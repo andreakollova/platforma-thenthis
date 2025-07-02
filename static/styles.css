@@ -95,3 +95,8 @@ h1 {
 .bd-mode-toggle .dropdown-menu .active .bi {
   display: block !important;
 }
+
+.python-icon {
+  color: #306998;
+  margin-right: 5px;
+}
