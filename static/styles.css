@@ -1,3 +1,10 @@
+.logo-light {
+  width: 30px;
+  height: auto;
+  object-fit: contain;
+}
+
+
 body {
     font-family: sans-serif;
     background-color: #f5f5f5;

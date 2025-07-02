@@ -4,26 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}My Site{% endblock %}</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="stylesheet" href="headers.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='headers.css') }}">
+
+
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors" />
-    <meta name="generator" content="Astro v5.9.2" />
-    <title>Album example · Bootstrap v5.3</title>
-    <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/album/" />
-    <script src="../assets/js/color-modes.js"></script>
-    <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <meta name="theme-color" content="#712cf9" />
-    <link href="styles.css" rel="stylesheet" />
-    <link href="headers.css" rel="stylesheet" />
-  </head>
 
 
 
@@ -36,17 +24,15 @@
 
       <!-- Logo -->
       <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 link-body-emphasis text-decoration-none">
-        <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap">
-          <use xlink:href="#bootstrap"></use>
-        </svg>
+        <img src="/static/logo.png" alt="Then This logo" style="width: 150px; margin-right: 50px;" class="logo-light">
       </a>
 
       <!-- Menu -->
       <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="#" class="nav-link px-2 link-secondary">Overview</a></li>
-        <li><a href="#" class="nav-link px-2 link-body-emphasis">Inventory</a></li>
-        <li><a href="#" class="nav-link px-2 link-body-emphasis">Customers</a></li>
-        <li><a href="#" class="nav-link px-2 link-body-emphasis">Products</a></li>
+        <li><a href="#" class="nav-link px-2 link-secondary">Objavujte</a></li>
+        <li><a href="#" class="nav-link px-2 link-body-emphasis">Cvičenia</a></li>
+        <li><a href="#" class="nav-link px-2 link-body-emphasis">Projekty</a></li>
+        <li><a href="#" class="nav-link px-2 link-body-emphasis">O platforme</a></li>
       </ul>
 
       <!-- Search -->
@@ -102,13 +88,13 @@
       <section class="py-5 text-center container">
         <div class="row py-lg-5">
           <div class="col-lg-6 col-md-8 mx-auto">
-            <h1 class="fw-light">Album example</h1>
+            <h1 class="fw-light">If Dendis said it once.</br>Then this remembers.</h1>
             <p class="lead text-body-secondary">
-              Something short and leading about the collection below...
+             This platform lets you practice real coding, one concept at a time.
             </p>
             <p>
-              <a href="#" class="btn btn-primary my-2">Main call to action</a>
-              <a href="#" class="btn btn-secondary my-2">Secondary action</a>
+              <a href="#" class="btn btn-primary my-2">Create an account</a>
+              <a href="#" class="btn btn-secondary my-2">Go to dashboard</a>
             </p>
           </div>
         </div>
@@ -149,6 +135,10 @@
               </div>
             </div>
             <!-- Repeat above card block for each card -->
+
+
+
+
           </div>
         </div>
       </div>
