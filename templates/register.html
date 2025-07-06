@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Registrácia{% endblock %}
+
+{% block content %}
+<main class="form-signin w-100 m-auto d-flex flex-column align-items-center" style="padding-top: 32px; padding-bottom: 80px;">
+
+  <!-- Registration Form Wrapper -->
+  <div class="p-5 shadow-sm border rounded-4" style="max-width: 600px; width: 100%; background-color: #fff;">
+    <form method="POST" enctype="multipart/form-data">
+      <h1 class="h3 mb-2 text-center">Vytvoriť nový účet</h1>
+      <p class="text-muted text-center mb-4">Vytvor si účet a posuň svoje zručnosti na novú úroveň.</p>
+
+      <!-- Meno -->
+      <div class="form-floating mb-4">
+        <input type="text" class="form-control" id="floatingName" name="name" placeholder="Tvoje meno" required>
+        <label for="floatingName">Meno</label>
+      </div>
+
+      <!-- Email -->
+      <div class="form-floating mb-4">
+        <input type="email" class="form-control" id="floatingEmail" name="email" placeholder="meno@example.com" required>
+        <label for="floatingEmail">Emailová adresa</label>
+      </div>
+
+      <!-- Heslo -->
+      <div class="form-floating mb-4">
+        <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Heslo" required>
+        <label for="floatingPassword">Heslo</label>
+      </div>
+
+      <!-- Fotka -->
+      <div class="mb-4">
+        <label for="formFile" class="form-label small text-muted">Nahraj si profilovú fotku 📸</label>
+        <input class="form-control" type="file" id="formFile" name="photo">
+      </div>
+
+      <hr class="my-4">
+
+      <button class="btn btn-primary w-100 py-2 mb-3" type="submit">Vytvoriť účet</button>
+
+      <!-- Link späť na login -->
+      <div class="text-center mt-2">
+        <small class="text-muted">
+          Už máš účet?
+          <a href="{{ url_for('login') }}" class="text-decoration-none">Prihlás sa tu</a>.
+        </small>
+      </div>
+
+        <p class="mt-3 mb-0 text-center text-muted" style="font-size: 13px;">
+        Registráciou súhlasíš s podmienkami používania a ochranou osobných údajov.
+      </p>
+    </form>
+  </div>
+</main>
+{% endblock %}
+
+{% block footer %}
+<!-- Optional: Theme switcher or footer content -->
+{% endblock %}
