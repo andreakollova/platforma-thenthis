@@ -1,5 +1,5 @@
 .logo-light {
-  width: 30px;
+  width: 130px;
   height: auto;
   object-fit: contain;
 }
@@ -100,3 +100,14 @@ h1 {
   color: #306998;
   margin-right: 5px;
 }
+
+.card-image-blur {
+  filter: blur(2px);
+  transition: filter 0.3s ease-in-out;
+}
+
+/* Optional: unblur on hover */
+.card-image-blur:hover {
+  filter: blur(0);
+}
+
