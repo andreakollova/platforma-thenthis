@@ -1,0 +1,84 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Then This{% endblock %}</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='headers.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+  <!-- Header/Navbar -->
+  <header class="pb-3 mb-3 border-bottom">
+    <div class="container">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+        <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 link-body-emphasis text-decoration-none">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="Then This logo" style="width: 150px; margin-right: 50px;" class="logo-light">
+        </a>
+        <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+          <li><a href="#" class="nav-link px-2 link-secondary">Objavujte</a></li>
+          <li><a href="#" class="nav-link px-2 link-body-emphasis">Cvičenia</a></li>
+          <li><a href="#" class="nav-link px-2 link-body-emphasis">Projekty</a></li>
+          <li><a href="#" class="nav-link px-2 link-body-emphasis">O platforme</a></li>
+        </ul>
+        <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+          <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
+        </form>
+        <div class="dropdown text-end">
+          <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
+          </a>
+          <ul class="dropdown-menu text-small">
+            <li><a class="dropdown-item" href="#">New project...</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Sign out</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page-specific content -->
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Bootstrap JS (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+{% block footer %}
+  <div class="container mt-5">
+    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 border-top" style="margin-bottom: 0;">
+      <!-- Left -->
+      <p class="col-md-4 mb-0 text-body-secondary">
+        &copy; <strong>2025 then_this.</strong> All rights reserved.
+      </p>
+
+      <!-- Center: Logo -->
+      <a href="/" class="col-md-4 d-flex align-items-center justify-content-center text-decoration-none" aria-label="Then This logo">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Then This logo" style="width: 100px;" class="logo-light">
+      </a>
+
+      <!-- Right -->
+      <ul class="nav col-md-4 justify-content-end">
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Objavujte</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Cvičenia</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Projekty</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">O platforme</a></li>
+      </ul>
+    </footer>
+  </div>
+{% endblock %}
+
+
+
+</body>
+
+</html>

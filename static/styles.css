@@ -106,8 +106,6 @@ h1 {
   transition: filter 0.3s ease-in-out;
 }
 
-/* Optional: unblur on hover */
 .card-image-blur:hover {
   filter: blur(0);
 }
-
