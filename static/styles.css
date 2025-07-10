@@ -109,3 +109,15 @@ h1 {
 .card-image-blur:hover {
   filter: blur(0);
 }
+
+.code-input.is-valid {
+  border: 2px solid #198754;
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.code-input.is-invalid {
+  border: 2px solid #dc3545;
+  background-color: #f8d7da;
+  color: #842029;
+}

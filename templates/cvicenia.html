@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Cvičenie{% endblock %}
+
+{% block content %}
+<main class="container py-3">
+  <div class="mb-4">
+    <h1 class="h3">Rozšírená objektovo-orientovaná trieda</h1>
+    <p class="text-muted mb-1">
+  Kategória:
+  <span class="badge bg-secondary">
+    <i class="fab fa-python me-1"></i>Python / OOP
+  </span>
+</p>
+    <div class="d-flex align-items-center mb-1">
+      <span class="text-muted me-2">Autor: </span>
+      <img src="https://github.com/mdo.png" alt="Martin Objektívny" width="22" height="22" class="rounded-circle me-1">
+      <strong class="text-muted">Martin Objektívny</strong>
+    </div>
+
+    <p class="mb-3" id="description">
+      <span id="short-text">
+        V tomto cvičení je tvojou úlohou vytvoriť objektovo-orientovanú štruktúru v jazyku Python. Začni definovaním triedy Person...
+      </span>
+      <span id="full-text" class="d-none">
+        Vytvor triedu <code>Person</code> so základnými atribútmi <code>name</code> a <code>age</code>. Pridaj metódy <code>greet()</code> a <code>birthday()</code>.
+        Potom vytvor podtriedu <code>Student</code>, ktorá bude dediť z <code>Person</code> a pridá atribút <code>school</code>.
+        Nezabudni použiť <code>super().__init__()</code> v konštruktore.
+        <br><strong>Precvičíš si:</strong>
+        <ul>
+          <li>vytváranie tried</li>
+          <li>konštruktory a metódy</li>
+          <li>prácu s <code>self</code> a <code>super</code></li>
+          <li>základy dedenia v OOP</li>
+        </ul>
+      </span>
+      <button class="btn btn-link btn-sm p-0" id="toggleDescription">Zobraziť celý popis</button>
+    </p>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label fw-semibold">Zvoľ si typ cvičenia:</label>
+    <div class="btn-group" role="group" id="modeButtons">
+      <button type="button" class="btn btn-outline-primary active" data-mode="fill">Dopĺňačka</button>
+      <button type="button" class="btn btn-outline-primary" data-mode="free">Voľný kód</button>
+    </div>
+  </div>
+
+  <!-- DOPĹŇAČKA -->
+  <div class="border rounded-4 p-4 bg-light" id="fillMode">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <p class="fw-semibold mb-0">Doplň kľúčové OOP slová priamo do kódu:</p>
+      <button class="btn btn-outline-secondary btn-sm" id="toggleAnswers">Zobraziť riešenie</button>
+    </div>
+    <div class="bg-dark text-white p-3 rounded font-monospace">
+<pre class="mb-0"><code><input type="text" class="code-input" data-answer="class" style="width:60px;"> Person:
+  <input type="text" class="code-input" data-answer="def" style="width:60px;"> __init__(<input type="text" class="code-input" data-answer="self" style="width:50px;">, name, age):
+    <input type="text" class="code-input" data-answer="self" style="width:70px;">.name = name
+    <input type="text" class="code-input" data-answer="self" style="width:70px;">.age = age
+
+  <input type="text" class="code-input" data-answer="def" style="width:60px;"> greet(<input type="text" class="code-input" data-answer="self" style="width:50px;">):
+    print("Ahoj, volám sa", <input type="text" class="code-input" data-answer="self" style="width:70px;">.name)
+
+  <input type="text" class="code-input" data-answer="def" style="width:60px;"> birthday(<input type="text" class="code-input" data-answer="self" style="width:50px;">):
+    <input type="text" class="code-input" data-answer="self" style="width:70px;">.age += 1
+
+<input type="text" class="code-input" data-answer="class" style="width:60px;"> Student(<input type="text" class="code-input" data-answer="Person" style="width:70px;">):
+  <input type="text" class="code-input" data-answer="def" style="width:60px;"> __init__(<input type="text" class="code-input" data-answer="self" style="width:50px;">, name, age, school):
+    <input type="text" class="code-input" data-answer="super" style="width:70px;">().__init__(name, age)
+    <input type="text" class="code-input" data-answer="self" style="width:70px;">.school = school</code></pre>
+    </div>
+    <button class="btn btn-success mt-3">Odoslať</button>
+  </div>
+
+  <!-- VOĽNÝ KÓD -->
+  <div class="border rounded-4 p-4 bg-light d-none" id="freeMode">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <p class="fw-semibold mb-0">Napíš vlastné riešenie:</p>
+      <button class="btn btn-outline-secondary btn-sm" id="toggleFreeCode">Zobraziť predpis</button>
+    </div>
+    <textarea id="freeCodeArea" class="form-control font-monospace bg-dark text-white" rows="12" placeholder="Tu napíš svoj Python kód..."></textarea>
+  </div>
+</main>
+
+<script>
+  // Prepínač medzi režimami
+  const modeButtons = document.querySelectorAll('#modeButtons button');
+  const fillMode = document.getElementById('fillMode');
+  const freeMode = document.getElementById('freeMode');
+
+  modeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      modeButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      const selectedMode = button.dataset.mode;
+      fillMode.classList.toggle('d-none', selectedMode !== 'fill');
+      freeMode.classList.toggle('d-none', selectedMode !== 'free');
+    });
+  });
+
+  // Riešenie pre dopĺňačku
+  const toggleAnswersBtn = document.getElementById('toggleAnswers');
+  let showingAnswers = false;
+  toggleAnswersBtn.addEventListener('click', () => {
+  const inputs = document.querySelectorAll('.code-input');
+  showingAnswers = !showingAnswers;
+  inputs.forEach(input => {
+    if (showingAnswers) {
+      if (!input.value || input.value.trim() === '') {
+        input.value = input.dataset.answer;
+        input.style.color = '#ccc';
+      } else {
+        input.dataset.userAnswer = input.value; // uchovaj, ak niekto niečo napísal
+        input.setAttribute('data-userAnswer', input.value);
+        if (input.value !== input.dataset.answer) {
+          input.style.color = '#ccc'; // ukáž správne riešenie ako ghost hint
+          input.value = input.dataset.answer;
+        }
+      }
+    } else {
+      const userVal = input.dataset.userAnswer || '';
+      input.value = userVal;
+      input.style.color = '';
+    }
+  });
+  toggleAnswersBtn.textContent = showingAnswers ? 'Skryť riešenie' : 'Zobraziť riešenie';
+});
+
+  // Riešenie pre voľný kód s uchovaním vlastného kódu
+  const toggleFreeCodeBtn = document.getElementById('toggleFreeCode');
+  const freeCodeArea = document.getElementById('freeCodeArea');
+  let showingPreset = false;
+  const userCode = { content: "" };
+  const freeTemplate = `class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def greet(self):
+        print("Ahoj, volám sa", self.name)
+
+    def birthday(self):
+        self.age += 1
+
+class Student(Person):
+    def __init__(self, name, age, school):
+        super().__init__(name, age)
+        self.school = school`;
+
+  toggleFreeCodeBtn.addEventListener('click', () => {
+    if (!showingPreset) {
+      userCode.content = freeCodeArea.value;
+      freeCodeArea.value = freeTemplate;
+      toggleFreeCodeBtn.textContent = "Skryť predpis";
+    } else {
+      freeCodeArea.value = userCode.content;
+      toggleFreeCodeBtn.textContent = "Zobraziť predpis";
+    }
+    showingPreset = !showingPreset;
+  });
+
+  // Popis prepínač
+  const toggleDescription = document.getElementById('toggleDescription');
+  const shortText = document.getElementById('short-text');
+  const fullText = document.getElementById('full-text');
+  toggleDescription.addEventListener('click', () => {
+    const isOpen = fullText.classList.contains('d-none');
+    fullText.classList.toggle('d-none');
+    shortText.classList.toggle('d-none');
+    toggleDescription.textContent = isOpen ? 'Skryť popis' : 'Zobraziť celý popis';
+  });
+
+    // Kontrola odpovedí v dopĺňačke
+const checkButton = document.querySelector('#fillMode .btn-success');
+checkButton.addEventListener('click', () => {
+  const inputs = document.querySelectorAll('.code-input');
+  inputs.forEach(input => {
+    const userInput = input.value.trim();
+    const correctAnswer = input.dataset.answer;
+
+    input.classList.remove('is-valid', 'is-invalid');
+
+    if (userInput.toLowerCase() === correctAnswer.toLowerCase()) {
+      input.classList.add('is-valid');
+    } else {
+      input.classList.add('is-invalid');
+    }
+  });
+});
+
+</script>
+{% endblock %}
