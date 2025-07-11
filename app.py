@@ -14,6 +14,10 @@ def login():
 def cvicenia():
     return render_template('cvicenia.html')
 
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
 @app.route("/register")
 def register():
     return render_template("register.html")

@@ -1,0 +1,151 @@
+  :root {
+      --text: #1f2937;
+      --muted: #6b7280;
+      --bg: #f9fafb;
+      --panel: #ffffff;
+      --icon-blue: #0d6efd;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 64px;
+      background-color: var(--panel);
+      padding: 1.2rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .sidebar a {
+      font-size: 1.2rem;
+      color: var(--text);
+      text-decoration: none;
+      margin: 1.2rem 0;
+      transition: opacity 0.2s;
+      opacity: 0.5;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      opacity: 1;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 2rem;
+      background: var(--panel);
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .topbar .user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .topbar .user img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .topbar .user span {
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    .topbar .logo {
+      width: 22px;
+      opacity: 0.15;
+    }
+
+    /* Content */
+    .dashboard-content {
+      padding: 2rem;
+    }
+
+    .dashboard-content h4 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+    }
+
+    .card-dashboard {
+      background: var(--panel);
+      border-radius: 0.8rem;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid #e5e7eb;
+    }
+
+    .card-dashboard:hover {
+      background: #f3f4f6;
+    }
+
+    .card-dashboard h6 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-dashboard i {
+      font-size: 1.2rem;
+      color: var(--icon-blue);
+    }
+
+    .card-dashboard p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        flex-direction: row;
+        height: 56px;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+        justify-content: space-around;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+    }

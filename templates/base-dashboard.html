@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Dashboard{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles-dashboard.css') }}">
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar d-flex flex-column">
+    <a href="/dashboard" class="active" title="Dashboard"><i class="fas fa-house"></i></a>
+    <a href="/cvicenia" title="Moje cvičenia"><i class="fas fa-code"></i></a>
+    <a href="/cvicenie/nove" title="Nové cvičenie"><i class="fas fa-plus"></i></a>
+    <a href="/cvicenie/random" title="Náhodné"><i class="fas fa-font-awesome"></i></a>
+
+    <!-- Bottom section -->
+    <div class="mt-auto pt-3 d-flex flex-column align-items-center">
+      <a href="/profil" title="Profil">
+        <i class="fa-regular fa-user" style="text-shadow: 0 0 1px currentColor;"></i>
+      </a>
+      <a href="/logout" title="Odhlásiť sa">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="user">
+        <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea">
+        <span>Ahoj, <strong>Andrea</strong>!</span>
+      </div>
+        <a href="http://127.0.0.1:5000/">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 90px;">
+</a>
+    </div>
+
+    <!-- Dynamic page content -->
+    <div class="dashboard-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

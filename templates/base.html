@@ -29,17 +29,15 @@
         <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
           <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
         </form>
-        <div class="dropdown text-end">
-          <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
+        <div class="dropdown text-end d-flex align-items-center gap-2">
+          <a href="http://127.0.0.1:5000/dashboard" class="dropdown text-end d-flex align-items-center gap-2 text-decoration-none" style="color: #374151;">
+            <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea" width="32" height="32" class="rounded-circle">
+            <span class="fw-normal d-flex align-items-center">
+              Andrea
+              <span style="font-size: 1.1rem; margin-left: 0.3rem; margin-top: 0px; color: #6b7280;">&#8250;</span>
+            </span>
           </a>
-          <ul class="dropdown-menu text-small">
-            <li><a class="dropdown-item" href="#">New project...</a></li>
-            <li><a class="dropdown-item" href="#">Settings</a></li>
-            <li><a class="dropdown-item" href="#">Profile</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Sign out</a></li>
-          </ul>
+
         </div>
       </div>
     </div>

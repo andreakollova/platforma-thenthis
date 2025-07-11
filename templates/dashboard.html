@@ -1,0 +1,27 @@
+{% extends "base-dashboard.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h4>Tvoja programátorská zóna</h4>
+<div class="row g-4">
+  <div class="col-md-4">
+    <a href="/cvicenie/nove" class="card-dashboard d-block">
+      <h6><i class="fas fa-plus"></i>Nové cvičenie</h6>
+      <p>Vytvor nové zadanie na precvičenie kódu.</p>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/cvicenia" class="card-dashboard d-block">
+      <h6><i class="fas fa-code"></i>Moje cvičenia</h6>
+      <p>Prehľad všetkých tvojich cvičení.</p>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/cvicenie/random" class="card-dashboard d-block">
+      <h6><i class="fas fa-font-awesome"></i>Náhodné cvičenie</h6>
+      <p>Skús výzvu s náhodným zadaním!</p>
+    </a>
+  </div>
+</div>
+{% endblock %}
