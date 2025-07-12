@@ -15,9 +15,11 @@
 
     .layout {
       display: flex;
-      height: 100vh;
-      overflow: hidden;
+      height: auto;
+      min-height: 100vh;
+      flex-direction: row;
     }
+
 
     /* Sidebar */
     .sidebar {

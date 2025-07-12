@@ -18,6 +18,10 @@ def cvicenia():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/nove')
+def nove():
+    return render_template('nove.html')
+
 @app.route("/register")
 def register():
     return render_template("register.html")

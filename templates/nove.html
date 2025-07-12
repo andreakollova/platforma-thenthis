@@ -1,0 +1,151 @@
+{% extends "base-dashboard.html" %}
+{% block title %}Nové cvičenie{% endblock %}
+
+{% block content %}
+<main class="container">
+  <h2 class="mb-4">Vytvoriť nové cvičenie</h2>
+  <form method="POST" action="/cvicenie/nove" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label"><b>Názov cvičenia</b></label>
+      <input type="text" class="form-control" name="title" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label"><b>Kategória</b></label>
+      <select class="form-select" id="mainCategory" name="category" required>
+        <option value="">-- Vyber kategóriu --</option>
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="CSS">CSS</option>
+        <option value="HTML">HTML</option>
+        <option value="SQL">SQL</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label"><b>Podkategória</b></label>
+      <select class="form-select" id="subcategory" name="subcategory" required>
+        <option value="">-- Najprv vyber hlavnú kategóriu --</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label"><b>Popis</b></label>
+      <textarea class="form-control" name="full_description" rows="4" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label"><b>Cover obrázok / screenshot</b></label>
+      <input class="form-control" type="file" name="cover_image" accept="image/*" required>
+      <small class="text-muted">Tento obrázok sa zobrazí ako pozadie karty cvičenia. Odporúčaný pomer strán: 16:9.</small>
+    </div>
+
+    <script>
+      const subcategories = {
+        Python: [
+          'Premenné a typy',
+          'Funkcie a parametre',
+          'Podmienky (if / else)',
+          'Cykly (for / while)',
+          'Zoznamy a tuplá (list, tuple)',
+          'Slovníky a množiny (dictionary, set)',
+          'Reťazce a metódy',
+          'OOP – triedy a objekty',
+          'Dedičnosť a super()',
+          'Moduly a importy',
+          'Práca so súbormi',
+          'Výnimky (try / except)',
+          'List comprehension',
+          'Lambda, map, filter',
+          'Dekorátory',
+          'Testovanie (unittest, pytest)',
+          'Flask – základy',
+          'Flask – routovanie a šablóny',
+          'Jinja2 – šablónovací jazyk'
+        ],
+        JavaScript: [
+          'Základy syntaxe',
+          'DOM manipulácia',
+          'Funkcie a callbacky',
+          'Události (events)',
+          'Podmienky a cykly',
+          'Fetch API / Ajax',
+          'LocalStorage',
+          'ES6+ features'
+        ],
+        CSS: [
+          'Selektory a štruktúra',
+          'Farby a pozadia',
+          'Flexbox',
+          'Grid layout',
+          'Responsívny dizajn',
+          'Animácie',
+          'Pseudo triedy',
+          'Premenné a BEM'
+        ],
+        HTML: [
+          'Základná štruktúra',
+          'Formuláre',
+          'Semantika',
+          'Tabuľky',
+          'Odkazy a obrázky',
+          'Multimédiá',
+          'Meta tagy',
+          'Základy SEO'
+        ],
+        SQL: [
+          'SELECT a FROM',
+          'WHERE a logika',
+          'JOIN operácie',
+          'GROUP BY a COUNT',
+          'INSERT, UPDATE, DELETE',
+          'Indexy a optimalizácia',
+          'Agregačné funkcie',
+          'Poddotazy'
+        ]
+      };
+
+      const mainSelect = document.getElementById('mainCategory');
+      const subSelect = document.getElementById('subcategory');
+
+      mainSelect.addEventListener('change', function () {
+        const selectedCategory = this.value;
+        const options = subcategories[selectedCategory] || [];
+        subSelect.innerHTML = '<option value="">-- Vyber podkategóriu --</option>';
+        options.forEach(function (subcat) {
+          const opt = document.createElement('option');
+          opt.value = subcat;
+          opt.textContent = subcat;
+          subSelect.appendChild(opt);
+        });
+      });
+    </script>
+
+    <div class="mb-3">
+      <label class="form-label">
+        <b>Zadaj celý kód (dopĺňané slová označ pomocou <code>{{ '{{' }}slovo{{ '}}' }}</code>)</b>
+      </label>
+      <textarea
+        class="form-control font-monospace"
+        name="code"
+        rows="10"
+        placeholder="Príklad:
+{{ '{{' }}class{{ '}}' }} Person:
+  {{ '{{' }}def{{ '}}' }} __init__({{ '{{' }}self{{ '}}' }}, name):
+    {{ '{{' }}self{{ '}}' }}.name = name"
+      ></textarea>
+      <small class="text-muted">
+        Pre dopĺňačku označ slová, ktoré sa majú dopĺňať, ako napr.
+        <code>{{ '{{' }}class{{ '}}' }}</code>,
+        <code>{{ '{{' }}self{{ '}}' }}</code>,
+        <code>{{ '{{' }}def{{ '}}' }}</code>.
+      </small>
+    </div>
+
+    <div class="mt-4">
+      <button class="btn btn-primary" type="submit">Uložiť cvičenie</button>
+      <a href="/dashboard" class="btn btn-secondary">Zrušiť</a>
+    </div>
+  </form>
+</main>
+{% endblock %}
