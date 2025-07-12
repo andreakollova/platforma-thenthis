@@ -1,0 +1,37 @@
+{% extends "base-dashboard.html" %}
+{% block title %}Môj profil{% endblock %}
+
+{% block content %}
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="p-5 shadow-sm border rounded-4 bg-white">
+        <div class="text-center mb-4">
+          <img src="{{ url_for('static', filename='andrea.jpg') }}"
+               alt="Profilová fotka"
+               class="rounded-circle shadow-sm"
+               width="120"
+               height="120"
+               style="object-fit: cover; object-position: center;">
+        </div>
+
+        <h2 class="text-center mb-3">Andrea Kollova</h2>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold text-muted">Celé meno</label>
+          <input type="text" class="form-control" value="Andrea Kollova" disabled>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold text-muted">Email</label>
+          <input type="email" class="form-control" value="andrea@andrea.sk" disabled>
+        </div>
+
+        <div class="text-center">
+          <p class="small text-muted mt-4 mb-0">Ak chceš zmeniť údaje, kontaktuj administrátora.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

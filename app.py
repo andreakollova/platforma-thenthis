@@ -22,6 +22,14 @@ def dashboard():
 def nove():
     return render_template('nove.html')
 
+@app.route('/moje-cvicenia')
+def moje_cvicenia():
+    return render_template('moje-cvicenia.html')
+
+@app.route('/profil')
+def profil():
+    return render_template('profil.html')
+
 @app.route("/register")
 def register():
     return render_template("register.html")

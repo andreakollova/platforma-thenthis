@@ -1,0 +1,155 @@
+{% extends "base-dashboard.html" %}
+{% block title %}Moje cvičenia{% endblock %}
+
+{% block content %}
+<main class="container">
+  <h2 class="mb-4">Moje cvičenia</h2>
+
+  <!-- Filter sekcia -->
+  <form method="GET" class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label class="form-label">Kategória</label>
+      <select name="category" class="form-select" id="filter-category">
+        <option value="">-- Všetky kategórie --</option>
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="CSS">CSS</option>
+        <option value="HTML">HTML</option>
+        <option value="SQL">SQL</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Podkategória</label>
+      <select name="subcategory" class="form-select" id="filter-subcategory">
+        <option value="">-- Všetky podkategórie --</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Filtrovať</button>
+    </div>
+  </form>
+
+  <!-- Cvičenia -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+    {% for exercise in exercises %}
+    <div class="col">
+      <div class="card shadow-sm position-relative">
+        <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}" class="card-img-top card-image-blur" style="height: 225px; object-fit: cover;" alt="cover">
+        <div class="card-body">
+          <p class="card-text fw-bold mb-2">{{ exercise.title }}</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="btn-group">
+              <a href="/cvicenie/{{ exercise.id }}" class="btn btn-sm btn-outline-secondary">Prehľad</a>
+              <a href="/cvicenie/start/{{ exercise.id }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
+            </div>
+            <small class="text-body-secondary">
+              {% if exercise.category == 'Python' %}<i class="fab fa-python me-1"></i>{% endif %}
+              {{ exercise.category }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Vzorová karta -->
+    <div class="col">
+      <div class="card shadow-sm position-relative">
+        <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" style="height: 225px; object-fit: cover;" alt="cover">
+        <div class="card-body">
+          <p class="card-text fw-bold mb-2">Spracovanie výnimiek try / except</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="btn-group">
+              <a href="#" class="btn btn-sm btn-outline-secondary">Prehľad</a>
+              <a href="#" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
+            </div>
+            <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const subcategories = {
+  Python: [
+    'Premenné a typy',
+    'Funkcie a parametre',
+    'Podmienky (if / else)',
+    'Cykly (for / while)',
+    'Zoznamy a tuplá',
+    'Slovníky a množiny',
+    'Reťazce a metódy',
+    'OOP – triedy a objekty',
+    'Dedičnosť a super()',
+    'Moduly a importy',
+    'Práca so súbormi',
+    'Výnimky (try / except)',
+    'List comprehension',
+    'Lambda, map, filter',
+    'Dekorátory',
+    'Testovanie (unittest, pytest)',
+    'Flask – základy',
+    'Flask – routovanie a šablóny',
+    'Jinja2 – šablónovací jazyk'
+  ],
+  JavaScript: [
+    'Základy syntaxe',
+    'DOM manipulácia',
+    'Funkcie a callbacky',
+    'Události (events)',
+    'Podmienky a cykly',
+    'Fetch API / Ajax',
+    'LocalStorage',
+    'ES6+ features'
+  ],
+  CSS: [
+    'Selektory a štruktúra',
+    'Farby a pozadia',
+    'Flexbox',
+    'Grid layout',
+    'Responsívny dizajn',
+    'Animácie',
+    'Pseudo triedy',
+    'Premenné a BEM'
+  ],
+  HTML: [
+    'Základná štruktúra',
+    'Formuláre',
+    'Semantika',
+    'Tabuľky',
+    'Odkazy a obrázky',
+    'Multimédiá',
+    'Meta tagy',
+    'Základy SEO'
+  ],
+  SQL: [
+    'SELECT a FROM',
+    'WHERE a logika',
+    'JOIN operácie',
+    'GROUP BY a COUNT',
+    'INSERT, UPDATE, DELETE',
+    'Indexy a optimalizácia',
+    'Agregačné funkcie',
+    'Poddotazy'
+  ]
+};
+
+const categorySelect = document.getElementById("filter-category");
+const subcategorySelect = document.getElementById("filter-subcategory");
+
+categorySelect.addEventListener("change", function () {
+  const selected = this.value;
+  const options = subcategories[selected] || [];
+  subcategorySelect.innerHTML = '<option value="">-- Všetky podkategórie --</option>';
+  options.forEach(sub => {
+    const opt = document.createElement("option");
+    opt.value = sub;
+    opt.textContent = sub;
+    subcategorySelect.appendChild(opt);
+  });
+});
+</script>
+{% endblock %}
