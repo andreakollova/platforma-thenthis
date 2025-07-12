@@ -121,3 +121,13 @@ h1 {
   background-color: #f8d7da;
   color: #842029;
 }
+
+.full-width-section {
+  width: 100vw;
+  background-color: #f8f9fa;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}

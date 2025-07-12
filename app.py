@@ -30,6 +30,10 @@ def moje_cvicenia():
 def profil():
     return render_template('profil.html')
 
+@app.route('/objavujte')
+def objavujte():
+    return render_template('objavujte.html')
+
 @app.route("/register")
 def register():
     return render_template("register.html")

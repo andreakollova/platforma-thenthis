@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Objavujte cvičenia{% endblock %}
+
+{% block content %}
+<main>
+
+  <!-- BIELA sekcia s filtrami a náhodným cvičením -->
+  <div class="w-100 py-5 bg-white">
+    <div class="container">
+      <h2 class="mb-4">Objavujte nové cvičenia</h2>
+
+      <!-- Filter -->
+      <form method="GET" id="filter-form" class="row align-items-end g-3 mb-5">
+        <div class="col-md-7">
+          <label class="form-label fw-semibold mb-2">Kategória</label>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary category-btn" data-category="Python">
+              <i class="fab fa-python me-1"></i> Python
+            </button>
+            <button type="button" class="btn btn-outline-secondary category-btn" data-category="JavaScript">
+              <i class="fab fa-js-square me-1"></i> JavaScript
+            </button>
+            <button type="button" class="btn btn-outline-secondary category-btn" data-category="CSS">
+              <i class="fab fa-css3-alt me-1"></i> CSS
+            </button>
+            <button type="button" class="btn btn-outline-secondary category-btn" data-category="HTML">
+              <i class="fab fa-html5 me-1"></i> HTML
+            </button>
+            <button type="button" class="btn btn-outline-secondary category-btn" data-category="SQL">
+              <i class="fas fa-database me-1"></i> SQL
+            </button>
+          </div>
+          <input type="hidden" name="category" id="category-input">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Podkategória</label>
+          <select name="subcategory" class="form-select" id="filter-subcategory">
+            <option value="">-- Všetky podkategórie --</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100">Filtrovať</button>
+        </div>
+      </form>
+
+      <!-- Náhodné cvičenie -->
+      <div class="mb-1">
+        <div style="max-width: 720px;">
+          <h5 class="mb-3 fs-5">
+            <i class="fas fa-random text-primary me-2"></i>Náhodné cvičenie
+          </h5>
+          <div class="card shadow-sm position-relative">
+            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" style="height: 225px; object-fit: cover;" alt="random">
+            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
+              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
+              <span class="small text-dark fw-medium">Andrea Kollova</span>
+            </div>
+            <div class="card-body">
+              <p class="card-text fw-bold mb-2">List comprehension a filter</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
+                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
+                </div>
+                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIVÁ sekcia cez celú šírku pre všetky cvičenia -->
+  <div class="full-width-section py-5 bg-light">
+    <div class="container">
+      <h5 class="mb-4 fs-3">
+        <i class="fas fa-code text-primary me-2"></i>Všetky cvičenia
+      </h5>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+        {% for i in range(6) %}
+        <div class="col">
+          <div class="card shadow-sm position-relative">
+            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" style="height: 225px; object-fit: cover;" alt="cover">
+            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
+              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
+              <span class="small text-dark fw-medium">Andrea Kollova</span>
+            </div>
+            <div class="card-body">
+              <p class="card-text fw-bold mb-2">Ukážkové cvičenie č. {{ i + 1 }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <a href="#" class="btn btn-sm btn-outline-secondary">Prehľad</a>
+                  <a href="#" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
+                </div>
+                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const categoryButtons = document.querySelectorAll('.category-btn');
+const categoryInput = document.getElementById('category-input');
+const subcategorySelect = document.getElementById('filter-subcategory');
+
+const subcategories = {
+  Python: ['Premenné a typy', 'Funkcie a parametre', 'Podmienky (if / else)', 'Cykly (for / while)', 'Zoznamy a tuplá', 'Slovníky a množiny', 'Reťazce a metódy', 'OOP – triedy a objekty', 'Dedičnosť a super()', 'Moduly a importy', 'Práca so súbormi', 'Výnimky (try / except)', 'List comprehension', 'Lambda, map, filter', 'Dekorátory', 'Testovanie (unittest, pytest)', 'Flask – základy', 'Flask – routovanie a šablóny', 'Jinja2 – šablónovací jazyk'],
+  JavaScript: ['Základy syntaxe', 'DOM manipulácia', 'Funkcie a callbacky', 'Události (events)', 'Podmienky a cykly', 'Fetch API / Ajax', 'LocalStorage', 'ES6+ features'],
+  CSS: ['Selektory a štruktúra', 'Farby a pozadia', 'Flexbox', 'Grid layout', 'Responsívny dizajn', 'Animácie', 'Pseudo triedy', 'Premenné a BEM'],
+  HTML: ['Základná štruktúra', 'Formuláre', 'Semantika', 'Tabuľky', 'Odkazy a obrázky', 'Multimédiá', 'Meta tagy', 'Základy SEO'],
+  SQL: ['SELECT a FROM', 'WHERE a logika', 'JOIN operácie', 'GROUP BY a COUNT', 'INSERT, UPDATE, DELETE', 'Indexy a optimalizácia', 'Agregačné funkcie', 'Poddotazy']
+};
+
+categoryButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    categoryButtons.forEach(b => b.classList.remove('btn-primary'));
+    categoryButtons.forEach(b => b.classList.add('btn-outline-secondary'));
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-primary');
+
+    categoryInput.value = btn.dataset.category;
+
+    const selected = btn.dataset.category;
+    const options = subcategories[selected] || [];
+    subcategorySelect.innerHTML = '<option value="">-- Všetky podkategórie --</option>';
+    options.forEach(sub => {
+      const opt = document.createElement("option");
+      opt.value = sub;
+      opt.textContent = sub;
+      subcategorySelect.appendChild(opt);
+    });
+  });
+});
+</script>
+{% endblock %}
