@@ -24,9 +24,12 @@
       </div>
 
       <!-- Heslo -->
-      <div class="form-floating mb-4">
+      <div class="form-floating mb-4 position-relative">
         <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Heslo" required>
         <label for="floatingPassword">Heslo</label>
+        <span class="toggle-password" onclick="togglePasswordVisibility()" title="Zobraziť heslo">
+          <i class="fa-regular fa-eye" id="toggle-icon"></i>
+        </span>
       </div>
 
       <!-- Fotka -->

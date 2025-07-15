@@ -131,3 +131,48 @@ h1 {
   margin-left: -50vw;
   margin-right: -50vw;
 }
+
+
+#toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1055;
+  animation: fadeSlideDown 0.5s ease-out;
+}
+
+.toast-msg {
+  background-color: #f8d7da;
+  color: #842029;
+  padding: 14px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  font-size: 15px;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid #f5c2c7;
+}
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #a3a3a3;
+  font-size: 1rem;
+  z-index: 10;
+}
+
+/* Animation */
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

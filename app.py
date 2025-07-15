@@ -75,9 +75,7 @@ def login():
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
-            flash('Nesprávny email alebo heslo.')
-            return redirect(url_for('login'))
-
+            return render_template('login.html', show_modal=True)
     return render_template('login.html')
 
 # LOGOUT
