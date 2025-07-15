@@ -21,11 +21,23 @@ login_manager.login_view = 'login'
 
 # USER model
 class User(db.Model, UserMixin):
+    __tablename__ = 'users'  # <-- toto pridaj
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     photo = db.Column(db.String(256), default="default.jpg")
+
+class Exercise(db.Model):
+    __tablename__ = 'exercises'  # <- DÔLEŽITÉ
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    subcategory = db.Column(db.String(100), nullable=False)
+    full_description = db.Column(db.Text, nullable=False)
+    code = db.Column(db.Text, nullable=True)
+    cover_image = db.Column(db.String(150), nullable=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -34,7 +46,8 @@ def load_user(user_id):
 # ROUTES
 @app.route('/')
 def home():
-    return render_template('index.html')
+    exercises = Exercise.query.order_by(Exercise.id.desc()).limit(6).all()
+    return render_template('index.html', exercises=exercises)
 
 # REGISTRATION ROUTE
 @app.route('/register', methods=['GET', 'POST'])
@@ -95,9 +108,44 @@ def dashboard():
 def cvicenia():
     return render_template('cvicenia.html')
 
-@app.route('/nove')
-def nove():
+@app.route('/cvicenie/nove', methods=['GET', 'POST'])
+@login_required
+def nove_cvicenie():
+    if request.method == 'POST':
+        title = request.form['title']
+        category = request.form['category']
+        subcategory = request.form['subcategory']
+        full_description = request.form['full_description']
+        code = request.form['code']
+
+        file = request.files['cover_image']
+        filename = "default.png"
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join('static/uploads/covers', filename))
+
+        new_exercise = Exercise(
+            title=title,
+            category=category,
+            subcategory=subcategory,
+            full_description=full_description,
+            code=code,
+            cover_image=filename,
+            author_id=current_user.id
+        )
+        db.session.add(new_exercise)
+        db.session.commit()
+        flash('Cvičenie bolo úspešne vytvorené!')
+
+        return redirect(url_for('exercise_detail', id=new_exercise.id))
+
     return render_template('nove.html')
+
+@app.route('/cvicenie/<int:id>')
+def exercise_detail(id):
+    exercise = Exercise.query.get_or_404(id)
+    author = User.query.get(exercise.author_id)
+    return render_template('cvicenie.html', exercise=exercise, author=author)
 
 @app.route('/moje-cvicenia')
 def moje_cvicenia():
