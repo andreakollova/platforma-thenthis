@@ -30,15 +30,18 @@
           <input type="search" class="form-control" placeholder="Hľadať..." aria-label="Search">
         </form>
         <div class="dropdown text-end d-flex align-items-center gap-2">
-          <a href="http://127.0.0.1:5000/dashboard" class="dropdown text-end d-flex align-items-center gap-2 text-decoration-none" style="color: #374151;">
-            <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea" width="32" height="32" class="rounded-circle">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('dashboard') }}" class="dropdown text-end d-flex align-items-center gap-2 text-decoration-none" style="color: #374151;">
+            <img src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.photo) }}" alt="{{ current_user.name }}" width="32" height="32" class="rounded-circle">
             <span class="fw-normal d-flex align-items-center">
-              Andrea
-              <span style="font-size: 1.1rem; margin-left: 0.3rem; margin-top: 0px; color: #6b7280;">&#8250;</span>
+              {{ current_user.name }}
+              <span style="font-size: 1.1rem; margin-left: 0.3rem; color: #6b7280;">&#8250;</span>
             </span>
           </a>
-
-        </div>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Prihlásiť sa</a>
+        {% endif %}
+      </div>
       </div>
     </div>
   </header>

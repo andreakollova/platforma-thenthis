@@ -5,7 +5,6 @@
 <main class="container">
   <h2 class="mb-4">Moje cvičenia</h2>
 
-  <!-- Filter sekcia -->
   <form method="GET" class="row g-3 mb-4">
     <div class="col-md-4">
       <label class="form-label">Kategória</label>
@@ -29,7 +28,6 @@
     </div>
   </form>
 
-  <!-- Cvičenia -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
     {% for exercise in exercises %}
     <div class="col">

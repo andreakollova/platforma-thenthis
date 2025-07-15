@@ -35,12 +35,16 @@
     <!-- Topbar -->
     <div class="topbar">
       <div class="user">
-        <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea">
-        <span>Ahoj, <strong>Andrea</strong>!</span>
+        {% if current_user.is_authenticated %}
+          <img src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.photo) }}" alt="{{ current_user.name }}" width="36" height="36" class="rounded-circle">
+          <span>Ahoj, <strong>{{ current_user.name }}</strong>!</span>
+        {% else %}
+          <a href="{{ url_for('login') }}">Prihlásiť sa</a>
+        {% endif %}
       </div>
-        <a href="http://127.0.0.1:5000/">
-  <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 90px;">
-</a>
+      <a href="{{ url_for('home') }}">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 90px;">
+      </a>
     </div>
 
     <!-- Dynamic page content -->
