@@ -25,7 +25,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
-    photo = db.Column(db.String(256), default="default.jpg")  # napr. andrea.jpg
+    photo = db.Column(db.String(256), default="default.jpg")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -57,8 +57,10 @@ def register():
         new_user = User(name=name, email=email, password=password, photo=filename)
         db.session.add(new_user)
         db.session.commit()
-        flash('Registrácia úspešná! Teraz sa prihlás.')
-        return redirect(url_for('login'))
+
+        login_user(new_user)
+        flash('Vitaj! Účet bol úspešne vytvorený.')
+        return redirect(url_for('dashboard'))
 
     return render_template('register.html')
 
