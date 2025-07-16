@@ -190,6 +190,41 @@ def publish_exercise(id):
     flash("Cvičenie bolo publikované!")
     return redirect(url_for('moje_cvicenia'))
 
+@app.route('/cvicenie/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_exercise(id):
+    exercise = Exercise.query.get_or_404(id)
+
+    # zabezpeč, že len autor môže upravovať
+    if exercise.author_id != current_user.id:
+        flash("Nemáš oprávnenie upraviť toto cvičenie.")
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        # aktualizuj hodnoty
+        exercise.title = request.form['title']
+        exercise.category = request.form['category']
+        exercise.subcategory = request.form['subcategory']
+        exercise.full_description = request.form['full_description']
+        code_raw = request.form['code']
+        exercise.code = Markup(re.sub(
+            r"\{\{\s*(.*?)\s*\}\}",
+            r"<input type='text' class='code-input' data-answer='\1' style='width:70px;'>",
+            code_raw
+        ))
+
+        file = request.files['cover_image']
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join('static/uploads/covers', filename))
+            exercise.cover_image = filename  # prepíš len ak nahráva nový
+
+        db.session.commit()
+
+        flash("Zmeny boli uložené.")
+        return render_template('cvicenie.html', exercise=exercise, author=current_user, is_preview=True)
+
+    return render_template('nove.html', exercise=exercise)
 
 
 if __name__ == '__main__':

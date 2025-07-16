@@ -3,40 +3,52 @@
 
 {% block content %}
 <main class="container">
-  <h2 class="mb-4">Vytvoriť nové cvičenie</h2>
-  <form method="POST" action="/cvicenie/nove" enctype="multipart/form-data">
+  <h2 class="mb-4">{% if exercise %}Upraviť cvičenie{% else %}Vytvoriť nové cvičenie{% endif %}</h2>
+  <form method="POST" action="{% if exercise %}{{ url_for('edit_exercise', id=exercise.id) }}{% else %}{{ url_for('nove_cvicenie') }}{% endif %}" enctype="multipart/form-data">
     <div class="mb-3">
       <label class="form-label"><b>Názov cvičenia</b></label>
-      <input type="text" class="form-control" name="title" required>
+      <input type="text" class="form-control" name="title" required value="{{ exercise.title if exercise }}">
     </div>
 
     <div class="mb-3">
       <label class="form-label"><b>Kategória</b></label>
       <select class="form-select" id="mainCategory" name="category" required>
         <option value="">-- Vyber kategóriu --</option>
-        <option value="Python">Python</option>
-        <option value="JavaScript">JavaScript</option>
-        <option value="CSS">CSS</option>
-        <option value="HTML">HTML</option>
-        <option value="SQL">SQL</option>
+        <option value="Python" {% if exercise and exercise.category == 'Python' %}selected{% endif %}>Python</option>
+        <option value="JavaScript" {% if exercise and exercise.category == 'JavaScript' %}selected{% endif %}>JavaScript</option>
+        <option value="CSS" {% if exercise and exercise.category == 'CSS' %}selected{% endif %}>CSS</option>
+        <option value="HTML" {% if exercise and exercise.category == 'HTML' %}selected{% endif %}>HTML</option>
+        <option value="SQL" {% if exercise and exercise.category == 'SQL' %}selected{% endif %}>SQL</option>
       </select>
     </div>
 
     <div class="mb-3">
       <label class="form-label"><b>Podkategória</b></label>
       <select class="form-select" id="subcategory" name="subcategory" required>
-        <option value="">-- Najprv vyber hlavnú kategóriu --</option>
+        {% if exercise %}
+          <option selected>{{ exercise.subcategory }}</option>
+        {% else %}
+          <option value="">-- Najprv vyber hlavnú kategóriu --</option>
+        {% endif %}
       </select>
     </div>
 
     <div class="mb-3">
       <label class="form-label"><b>Popis</b></label>
-      <textarea class="form-control" name="full_description" rows="4" required></textarea>
+      <textarea class="form-control" name="full_description" rows="4" required>{{ exercise.full_description if exercise }}</textarea>
     </div>
 
     <div class="mb-3">
       <label class="form-label"><b>Cover obrázok / screenshot</b></label>
-      <input class="form-control" type="file" name="cover_image" accept="image/*" required>
+      <input class="form-control" type="file" name="cover_image" accept="image/*" {% if not exercise %}required{% endif %}>
+
+      {% if exercise %}
+        <div class="mt-2">
+          <p class="mb-1 text-muted">Aktuálny obrázok:</p>
+          <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}" alt="cover" class="img-thumbnail" style="max-width: 300px;">
+        </div>
+      {% endif %}
+
       <small class="text-muted">Tento obrázok sa zobrazí ako pozadie karty cvičenia. Odporúčaný pomer strán: 16:9.</small>
     </div>
 
@@ -119,6 +131,21 @@
           subSelect.appendChild(opt);
         });
       });
+      {% if exercise %}
+        mainSelect.value = "{{ exercise.category }}";
+        const options = subcategories["{{ exercise.category }}"] || [];
+        subSelect.innerHTML = '<option value="">-- Vyber podkategóriu --</option>';
+        options.forEach(function (subcat) {
+          const opt = document.createElement('option');
+          opt.value = subcat;
+          opt.textContent = subcat;
+          if (subcat === "{{ exercise.subcategory }}") {
+            opt.selected = true;
+          }
+          subSelect.appendChild(opt);
+        });
+      {% endif %}
+
     </script>
 
     <div class="mb-3">
@@ -130,10 +157,10 @@
         name="code"
         rows="10"
         placeholder="Príklad:
-{{ '{{' }}class{{ '}}' }} Person:
-  {{ '{{' }}def{{ '}}' }} __init__({{ '{{' }}self{{ '}}' }}, name):
-    {{ '{{' }}self{{ '}}' }}.name = name"
-      ></textarea>
+      {{'{{'}}class{{'}}'}} Person:
+        {{'{{'}}def{{'}}'}} __init__({{'{{'}}self{{'}}'}}, name):
+          {{'{{'}}self{{'}}'}}.name = name"
+      >{{ exercise.code|safe if exercise }}</textarea>
       <small class="text-muted">
         Pre dopĺňačku označ slová, ktoré sa majú dopĺňať, ako napr.
         <code>{{ '{{' }}class{{ '}}' }}</code>,
@@ -143,7 +170,9 @@
     </div>
 
     <div class="mt-4">
-      <button class="btn btn-primary" type="submit">Uložiť cvičenie</button>
+      <button class="btn btn-primary" type="submit">
+        {% if exercise %}Uložiť zmeny{% else %}Uložiť cvičenie{% endif %}
+      </button>
       <a href="/dashboard" class="btn btn-secondary">Zrušiť</a>
     </div>
   </form>
