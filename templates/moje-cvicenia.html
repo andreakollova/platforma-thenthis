@@ -3,6 +3,15 @@
 
 {% block content %}
 <main class="container">
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div id="toast-container">
+      <div class="toast-msg">{{ messages[0] }}</div>
+    </div>
+  {% endif %}
+{% endwith %}
+
   <h2 class="mb-4">Moje cvičenia</h2>
 
   <form method="GET" class="row g-3 mb-4">
@@ -71,6 +80,11 @@
 </main>
 
 <script>
+setTimeout(() => {
+  const toast = document.getElementById('toast-container');
+  if (toast) toast.remove();
+}, 6000); // 6 seconds
+
 const subcategories = {
   Python: [
     'Premenné a typy',

@@ -190,3 +190,12 @@ checkButton.addEventListener('click', () => {
 
 </script>
 {% endblock %}
+{% if is_preview %}
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{{ url_for('publish_exercise', id=exercise.id) }}" class="btn btn-success">Publikovať</a>
+    <a href="{{ url_for('nove_cvicenie') }}" class="btn btn-outline-secondary">Upraviť</a>
+  </div>
+{% endif %}
+{% if is_preview %}
+  <div class="alert alert-info">Toto je náhľad tvojho cvičenia. Nezabudni ho publikovať.</div>
+{% endif %}

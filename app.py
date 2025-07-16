@@ -4,6 +4,8 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from werkzeug.utils import secure_filename
+from markupsafe import Markup
+import re
 
 # Flask setup
 app = Flask(__name__)
@@ -38,6 +40,8 @@ class Exercise(db.Model):
     code = db.Column(db.Text, nullable=True)
     cover_image = db.Column(db.String(150), nullable=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    published = db.Column(db.Boolean, default=False)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -46,7 +50,7 @@ def load_user(user_id):
 # ROUTES
 @app.route('/')
 def home():
-    exercises = Exercise.query.order_by(Exercise.id.desc()).limit(6).all()
+    exercises = Exercise.query.filter_by(published=True).order_by(Exercise.id.desc()).limit(6).all()
     return render_template('index.html', exercises=exercises)
 
 # REGISTRATION ROUTE
@@ -116,7 +120,12 @@ def nove_cvicenie():
         category = request.form['category']
         subcategory = request.form['subcategory']
         full_description = request.form['full_description']
-        code = request.form['code']
+        code_raw = request.form['code']
+        code_with_inputs = re.sub(
+            r"\{\{\s*(.*?)\s*\}\}",
+            r"<input type='text' class='code-input' data-answer='\1' style='width:70px;'>",
+            code_raw
+        )
 
         file = request.files['cover_image']
         filename = "default.png"
@@ -129,15 +138,20 @@ def nove_cvicenie():
             category=category,
             subcategory=subcategory,
             full_description=full_description,
-            code=code,
+            code=Markup(code_with_inputs),
             cover_image=filename,
             author_id=current_user.id
         )
         db.session.add(new_exercise)
         db.session.commit()
-        flash('Cvičenie bolo úspešne vytvorené!')
 
-        return redirect(url_for('exercise_detail', id=new_exercise.id))
+        # Tu použijeme cvicenie.html ale s flagom is_preview=True
+        return render_template(
+            'cvicenie.html',
+            exercise=new_exercise,
+            author=current_user,
+            is_preview=True  # 🔑 kľúč
+        )
 
     return render_template('nove.html')
 
@@ -148,8 +162,10 @@ def exercise_detail(id):
     return render_template('cvicenie.html', exercise=exercise, author=author)
 
 @app.route('/moje-cvicenia')
+@login_required
 def moje_cvicenia():
-    return render_template('moje-cvicenia.html')
+    exercises = Exercise.query.filter_by(author_id=current_user.id).order_by(Exercise.id.desc()).all()
+    return render_template('moje-cvicenia.html', exercises=exercises)
 
 @app.route('/profil')
 def profil():
@@ -158,6 +174,22 @@ def profil():
 @app.route('/objavujte')
 def objavujte():
     return render_template('objavujte.html')
+
+@app.route('/cvicenie/<int:id>/publish')
+@login_required
+def publish_exercise(id):
+    exercise = Exercise.query.get_or_404(id)
+
+    if exercise.author_id != current_user.id:
+        flash("Nemáš oprávnenie publikovať toto cvičenie.")
+        return redirect(url_for('dashboard'))
+
+    exercise.published = True
+    db.session.commit()
+
+    flash("Cvičenie bolo publikované!")
+    return redirect(url_for('moje_cvicenia'))
+
 
 
 if __name__ == '__main__':
