@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-
 {% block title %}Cvičenie{% endblock %}
 
 {% block content %}
 <main class="container py-3">
+
   {% if is_preview %}
     <div class="alert alert-info">Toto je náhľad tvojho cvičenia. Nezabudni ho publikovať.</div>
   {% endif %}
@@ -13,7 +13,7 @@
     <p class="text-muted mb-1">
       Kategória:
       <span class="badge bg-secondary">
-        <i class="fab fa-python me-1"></i>{{ exercise.category }} / {{ exercise.subcategory }}
+        <i class="{{ category_icon }} me-1"></i>{{ exercise.category }} / {{ exercise.subcategory }}
       </span>
     </p>
     <div class="d-flex align-items-center mb-1">
@@ -24,14 +24,33 @@
     <p class="mb-3">{{ exercise.full_description }}</p>
   </div>
 
-  <!-- Zobraz dopĺňané cvičenie -->
-  <div class="border rounded-4 p-4 bg-light">
-    <p class="fw-semibold mb-3">Tvoje cvičenie:</p>
-    <div class="bg-dark text-white p-3 rounded font-monospace">
-<pre class="mb-0"><code>
-{{ exercise.code | safe }}
-</code></pre>
+  <div class="mb-4">
+    <label class="form-label fw-semibold">Zvoľ si typ cvičenia:</label>
+    <div class="btn-group" role="group" id="modeButtons">
+      <button type="button" class="btn btn-outline-primary active" data-mode="fill">Dopĺňačka</button>
+      <button type="button" class="btn btn-outline-primary" data-mode="free">Voľný kód</button>
     </div>
+  </div>
+
+  <!-- DOPĹŇAČKA -->
+  <div class="border rounded-4 p-4 bg-light" id="fillMode">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <p class="fw-semibold mb-0">Doplň kľúčové slová do kódu:</p>
+      <button class="btn btn-outline-secondary btn-sm" id="toggleAnswers">Zobraziť riešenie</button>
+    </div>
+    <div class="bg-dark text-white p-3 rounded font-monospace">
+      <pre class="mb-0"><code>{{ exercise.code | safe }}</code></pre>
+    </div>
+    <button class="btn btn-success mt-3">Odoslať</button>
+  </div>
+
+  <!-- VOĽNÝ KÓD -->
+  <div class="border rounded-4 p-4 bg-light d-none" id="freeMode">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <p class="fw-semibold mb-0">Napíš vlastné riešenie:</p>
+      <button class="btn btn-outline-secondary btn-sm" id="toggleFreeCode">Zobraziť predpis</button>
+    </div>
+    <textarea id="freeCodeArea" class="form-control font-monospace bg-dark text-white" rows="12" placeholder="Tu napíš svoj kód..."></textarea>
   </div>
 
   {% if is_preview %}
@@ -40,5 +59,95 @@
       <a href="{{ url_for('edit_exercise', id=exercise.id) }}" class="btn btn-outline-secondary">Upraviť</a>
     </div>
   {% endif %}
-</main>
+<script>
+// 💡 TU vlož svoj celý JavaScript:
+const modeButtons = document.querySelectorAll('#modeButtons button');
+const fillMode = document.getElementById('fillMode');
+const freeMode = document.getElementById('freeMode');
+
+modeButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    modeButtons.forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    const selectedMode = button.dataset.mode;
+    fillMode.classList.toggle('d-none', selectedMode !== 'fill');
+    freeMode.classList.toggle('d-none', selectedMode !== 'free');
+  });
+});
+
+const toggleAnswersBtn = document.getElementById('toggleAnswers');
+let showingAnswers = false;
+toggleAnswersBtn.addEventListener('click', () => {
+  const inputs = document.querySelectorAll('.code-input');
+  showingAnswers = !showingAnswers;
+  inputs.forEach(input => {
+    if (showingAnswers) {
+      if (!input.value || input.value.trim() === '') {
+        input.value = input.dataset.answer;
+        input.style.color = '#ccc';
+      } else {
+        input.dataset.userAnswer = input.value;
+        input.setAttribute('data-userAnswer', input.value);
+        if (input.value !== input.dataset.answer) {
+          input.style.color = '#ccc';
+          input.value = input.dataset.answer;
+        }
+      }
+    } else {
+      const userVal = input.dataset.userAnswer || '';
+      input.value = userVal;
+      input.style.color = '';
+    }
+  });
+  toggleAnswersBtn.textContent = showingAnswers ? 'Skryť riešenie' : 'Zobraziť riešenie';
+});
+
+const toggleFreeCodeBtn = document.getElementById('toggleFreeCode');
+const freeCodeArea = document.getElementById('freeCodeArea');
+let showingPreset = false;
+const userCode = { content: "" };
+const freeTemplate = `class Person:
+  def __init__(self, name, age):
+    self.name = name
+    self.age = age
+
+  def greet(self):
+    print("Ahoj, volám sa", self.name)
+
+  def birthday(self):
+    self.age += 1
+
+class Student(Person):
+  def __init__(self, name, age, school):
+    super().__init__(name, age)
+    self.school = school`;
+
+toggleFreeCodeBtn.addEventListener('click', () => {
+  if (!showingPreset) {
+    userCode.content = freeCodeArea.value;
+    freeCodeArea.value = freeTemplate;
+    toggleFreeCodeBtn.textContent = "Skryť predpis";
+  } else {
+    freeCodeArea.value = userCode.content;
+    toggleFreeCodeBtn.textContent = "Zobraziť predpis";
+  }
+  showingPreset = !showingPreset;
+});
+
+const checkButton = document.querySelector('#fillMode .btn-success');
+checkButton.addEventListener('click', () => {
+  const inputs = document.querySelectorAll('.code-input');
+  inputs.forEach(input => {
+    const userInput = input.value.trim();
+    const correctAnswer = input.dataset.answer;
+    input.classList.remove('is-valid', 'is-invalid');
+    if (userInput.toLowerCase() === correctAnswer.toLowerCase()) {
+      input.classList.add('is-valid');
+    } else {
+      input.classList.add('is-invalid');
+    }
+  });
+});
+</script>
+
 {% endblock %}

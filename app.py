@@ -159,7 +159,19 @@ def nove_cvicenie():
 def exercise_detail(id):
     exercise = Exercise.query.get_or_404(id)
     author = User.query.get(exercise.author_id)
-    return render_template('cvicenie.html', exercise=exercise, author=author)
+    category_icons = {
+        "Python": "fab fa-python",
+        "JavaScript": "fab fa-js",
+        "HTML": "fab fa-html5",
+        "CSS": "fab fa-css3-alt",
+        "SQL": "fas fa-database"
+    }
+    return render_template(
+        'cvicenie.html',
+        exercise=exercise,
+        author=author,
+        category_icon=category_icons.get(exercise.category, "fas fa-code")
+    )
 
 @app.route('/moje-cvicenia')
 @login_required
