@@ -226,6 +226,17 @@ def edit_exercise(id):
 
     return render_template('nove.html', exercise=exercise)
 
+@app.route('/cvicenie/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_exercise(id):
+    exercise = Exercise.query.get_or_404(id)
+    if exercise.author_id != current_user.id:
+        abort(403)
+    db.session.delete(exercise)
+    db.session.commit()
+    flash('Cvičenie bolo vymazané.')
+    return redirect(url_for('moje_cvicenia'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
