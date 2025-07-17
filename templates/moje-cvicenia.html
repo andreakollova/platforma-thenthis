@@ -55,8 +55,8 @@
                 </div>
                 <div class="settings-dropdown">
                   <a href="{{ url_for('edit_exercise', id=exercise.id) }}" class="dropdown-item">Upraviť</a>
-                  <form method="POST" action="{{ url_for('delete_exercise', id=exercise.id) }}" onsubmit="return confirm('Naozaj chceš vymazať toto cvičenie?')">
-                    <button type="submit" class="dropdown-item text-danger">Vymazať</button>
+                  <form method="POST" action="{{ url_for('delete_exercise', id=exercise.id) }}" id="form-{{ exercise.id }}" class="delete-form">
+                    <button type="button" class="dropdown-item text-danger open-delete-modal" data-form-id="form-{{ exercise.id }}">Vymazať</button>
                   </form>
                 </div>
               </div>
@@ -73,6 +73,25 @@
     {% endfor %}
 
   </div>
+
+ <!-- Modal pre potvrdenie vymazania -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4 border-0 rounded-4 shadow-sm" style="max-width: 380px; margin: auto;">
+      <div class="text-center">
+        <div class="mb-3">
+          <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2.4rem;"></i>
+        </div>
+        <h5 class="mb-3">Vymazať cvičenie?</h5>
+        <p class="text-muted mb-4 small">Túto akciu nie je možné vrátiť späť. Naozaj chceš pokračovať?</p>
+        <div class="d-flex justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Zrušiť</button>
+          <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Vymazať</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </main>
 
 <script>
@@ -166,6 +185,27 @@ categorySelect.addEventListener("change", function () {
     opt.textContent = sub;
     subcategorySelect.appendChild(opt);
   });
+});
+
+let targetForm = null;
+
+document.querySelectorAll('.open-delete-modal').forEach(button => {
+  button.addEventListener('click', function () {
+    const formId = this.getAttribute('data-form-id');
+    targetForm = document.getElementById(formId);
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+  });
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+  if (targetForm) targetForm.submit();
+});
+document.addEventListener('click', function (e) {
+  const isSettings = e.target.closest('.settings-icon') || e.target.closest('.settings-dropdown');
+  if (!isSettings) {
+    document.querySelectorAll('.settings-dropdown').forEach(d => d.style.display = 'none');
+  }
 });
 </script>
 {% endblock %}

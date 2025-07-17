@@ -246,3 +246,15 @@
   .settings-dropdown .text-danger:hover {
     background-color: #ffebee;
   }
+
+  .modal-content {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .modal-content .btn {
+    border-radius: 6px;
+  }
+
+  .modal-backdrop.show {
+    opacity: 0.15;
+  }
