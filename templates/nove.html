@@ -160,7 +160,7 @@
       {{'{{'}}class{{'}}'}} Person:
         {{'{{'}}def{{'}}'}} __init__({{'{{'}}self{{'}}'}}, name):
           {{'{{'}}self{{'}}'}}.name = name"
-      >{{ exercise.code|safe if exercise }}</textarea>
+      >{{ exercise.code_raw if exercise }}</textarea>
       <small class="text-muted">
         Pre dopĺňačku označ slová, ktoré sa majú dopĺňať, ako napr.
         <code>{{ '{{' }}class{{ '}}' }}</code>,

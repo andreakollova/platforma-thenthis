@@ -5,7 +5,13 @@
 <main class="container py-3">
 
   {% if is_preview %}
-    <div class="alert alert-info">Toto je náhľad tvojho cvičenia. Nezabudni ho publikovať.</div>
+    <div class="alert alert-info d-flex justify-content-between align-items-center">
+      <span>Toto je náhľad tvojho cvičenia. Nezabudni ho publikovať.</span>
+      <span class="d-flex gap-2">
+        <a href="{{ url_for('publish_exercise', id=exercise.id) }}" class="btn btn-success btn-sm">Publikovať</a>
+        <a href="{{ url_for('edit_exercise', id=exercise.id) }}" class="btn btn-outline-secondary btn-sm">Upraviť</a>
+      </span>
+    </div>
   {% endif %}
 
   <div class="mb-4">
@@ -101,12 +107,6 @@
       <!-- Odoslať -->
     </div>
 
-  {% if is_preview %}
-    <div class="d-flex justify-content-between mt-4">
-      <a href="{{ url_for('publish_exercise', id=exercise.id) }}" class="btn btn-success">Publikovať</a>
-      <a href="{{ url_for('edit_exercise', id=exercise.id) }}" class="btn btn-outline-secondary">Upraviť</a>
-    </div>
-  {% endif %}
 <script>
 const modeButtons = document.querySelectorAll('#modeButtons button');
 const fillMode = document.getElementById('fillMode');
@@ -121,7 +121,7 @@ const resetButton = document.getElementById('resetButton');
 const checkButton = document.querySelector('#fillMode .btn-success');
 
 const userCode = { content: "" };
-const freeTemplate = {{ solution_clean | tojson | safe }};
+const freeTemplate = {{ solution_clean | default('""') | tojson | safe }};
 
 let currentMode = "fill";
 let showingPreset = false;

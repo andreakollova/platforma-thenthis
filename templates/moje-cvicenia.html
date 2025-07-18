@@ -57,7 +57,7 @@
                     data-category="{{ exercise.category }}"
                     data-subcategory="{{ exercise.subcategory }}"
                     data-description="{{ exercise.full_description }}"
-                    data-answers="{{ exercise.answers|join(', ') }}">
+                    data-answers="{{ exercise.answers | join(', ') }}"">
               Prehľad
             </button>
               <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>

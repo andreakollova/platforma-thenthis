@@ -7,6 +7,14 @@ from werkzeug.utils import secure_filename
 from markupsafe import Markup
 import re
 
+category_icons = {
+    "Python": "fab fa-python",
+    "JavaScript": "fab fa-js",
+    "HTML": "fab fa-html5",
+    "CSS": "fab fa-css3-alt",
+    "SQL": "fas fa-database"
+}
+
 # Flask setup
 app = Flask(__name__)
 app.secret_key = 'tajny-kluc'
@@ -38,10 +46,16 @@ class Exercise(db.Model):
     subcategory = db.Column(db.String(100), nullable=False)
     full_description = db.Column(db.Text, nullable=False)
     code = db.Column(db.Text, nullable=True)
-    code_raw = db.Column(db.Text, nullable=True)  # <--- sem uložíme pôvodný text
+    code_raw = db.Column(db.Text, nullable=True)
     cover_image = db.Column(db.String(150), nullable=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     published = db.Column(db.Boolean, default=False)
+
+    @property
+    def answers(self):
+        if self.code_raw:
+            return list(dict.fromkeys(re.findall(r"\{\{\s*(.*?)\s*\}\}", self.code_raw)))
+        return []
 
 
 @login_manager.user_loader
@@ -152,7 +166,9 @@ def nove_cvicenie():
             'cvicenie.html',
             exercise=new_exercise,
             author=current_user,
-            is_preview=True  # 🔑 kľúč
+            is_preview=True,
+            solution_clean=re.sub(r"\{\{\s*(.*?)\s*\}\}", r"\1", code_raw or ""),
+            category_icon=category_icons.get(category, "fas fa-code")
         )
 
     return render_template('nove.html')
@@ -167,13 +183,6 @@ def exercise_detail(id):
     # 🔧 Vygeneruj výsledný kód bez {{ ... }}
     final_code = re.sub(r"\{\{\s*(.*?)\s*\}\}", r"\1", exercise.code_raw or "")
 
-    category_icons = {
-        "Python": "fab fa-python",
-        "JavaScript": "fab fa-js",
-        "HTML": "fab fa-html5",
-        "CSS": "fab fa-css3-alt",
-        "SQL": "fas fa-database"
-    }
     return render_template(
         'cvicenie.html',
         exercise=exercise,
@@ -187,11 +196,6 @@ def exercise_detail(id):
 @login_required
 def moje_cvicenia():
     exercises = Exercise.query.filter_by(author_id=current_user.id).order_by(Exercise.id.desc()).all()
-
-    for ex in exercises:
-        code_text = str(ex.code_raw) if ex.code_raw else ""
-        ex.answers = list(dict.fromkeys(re.findall(r"\{\{\s*(.*?)\s*\}\}", code_text)))
-
     return render_template('moje-cvicenia.html', exercises=exercises)
 
 @app.route('/profil')
