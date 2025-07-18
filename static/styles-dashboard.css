@@ -282,3 +282,38 @@
   color: #495057 !important;
   border-color: #ced4da !important;
 }
+
+.sidebar {
+  padding: 12px 0;
+  width: 60px;
+  background-color: #fff;
+  border-right: 1px solid #eee;
+  overflow-y: hidden; /* zabráni scrollovaniu */
+}
+
+.sidebar a {
+  padding: 6px;
+  text-align: center;
+  font-size: 1rem;
+  color: #444;
+  border-radius: 6px;
+  transition: background 0.2s ease-in-out;
+}
+
+.sidebar a i {
+  font-size: 1.1rem;
+}
+
+.sidebar a.active {
+  background-color: #0d6efd;
+  color: #fff !important;
+}
+
+.sidebar a:hover {
+  background-color: #f0f0f0;
+  color: #0d6efd;
+}
+
+.sidebar .mt-auto {
+  margin-top: auto !important;
+}

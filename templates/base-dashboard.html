@@ -17,17 +17,25 @@
 <body>
 
 <div class="layout">
-  <!-- Sidebar -->
-  <div class="sidebar d-flex flex-column">
-    <a href="/dashboard" class="active" title="Dashboard"><i class="fas fa-house"></i></a>
-    <a href="/moje-cvicenia" title="Moje cvičenia"><i class="fas fa-code"></i></a>
-    <a href="/nove" title="Nové cvičenie"><i class="fas fa-plus"></i></a>
-    <a href="/cvicenie/random" title="Náhodné"><i class="fas fa-font-awesome"></i></a>
+  <div class="sidebar d-flex flex-column align-items-center justify-content-between" style="height: 100vh;">
+    <div class="d-flex flex-column align-items-center" style="gap: 6px;">
+      <a href="{{ url_for('dashboard') }}" class="{% if request.path == '/dashboard' %}active{% endif %}" title="Dashboard">
+        <i class="fas fa-house"></i>
+      </a>
+      <a href="{{ url_for('moje_cvicenia') }}" class="{% if '/moje-cvicenia' in request.path %}active{% endif %}" title="Moje cvičenia">
+        <i class="fas fa-code"></i>
+      </a>
+      <a href="{{ url_for('nove_cvicenie') }}" class="{% if '/cvicenie/nove' in request.path %}active{% endif %}" title="Nové cvičenie">
+        <i class="fas fa-plus"></i>
+      </a>
+      <a href="/cvicenie/random" class="{% if '/cvicenie/random' in request.path %}active{% endif %}" title="Náhodné">
+        <i class="fas fa-font-awesome"></i>
+      </a>
+    </div>
 
-    <!-- Bottom section -->
-    <div class="mt-auto pt-3 d-flex flex-column align-items-center">
-      <a href="/profil" title="Profil">
-        <i class="fa-regular fa-user" style="text-shadow: 0 0 1px currentColor;"></i>
+    <div class="d-flex flex-column align-items-center mb-2" style="gap: 6px;">
+      <a href="/profil" class="{% if '/profil' in request.path %}active{% endif %}" title="Profil">
+        <i class="fa-regular fa-user"></i>
       </a>
       <a href="/logout" title="Odhlásiť sa">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -35,14 +43,17 @@
     </div>
   </div>
 
+
   <!-- Main -->
   <div class="main">
     <!-- Topbar -->
     <div class="topbar">
       <div class="user">
         {% if current_user.is_authenticated %}
+          <a href="{{ url_for('dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
           <img src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.photo) }}" alt="{{ current_user.name }}" width="36" height="36" class="rounded-circle">
           <span>Ahoj, <strong>{{ current_user.name }}</strong>!</span>
+        </a>
         {% else %}
           <a href="{{ url_for('login') }}">Prihlásiť sa</a>
         {% endif %}
