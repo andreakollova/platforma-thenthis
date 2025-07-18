@@ -19,11 +19,11 @@
       <label class="form-label">Kategória</label>
       <select name="category" class="form-select" id="filter-category">
         <option value="">-- Všetky kategórie --</option>
-        <option value="Python">Python</option>
-        <option value="JavaScript">JavaScript</option>
-        <option value="CSS">CSS</option>
-        <option value="HTML">HTML</option>
-        <option value="SQL">SQL</option>
+        <option value="Python" {% if selected_category == 'Python' %}selected{% endif %}>Python</option>
+        <option value="JavaScript" {% if selected_category == 'JavaScript' %}selected{% endif %}>JavaScript</option>
+        <option value="CSS" {% if selected_category == 'CSS' %}selected{% endif %}>CSS</option>
+        <option value="HTML" {% if selected_category == 'HTML' %}selected{% endif %}>HTML</option>
+        <option value="SQL" {% if selected_category == 'SQL' %}selected{% endif %}>SQL</option>
       </select>
     </div>
     <div class="col-md-4">
@@ -286,5 +286,23 @@ document.addEventListener('click', function (e) {
     document.querySelectorAll('.settings-dropdown').forEach(d => d.style.display = 'none');
   }
 });
+
+const preselectedCategory = "{{ selected_category or '' }}";
+  const preselectedSubcategory = "{{ selected_subcategory or '' }}";
+
+  if (preselectedCategory) {
+    categorySelect.value = preselectedCategory;
+    const options = subcategories[preselectedCategory] || [];
+    subcategorySelect.innerHTML = '<option value="">-- Všetky podkategórie --</option>';
+    options.forEach(sub => {
+      const opt = document.createElement("option");
+      opt.value = sub;
+      opt.textContent = sub;
+      if (sub === preselectedSubcategory) {
+        opt.selected = true;
+      }
+      subcategorySelect.appendChild(opt);
+    });
+  }
 </script>
 {% endblock %}

@@ -195,8 +195,23 @@ def exercise_detail(id):
 @app.route('/moje-cvicenia')
 @login_required
 def moje_cvicenia():
-    exercises = Exercise.query.filter_by(author_id=current_user.id).order_by(Exercise.id.desc()).all()
-    return render_template('moje-cvicenia.html', exercises=exercises)
+    category = request.args.get('category')
+    subcategory = request.args.get('subcategory')
+
+    query = Exercise.query.filter_by(author_id=current_user.id)
+
+    if category:
+        query = query.filter_by(category=category)
+    if subcategory:
+        query = query.filter_by(subcategory=subcategory)
+
+    exercises = query.order_by(Exercise.id.desc()).all()
+    return render_template(
+        'moje-cvicenia.html',
+        exercises=exercises,
+        selected_category=category,
+        selected_subcategory=subcategory
+    )
 
 @app.route('/profil')
 def profil():
