@@ -75,7 +75,14 @@
               </div>
             </div>
             <small class="text-body-secondary">
-              {% if exercise.category == 'Python' %}<i class="fab fa-python me-1"></i>{% endif %}
+              {% set icons = {
+                'Python': 'fab fa-python',
+                'JavaScript': 'fab fa-js',
+                'HTML': 'fab fa-html5',
+                'CSS': 'fab fa-css3-alt',
+                'SQL': 'fas fa-database'
+              } %}
+              <i class="{{ icons.get(exercise.category, 'fas fa-code') }} me-1"></i>
               {{ exercise.category }}
             </small>
           </div>
