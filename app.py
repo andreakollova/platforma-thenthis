@@ -31,13 +31,14 @@ class User(db.Model, UserMixin):
     photo = db.Column(db.String(256), default="default.jpg")
 
 class Exercise(db.Model):
-    __tablename__ = 'exercises'  # <- DÔLEŽITÉ
+    __tablename__ = 'exercises'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     category = db.Column(db.String(50), nullable=False)
     subcategory = db.Column(db.String(100), nullable=False)
     full_description = db.Column(db.Text, nullable=False)
     code = db.Column(db.Text, nullable=True)
+    code_raw = db.Column(db.Text, nullable=True)  # <--- sem uložíme pôvodný text
     cover_image = db.Column(db.String(150), nullable=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     published = db.Column(db.Boolean, default=False)
@@ -139,6 +140,7 @@ def nove_cvicenie():
             subcategory=subcategory,
             full_description=full_description,
             code=Markup(code_with_inputs),
+            code_raw=code_raw,  # <--- pridaj toto
             cover_image=filename,
             author_id=current_user.id
         )
@@ -177,6 +179,11 @@ def exercise_detail(id):
 @login_required
 def moje_cvicenia():
     exercises = Exercise.query.filter_by(author_id=current_user.id).order_by(Exercise.id.desc()).all()
+
+    for ex in exercises:
+        code_text = str(ex.code_raw) if ex.code_raw else ""
+        ex.answers = list(dict.fromkeys(re.findall(r"\{\{\s*(.*?)\s*\}\}", code_text)))
+
     return render_template('moje-cvicenia.html', exercises=exercises)
 
 @app.route('/profil')

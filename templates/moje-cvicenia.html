@@ -50,7 +50,16 @@
           <p class="card-text fw-bold mb-2">{{ exercise.title }}</p>
           <div class="d-flex justify-content-between align-items-center">
             <div class="btn-group">
-              <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Prehľad</a>
+            <button type="button" class="btn btn-sm btn-outline-secondary open-preview"
+                    data-bs-toggle="modal"
+                    data-bs-target="#previewModal"
+                    data-title="{{ exercise.title }}"
+                    data-category="{{ exercise.category }}"
+                    data-subcategory="{{ exercise.subcategory }}"
+                    data-description="{{ exercise.full_description }}"
+                    data-answers="{{ exercise.answers|join(', ') }}">
+              Prehľad
+            </button>
               <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
 
               <div class="position-relative ms-2">
@@ -95,9 +104,69 @@
     </div>
   </div>
 </div>
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-sm p-4">
+      <h5 id="modal-title" class="mb-2"></h5>
+      <p class="small text-muted mb-1" id="modal-category"></p>
+      <p id="modal-description" class="mb-3"></p>
+      <div id="modal-code" class="bg-light rounded px-3 py-2 font-monospace small d-none"></div>
+      <div class="text-end">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Zavrieť</button>
+      </div>
+    </div>
+  </div>
+</div>
 </main>
 
 <script>
+document.querySelectorAll('.open-preview').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const category = btn.dataset.category;
+    const subcategory = btn.dataset.subcategory;
+
+    const categoryIcons = {
+      "Python": "fab fa-python",
+      "JavaScript": "fab fa-js",
+      "HTML": "fab fa-html5",
+      "CSS": "fab fa-css3-alt",
+      "SQL": "fas fa-database"
+    };
+
+    const iconClass = categoryIcons[category] || "fas fa-code";
+
+    document.getElementById('modal-title').textContent = btn.dataset.title;
+    document.getElementById('modal-category').innerHTML =
+      `<i class="${iconClass} me-1"></i> ${category} / ${subcategory}`;
+    document.getElementById('modal-description').textContent = btn.dataset.description;
+
+const answers = btn.dataset.answers;
+const modalCode = document.getElementById('modal-code');
+
+if (answers && answers.trim()) {
+  const highlightWords = ["class", "def", "self", "print", "Zviera", "zvuk"];
+  const uniqueAnswers = answers
+    .split(', ')
+    .filter((v, i, a) => a.indexOf(v) === i); // odstráni duplicitné slová
+
+  const formatted = uniqueAnswers
+    .map(word => {
+      if (highlightWords.includes(word)) {
+        return `<span class="text-primary">${word}</span>`;
+      }
+      return word;
+    })
+    .join(', ');
+
+  modalCode.innerHTML = `Kód na precvičenie: ${formatted}`;
+  modalCode.classList.remove('d-none');
+} else {
+  modalCode.classList.add('d-none');
+}
+  });
+});
+
+
 document.addEventListener('click', function (e) {
   document.querySelectorAll('.settings-dropdown').forEach(d => d.style.display = 'none');
   if (e.target.closest('.settings-icon')) {

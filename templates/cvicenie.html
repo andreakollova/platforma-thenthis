@@ -21,14 +21,27 @@
       <img src="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}" alt="{{ author.name }}" width="22" height="22" class="rounded-circle me-1">
       <strong class="text-muted">{{ author.name }}</strong>
     </div>
-    <p class="mb-3">{{ exercise.full_description }}</p>
+<p class="mb-2">
+  {{ exercise.full_description }} <a href="#" id="toggleKeywords" class="ms-2 link-primary small">Zobraziť kľúčové hodnoty</a>
+    </p>
+    <div id="keywordsBox" class="mt-2 d-none small">
+      <span class="badge bg-pink text-white me-1">self</span>
+      <span class="badge bg-pink text-white me-1">super</span>
+      <span class="badge bg-pink text-white me-1">class</span>
+      <span class="badge bg-pink text-white me-1">print</span>
+      <span class="badge bg-pink text-white me-1">Zviera</span>
+      <span class="badge bg-pink text-white me-1">zvuk</span>
+    </div>
   </div>
 
   <div class="mb-4">
-    <label class="form-label fw-semibold">Zvoľ si typ cvičenia:</label>
-    <div class="btn-group" role="group" id="modeButtons">
-      <button type="button" class="btn btn-outline-primary active" data-mode="fill">Dopĺňačka</button>
-      <button type="button" class="btn btn-outline-primary" data-mode="free">Voľný kód</button>
+    <div id="modeButtons" class="rounded-pill bg-light d-inline-flex shadow-sm p-1" style="gap: 2px;">
+      <button type="button" class="btn btn-sm rounded-pill px-3 py-1 active" data-mode="fill">
+        <i class="fa-regular fa-pen-to-square me-1"></i>Dopĺňačka
+      </button>
+      <button type="button" class="btn btn-sm rounded-pill px-3 py-1" data-mode="free">
+        <i class="fa-solid fa-terminal me-1"></i>Voľný kód
+      </button>
     </div>
   </div>
 
@@ -148,6 +161,30 @@ checkButton.addEventListener('click', () => {
     }
   });
 });
+
+const toggleKeywordsLink = document.getElementById('toggleKeywords');
+const keywordsBox = document.getElementById('keywordsBox');
+
+toggleKeywordsLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  const inputs = document.querySelectorAll('.code-input');
+  const words = [...new Set(Array.from(inputs).map(input => input.dataset.answer.trim()))];
+
+  const highlightWords = ["class", "def", "self", "print", "Zviera", "zvuk"];
+  const coloredWords = words.map(word => {
+    if (highlightWords.includes(word)) {
+      return `<span class="text-pink me-1">${word}</span>`;
+    }
+    return `<span class="text-muted me-1">${word}</span>`;
+  });
+
+  keywordsBox.innerHTML = `V tomto cvičení je potrebné doplniť kód: ${coloredWords.join(' ')}`;
+  keywordsBox.classList.toggle('d-none');
+  toggleKeywordsLink.textContent = keywordsBox.classList.contains('d-none')
+    ? 'Zobraziť kľúčové hodnoty'
+    : 'Skryť kľúčové hodnoty';
+});
+
 </script>
 
 {% endblock %}

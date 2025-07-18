@@ -176,3 +176,21 @@ h1 {
     transform: translate(-50%, 0);
   }
 }
+
+.text-pink {
+  color: #d63384;  /* ružová / magenta */
+  font-weight: 500;
+}
+
+#modeButtons .btn {
+  font-weight: 500;
+  border: none;
+  color: #0d6efd;
+  background-color: white;
+  transition: all 0.2s ease-in-out;
+}
+
+#modeButtons .btn.active {
+  background-color: #0d6efd;
+  color: white;
+}
