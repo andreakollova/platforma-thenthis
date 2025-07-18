@@ -65,7 +65,15 @@ def load_user(user_id):
 # ROUTES
 @app.route('/')
 def home():
-    exercises = Exercise.query.filter_by(published=True).order_by(Exercise.id.desc()).limit(6).all()
+    # načítame cvičenia spolu s autorom
+    exercises = (
+        db.session.query(Exercise, User)
+        .join(User, Exercise.author_id == User.id)
+        .filter(Exercise.published == True)
+        .order_by(Exercise.id.desc())
+        .limit(9)
+        .all()
+    )
     return render_template('index.html', exercises=exercises)
 
 # REGISTRATION ROUTE

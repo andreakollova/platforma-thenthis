@@ -55,7 +55,7 @@
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
           <img src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.photo) }}" alt="{{ current_user.name }}" width="36" height="36" class="rounded-circle">
-          <span>Ahoj, <strong>{{ current_user.name }}</strong>!</span>
+          <span>Ahoj, <strong>{{ current_user.name.split(' ')[0] }}</strong>!</span>
         </a>
         {% else %}
           <a href="{{ url_for('login') }}">Prihlásiť sa</a>

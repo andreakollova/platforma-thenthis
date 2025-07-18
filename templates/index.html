@@ -33,136 +33,49 @@
 
     <!-- Cards -->
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+      {% for exercise, author in exercises %}
+      <div class="col">
+        <div class="card shadow-sm position-relative">
+          <a href="{{ url_for('exercise_detail', id=exercise.id) }}">
+            <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}"
+                 class="card-img-top card-image-blur"
+                 style="height: 225px; object-fit: cover;" alt="cover">
+          </a>
 
+          <!-- autor v rohu -->
+          <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
+            <img src="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}"
+                 alt="{{ author.name }}"
+                 width="32" height="32" class="rounded-circle me-2">
+            <span class="small text-dark fw-medium">{{ author.name }}</span>
+          </div>
 
-        <!-- Card 1: Andrea -->
-        <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" alt="Card image" style="height: 225px; object-fit: cover;">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Andrea Kollova</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Spracovanie výnimiek try except</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
+          <div class="card-body">
+            <p class="card-text fw-bold mb-2">{{ exercise.title }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Prehľad</a>
+                <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
               </div>
+              <small class="text-body-secondary">
+                {% set icons = {
+                  'Python': 'fab fa-python',
+                  'JavaScript': 'fab fa-js',
+                  'HTML': 'fab fa-html5',
+                  'CSS': 'fab fa-css3-alt',
+                  'SQL': 'fas fa-database'
+                } %}
+                <i class="{{ icons.get(exercise.category, 'fas fa-code') }} me-1"></i>
+                {{ exercise.category }}
+              </small>
             </div>
           </div>
         </div>
-
-        <!-- Card 2: Andrea -->
-        <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" alt="Card image" style="height: 225px; object-fit: cover;">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Andrea Kollova</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Definícia a použitie funkcií</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 3: Andrea -->
-        <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" alt="Card image" style="height: 225px; object-fit: cover;">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Andrea Kollova</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Základy OOP: triedy a objekty</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <a href="/cvicenia" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 4: Andrea -->
-        <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" alt="Card image" style="height: 225px; object-fit: cover;">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Andrea Kollova</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Dedičnosť a polymorfizmus</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 5: Peter -->
-        <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" alt="Card image" style="height: 225px; object-fit: cover;">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="https://github.com/mdo.png" alt="Peter Novák" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Peter Novák</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Práca s JSON a parsovanie</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 6: Peter -->
-        <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" alt="Card image" style="height: 225px; object-fit: cover;">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="https://github.com/mdo.png" alt="Peter Novák" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Peter Novák</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Úvod do multithreadingu</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div> <!-- /.row -->
-    </div> <!-- /.container -->
+      </div>
+      {% else %}
+        <p>Žiadne cvičenia zatiaľ neboli pridané.</p>
+      {% endfor %}
+    </div>
   </div> <!-- /.album -->
 </main>
 {% endblock %}
