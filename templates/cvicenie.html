@@ -3,6 +3,13 @@
 
 {% block content %}
 <main class="container py-3">
+{% set icon_files = {
+  'Python': 'python.svg',
+  'JavaScript': 'js.svg',
+  'HTML': 'html.svg',
+  'CSS': 'css.svg',
+  'SQL': 'mysql.svg'
+} %}
 
   {% if is_preview %}
     <div class="alert alert-info d-flex justify-content-between align-items-center">
@@ -18,8 +25,10 @@
     <h1 class="fw-bold fs-3 mb-2">{{ exercise.title }}</h1>
 
     <div class="text-muted fs-7 mb-1">
-      <i class="{{ category_icon }} me-1 text-primary"></i>
-      <strong>Kategória:</strong> {{ exercise.category }} / {{ exercise.subcategory }}
+      <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+         alt="{{ exercise.category }} ikonka"
+         style="height: 18px; width: auto;" class="me-1">
+    <strong>Kategória:</strong> {{ exercise.category }} / {{ exercise.subcategory }}
     </div>
 
     <div class="text-muted fs-6 d-flex align-items-center mb-1">

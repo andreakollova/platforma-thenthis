@@ -51,23 +51,48 @@
           </div>
 
           <div class="card-body">
-            <p class="card-text fw-bold mb-2">{{ exercise.title }}</p>
+            <p class="card-text fw-bold mb-1">{{ exercise.title }}</p>
+            <p class="text-muted small mt-1 mb-2">
+              {% set icons = {
+                'Python': 'fab fa-python',
+                'JavaScript': 'fab fa-js',
+                'HTML': 'fab fa-html5',
+                'CSS': 'fab fa-css3-alt',
+                'SQL': 'fas fa-database'
+              } %}
+              <i class="{{ icons.get(exercise.category, 'fas fa-code') }} me-1 text-secondary"></i>
+              {{ exercise.subcategory }}
+            </p>
+
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
-                <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Prehľad</a>
+                <button type="button" class="btn btn-sm btn-outline-secondary open-preview"
+                        data-bs-toggle="modal"
+                        data-bs-target="#previewModal"
+                        data-title="{{ exercise.title }}"
+                        data-category="{{ exercise.category }}"
+                        data-subcategory="{{ exercise.subcategory }}"
+                        data-description="{{ exercise.full_description }}"
+                        data-answers="{{ exercise.answers | join(', ') }}"
+                        data-author-name="{{ author.name }}"
+                        data-author-photo="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}">
+                  Prehľad
+                </button>
                 <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
               </div>
-              <small class="text-body-secondary">
-                {% set icons = {
-                  'Python': 'fab fa-python',
-                  'JavaScript': 'fab fa-js',
-                  'HTML': 'fab fa-html5',
-                  'CSS': 'fab fa-css3-alt',
-                  'SQL': 'fas fa-database'
-                } %}
-                <i class="{{ icons.get(exercise.category, 'fas fa-code') }} me-1"></i>
-                {{ exercise.category }}
-              </small>
+              {% set icon_files = {
+                'Python': 'python.svg',
+                'JavaScript': 'js.svg',
+                'HTML': 'html.svg',
+                'CSS': 'css.svg',
+                'SQL': 'mysql.svg'
+              } %}
+
+              <div class="mt-2">
+                <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                     alt="{{ exercise.category }} logo"
+                     style="height: 30px; width: auto;">
+              </div>
             </div>
           </div>
         </div>
@@ -77,5 +102,22 @@
       {% endfor %}
     </div>
   </div> <!-- /.album -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-sm p-4">
+      <div class="d-flex align-items-center gap-2 mb-3" id="modal-author" style="display: none;">
+        <img id="modal-author-photo" src="" alt="author" width="32" height="32" class="rounded-circle">
+        <span class="small text-dark fw-medium" id="modal-author-name"></span>
+      </div>
+      <h5 id="modal-title" class="mb-2"></h5>
+      <p class="small text-muted mb-1" id="modal-category"></p>
+      <p id="modal-description" class="mb-3"></p>
+      <div id="modal-code" class="bg-light rounded px-3 py-2 font-monospace small d-none"></div>
+      <div class="text-end">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Zavrieť</button>
+      </div>
+    </div>
+  </div>
+</div>
 </main>
 {% endblock %}
