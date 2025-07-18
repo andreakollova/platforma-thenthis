@@ -194,3 +194,9 @@ h1 {
   background-color: #0d6efd;
   color: white;
 }
+
+#toggleActionBtn:hover {
+  background-color: #f8f9fa !important;
+  color: #495057 !important;
+  border-color: #ced4da !important;
+}

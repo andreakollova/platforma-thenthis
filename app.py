@@ -157,10 +157,16 @@ def nove_cvicenie():
 
     return render_template('nove.html')
 
+import re
+
 @app.route('/cvicenie/<int:id>')
 def exercise_detail(id):
     exercise = Exercise.query.get_or_404(id)
     author = User.query.get(exercise.author_id)
+
+    # 🔧 Vygeneruj výsledný kód bez {{ ... }}
+    final_code = re.sub(r"\{\{\s*(.*?)\s*\}\}", r"\1", exercise.code_raw or "")
+
     category_icons = {
         "Python": "fab fa-python",
         "JavaScript": "fab fa-js",
@@ -172,8 +178,10 @@ def exercise_detail(id):
         'cvicenie.html',
         exercise=exercise,
         author=author,
+        solution_clean=final_code,  # <--- toto pošleme
         category_icon=category_icons.get(exercise.category, "fas fa-code")
     )
+
 
 @app.route('/moje-cvicenia')
 @login_required
