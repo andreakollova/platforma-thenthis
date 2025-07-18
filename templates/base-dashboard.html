@@ -19,8 +19,11 @@
 <div class="layout">
   <div class="sidebar d-flex flex-column align-items-center justify-content-between" style="height: 100vh;">
     <div class="d-flex flex-column align-items-center" style="gap: 6px;">
-      <a href="{{ url_for('dashboard') }}" class="{% if request.path == '/dashboard' %}active{% endif %}" title="Dashboard">
+      <a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}" title="Home">
         <i class="fas fa-house"></i>
+      </a>
+      <a href="{{ url_for('dashboard') }}" class="{% if '/dashboard' in request.path %}active{% endif %}" title="Dashboard">
+        <i class="fa-solid fa-list-ul"></i>
       </a>
       <a href="{{ url_for('moje_cvicenia') }}" class="{% if '/moje-cvicenia' in request.path %}active{% endif %}" title="Moje cvičenia">
         <i class="fas fa-code"></i>
@@ -35,7 +38,7 @@
 
     <div class="d-flex flex-column align-items-center mb-2" style="gap: 6px;">
       <a href="/profil" class="{% if '/profil' in request.path %}active{% endif %}" title="Profil">
-        <i class="fa-regular fa-user"></i>
+        <i class="fa-regular fa-user icon-thicker"></i>
       </a>
       <a href="/logout" title="Odhlásiť sa">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
