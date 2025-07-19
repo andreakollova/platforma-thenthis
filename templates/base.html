@@ -54,10 +54,34 @@
           <img src="{{ url_for('static', filename='logo.png') }}" alt="Then This logo" style="width: 150px; margin-right: 50px;" class="logo-light">
         </a>
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-          <li><a href="/" class="nav-link px-2 link-secondary">Domov</a></li>
-          <li><a href="/objavujte" class="nav-link px-2 link-secondary">Objavujte</a></li>
-          <li><a href="#" class="nav-link px-2 link-body-emphasis">Projekty</a></li>
-          <li><a href="#" class="nav-link px-2 link-body-emphasis">O platforme</a></li>
+          <li>
+            <a href="/"
+               class="nav-link px-2 text-dark {% if request.path == '/' %}fw-semibold{% endif %}"
+               {% if request.path == '/' %}style="color: #6b7280;"{% endif %}>
+              Domov
+            </a>
+          </li>
+          <li>
+            <a href="/objavujte"
+               class="nav-link px-2 text-dark {% if request.path.startswith('/objavujte') %}fw-semibold{% endif %}"
+               {% if request.path.startswith('/objavujte') %}style="color: #6b7280;"{% endif %}>
+              Objavujte
+            </a>
+          </li>
+          <li>
+            <a href="/projekty"
+               class="nav-link px-2 text-dark {% if request.path.startswith('/projekty') %}fw-semibold{% endif %}"
+               {% if request.path.startswith('/projekty') %}style="color: #6b7280;"{% endif %}>
+              Projekty
+            </a>
+          </li>
+          <li>
+            <a href="/o-platforme"
+               class="nav-link px-2 text-dark {% if request.path.startswith('/o-platforme') %}fw-semibold{% endif %}"
+               {% if request.path.startswith('/o-platforme') %}style="color: #6b7280;"{% endif %}>
+              O platforme
+            </a>
+          </li>
         </ul>
         <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
           <input type="search" class="form-control" placeholder="Hľadať..." aria-label="Search">

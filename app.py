@@ -324,6 +324,17 @@ def delete_exercise(id):
     flash('Cvičenie bolo vymazané.')
     return redirect(url_for('moje_cvicenia'))
 
+@app.route('/projekty')
+def projekty():
+    return render_template('projekty.html')
+
+@app.route('/random')
+def random_page():
+    return render_template('random.html')
+
+@app.route('/o-platforme')
+def o_platforme():
+    return render_template('platforma.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
