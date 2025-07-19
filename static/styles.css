@@ -216,82 +216,93 @@ h1 {
   padding: 2rem;
 }
 
+/* Obsah textu */
 .floating-content {
   z-index: 2;
   position: relative;
   max-width: 700px;
 }
 
+/* Vzhľad ikon */
 .floating-icon {
   position: absolute;
   width: 40px;
   opacity: 0.85;
   z-index: 1;
+  pointer-events: none;
+  transition: transform 0.3s ease-in-out;
 }
 
-/* Individuálne animácie */
-.floating-icon.pos-top         { animation: sway1 7s ease-in-out infinite; }
-.floating-icon.pos-top-left    { animation: sway2 8s ease-in-out infinite; }
-.floating-icon.pos-top-right   { animation: sway3 9s ease-in-out infinite; }
-.floating-icon.pos-left        { animation: sway4 7.5s ease-in-out infinite; }
-.floating-icon.pos-right       { animation: sway5 8.5s ease-in-out infinite; }
-.floating-icon.pos-bottom      { animation: sway6 9.5s ease-in-out infinite; }
+/* IDLE animácie (každá iná) */
+.floating-icon.pos-top         { animation: sway1 9s ease-in-out infinite; }
+.floating-icon.pos-top-left    { animation: sway2 8.5s ease-in-out infinite; }
+.floating-icon.pos-top-right   { animation: sway3 10s ease-in-out infinite; }
+.floating-icon.pos-left        { animation: sway4 9.2s ease-in-out infinite; }
+.floating-icon.pos-right       { animation: sway5 8.7s ease-in-out infinite; }
+.floating-icon.pos-bottom      { animation: sway6 9.8s ease-in-out infinite; }
 
-/* Animácie */
+
+/* Kľúčové animácie: X + Y pohyb */
 @keyframes sway1 {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-5px); }
-  50%  { transform: translateY(5px); }
-  75%  { transform: translateY(-4px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-4px, -5px); }
+  50%  { transform: translate(4px, 5px); }
+  75%  { transform: translate(-3px, -4px); }
+  100% { transform: translate(0, 0); }
 }
 
 @keyframes sway2 {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-6px); }
-  50%  { transform: translateY(6px); }
-  75%  { transform: translateY(-3px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(5px, -6px); }
+  50%  { transform: translate(-5px, 6px); }
+  75%  { transform: translate(3px, -3px); }
+  100% { transform: translate(0, 0); }
 }
 
 @keyframes sway3 {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-4px); }
-  50%  { transform: translateY(4px); }
-  75%  { transform: translateY(-2px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-6px, 4px); }
+  50%  { transform: translate(6px, -4px); }
+  75%  { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
 }
 
 @keyframes sway4 {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-7px); }
-  50%  { transform: translateY(7px); }
-  75%  { transform: translateY(-5px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-7px, -5px); }
+  50%  { transform: translate(7px, 5px); }
+  75%  { transform: translate(-4px, -2px); }
+  100% { transform: translate(0, 0); }
 }
 
 @keyframes sway5 {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-6px); }
-  50%  { transform: translateY(6px); }
-  75%  { transform: translateY(-3px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(5px, -4px); }
+  50%  { transform: translate(-5px, 4px); }
+  75%  { transform: translate(3px, -3px); }
+  100% { transform: translate(0, 0); }
 }
 
 @keyframes sway6 {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-8px); }
-  50%  { transform: translateY(8px); }
-  75%  { transform: translateY(-4px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-6px, 6px); }
+  50%  { transform: translate(6px, -6px); }
+  75%  { transform: translate(-3px, 3px); }
+  100% { transform: translate(0, 0); }
 }
 
-/* Pozície ikon – ešte bližšie k textu */
+
+/* Pozície ikon (asymetricky, ale vyvážene) */
 .pos-top         { top: 9%; left: 50%; transform: translateX(-50%); }
 .pos-top-left    { top: 22%; left: 18%; }
-.pos-top-right   { top: 22%; right: 18%; }
-.pos-left        { top: 48%; left: 10%; }
-.pos-right       { top: 48%; right: 10%; }
-.pos-bottom      { bottom: 9%; left: 50%; transform: translateX(-50%); }
+.pos-top-right   { top: 22%; right: 16%; }
+.pos-left        { top: 50%; left: 10%; }
+.pos-right       { top: 52%; right: 9%; }
+.pos-bottom      { bottom: 10%; left: 50%; transform: translateX(-50%); }
 
-
+/* Skryť ikony na mobile */
+@media (max-width: 768px) {
+  .floating-icon {
+    display: none;
+  }
+}
