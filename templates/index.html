@@ -12,22 +12,35 @@
 } %}
 
 <main>
-  <section class="py-5 text-center container">
-    <div class="row py-lg-5">
-      <div class="col-lg-6 col-md-8 mx-auto">
-        <h1 class="fw-light">
-          If Dendis said it once.<br>
-          <span class="fw-semibold">then_this</span> remembers.
-        </h1>
-        <p class="text-body-secondary fs-6">
-          Zdokonaľ svoje programátorské zručnosti riešením úloh v Pythone, Javascripte, CSS, HTML či SQL.
-        </p>
-        <p>
-          <a href="/register" class="btn btn-primary my-2">Zaregistrovať sa</a>
-          <a href="/objavujte" class="btn btn-secondary my-2">Prejsť na cvičenia</a>
-        </p>
-      </div>
+
+    <div class="floating-icons-wrapper text-center my-3">
+
+    <!-- Ikonky -->
+    <img src="{{ url_for('static', filename='icons/python.svg') }}" class="floating-icon pos-top-left" alt="Python">
+    <img src="{{ url_for('static', filename='icons/js.svg') }}" class="floating-icon pos-left" alt="JavaScript">
+    <img src="{{ url_for('static', filename='icons/html.svg') }}" class="floating-icon pos-right" alt="HTML">
+    <img src="{{ url_for('static', filename='icons/mysql.svg') }}" class="floating-icon pos-bottom" alt="SQL">
+    <img src="{{ url_for('static', filename='icons/bootstrap.png') }}" class="floating-icon pos-top" alt="Bootstrap">
+    <img src="{{ url_for('static', filename='icons/css.svg') }}" class="floating-icon pos-top-right" alt="CSS">
+
+    <!-- Text uprostred -->
+    <div class="floating-content text-center">
+      <h1 class="fw-light z-2 position-relative mb-3">
+        If Dendis said it once.<br>
+        <span class="fw-semibold">then_this</span> remembers.
+      </h1>
+      <p class="text-body-secondary fs-6">
+        <span>Zdokonaľ svoje programátorské zručnosti riešením úloh v Pythone,</span><br>
+        <span>Javascripte, CSS, HTML či SQL.</span>
+      </p>
+      <p>
+        <a href="/register" class="btn btn-primary my-2">Zaregistrovať sa</a>
+        <a href="/objavujte" class="btn btn-secondary my-2">Prejsť na cvičenia</a>
+      </p>
     </div>
+
+  </div>
+
   </section>
 
   <div class="full-width-section py-5">
