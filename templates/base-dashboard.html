@@ -12,7 +12,27 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-
+<!-- Modal na prehľad cvičenia -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-sm p-4">
+      <div class="d-flex align-items-center gap-2 mb-3" id="modal-author" style="display: none;">
+      </div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h5 id="modal-title" class="mb-0 fw-semibold"></h5>
+      </div>
+      <p class="small text-muted mb-1 d-flex align-items-center gap-2">
+        <img id="modal-icon-image" src="" alt="Ikonka" style="height: 18px;">
+        <span id="modal-category-text"></span>
+      </p>
+      <p id="modal-description" class="mb-3"></p>
+      <div id="modal-code" class="bg-light rounded px-3 py-2 font-monospace small d-none"></div>
+      <div class="text-end">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Zavrieť</button>
+      </div>
+    </div>
+  </div>
+</div>
 </head>
 <body>
 
@@ -75,3 +95,59 @@
 
 </body>
 </html>
+<script>
+document.querySelectorAll('.open-preview').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const title = btn.dataset.title;
+    const description = btn.dataset.description;
+    const category = btn.dataset.category;
+    const subcategory = btn.dataset.subcategory;
+    const answers = btn.dataset.answers;
+    const authorName = btn.dataset.authorName;
+    const authorPhoto = btn.dataset.authorPhoto;
+
+    // Nastavenie nadpisu a popisu
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-description').textContent = description;
+
+    // Autor (ak existuje)
+    if (authorName && authorPhoto) {
+      document.getElementById('modal-author').style.display = 'flex';
+      document.getElementById('modal-author-name').textContent = authorName;
+      document.getElementById('modal-author-photo').src = authorPhoto;
+    } else {
+      document.getElementById('modal-author').style.display = 'none';
+    }
+
+    // Ikonka a kategória
+    const iconMap = {
+      'Python': 'python.svg',
+      'JavaScript': 'js.svg',
+      'HTML': 'html.svg',
+      'CSS': 'css.svg',
+      'SQL': 'mysql.svg'
+    };
+
+    const icon = iconMap[category] || 'default.svg';
+    document.getElementById('modal-icon-image').src = `/static/icons/${icon}`;
+    document.getElementById('modal-category-text').textContent = `${category} – ${subcategory}`;
+
+    // Formátovaný kód
+    const modalCode = document.getElementById('modal-code');
+    if (answers && answers.trim()) {
+      const highlightWords = ['class', 'def', 'self', 'print', 'Zviera', 'zvuk'];
+      const uniqueAnswers = [...new Set(answers.split(', ').map(w => w.trim()))];
+      const formatted = uniqueAnswers.map(word =>
+        highlightWords.includes(word)
+          ? `<span class="text-primary">${word}</span>`
+          : word
+      ).join(', ');
+
+      modalCode.innerHTML = `Kód na precvičenie: ${formatted}`;
+      modalCode.classList.remove('d-none');
+    } else {
+      modalCode.classList.add('d-none');
+    }
+  });
+});
+</script>

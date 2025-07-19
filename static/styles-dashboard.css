@@ -236,6 +236,7 @@
     position: absolute;
     right: 0;
     top: 100%;
+    margin-top: 4px;
     min-width: 120px;
     background: #fff;
     border: 1px solid #e0e0e0;
@@ -337,4 +338,8 @@ html, body {
   padding: 1rem;
   overflow-y: auto;
   flex-grow: 1;
+}
+
+.settings-dropdown {
+  overflow: visible;
 }

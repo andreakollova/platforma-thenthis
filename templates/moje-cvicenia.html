@@ -46,63 +46,64 @@
 
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
     {% for exercise in exercises %}
-    <div class="col">
-      <div class="card shadow-sm position-relative">
-          <a href="{{ url_for('exercise_detail', id=exercise.id) }}">
-            <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}"
-                 class="card-img-top card-image-blur"
-                 style="height: 225px; object-fit: cover;" alt="cover">
-          </a>
-        <div class="card-body">
-          <p class="card-text fw-bold mb-1">{{ exercise.title }}</p>
-          <p class="text-muted small mt-1 mb-2 d-flex align-items-center">
-            {% set icons = {
-              'Python': 'fab fa-python',
-              'JavaScript': 'fab fa-js',
-              'HTML': 'fab fa-html5',
-              'CSS': 'fab fa-css3-alt',
-              'SQL': 'fas fa-database'
-            } %}
-            <i class="{{ icons.get(exercise.category, 'fas fa-code') }} me-2 text-secondary"></i>
-            {{ exercise.subcategory }}
-          </p>
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="btn-group">
-            <button type="button" class="btn btn-sm btn-outline-secondary open-preview"
-                    data-bs-toggle="modal"
-                    data-bs-target="#previewModal"
-                    data-title="{{ exercise.title }}"
-                    data-category="{{ exercise.category }}"
-                    data-subcategory="{{ exercise.subcategory }}"
-                    data-description="{{ exercise.full_description }}"
-                    data-answers="{{ exercise.answers | join(', ') }}"">
-              Prehľad
-            </button>
-              <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
+      <div class="col">
+      <div class="card border-0 shadow-sm rounded-4 h-100 position-relative" style="overflow: visible;">
+        <a href="{{ url_for('exercise_detail', id=exercise.id) }}"
+           class="position-relative d-block rounded-top-4 overflow-hidden"
+           style="height: 200px;">
+          <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}"
+               class="w-100 h-100 object-fit-cover card-image-blur"
+               alt="cover">
+        </a>
 
-              <div class="position-relative ms-2">
-                <div class="settings-icon">
+          <div class="card-body">
+            <h6 class="fw-bold mb-1">{{ exercise.title }}</h6>
+            <p class="text-muted small mb-3">
+              <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                   alt="{{ exercise.category }}" style="height: 12px;" class="me-1">
+              {{ exercise.subcategory }}
+            </p>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-secondary open-preview"
+                        data-bs-toggle="modal"
+                        data-bs-target="#previewModal"
+                        data-title="{{ exercise.title }}"
+                        data-category="{{ exercise.category }}"
+                        data-subcategory="{{ exercise.subcategory }}"
+                        data-description="{{ exercise.full_description }}"
+                        data-answers="{{ exercise.answers | join(', ') }}">
+                  Prehľad
+                </button>
+                <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">
+                  Začať cvičenie
+                </a>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                     alt="{{ exercise.category }} logo"
+                     style="height: 26px; width: auto;">
+
+                <div class="settings-icon position-relative" style="cursor: pointer;">
                   <i class="fa-solid fa-pen-to-square"></i>
-                </div>
-                <div class="settings-dropdown">
-                  <a href="{{ url_for('edit_exercise', id=exercise.id) }}" class="dropdown-item">Upraviť</a>
-                  <form method="POST" action="{{ url_for('delete_exercise', id=exercise.id) }}" id="form-{{ exercise.id }}" class="delete-form">
-                    <button type="button" class="dropdown-item text-danger open-delete-modal" data-form-id="form-{{ exercise.id }}">Vymazať</button>
-                  </form>
+                  <div class="settings-dropdown bg-white border rounded shadow-sm mt-1"
+                       style="display: none; position: absolute; right: 0; top: 100%; z-index: 1055;">
+                    <a href="{{ url_for('edit_exercise', id=exercise.id) }}" class="dropdown-item small">Upraviť</a>
+                    <form method="POST" action="{{ url_for('delete_exercise', id=exercise.id) }}"
+                          id="form-{{ exercise.id }}" class="delete-form">
+                      <button type="button" class="dropdown-item text-danger small open-delete-modal"
+                              data-form-id="form-{{ exercise.id }}">Vymazať</button>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="mt-2">
-              <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
-                   alt="{{ exercise.category }} logo"
-                   style="height: 28px; width: auto;">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </div> <!-- .card-body -->
+        </div> <!-- .card -->
+      </div> <!-- .col -->
     {% endfor %}
-
   </div>
 
  <!-- Modal pre potvrdenie vymazania -->
