@@ -3,104 +3,190 @@
 {% block title %}Objavujte cvičenia{% endblock %}
 
 {% block content %}
+{% set icon_files = {
+  'Python': 'python.svg',
+  'JavaScript': 'js.svg',
+  'HTML': 'html.svg',
+  'CSS': 'css.svg',
+  'SQL': 'mysql.svg'
+} %}
 <main>
-
-  <!-- BIELA sekcia s filtrami a náhodným cvičením -->
-  <div class="w-100 py-4 bg-white">
-    <div class="container">
-      <h2 class="mb-4">Objavujte nové cvičenia</h2>
-
-      <!-- Filter -->
-      <form method="GET" id="filter-form" class="row align-items-end g-3 mb-5">
-        <div class="col-md-7">
-          <label class="form-label fw-semibold mb-2">Kategória</label>
-          <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-secondary category-btn" data-category="Python">
-              <i class="fab fa-python me-1"></i> Python
-            </button>
-            <button type="button" class="btn btn-outline-secondary category-btn" data-category="JavaScript">
-              <i class="fab fa-js-square me-1"></i> JavaScript
-            </button>
-            <button type="button" class="btn btn-outline-secondary category-btn" data-category="CSS">
-              <i class="fab fa-css3-alt me-1"></i> CSS
-            </button>
-            <button type="button" class="btn btn-outline-secondary category-btn" data-category="HTML">
-              <i class="fab fa-html5 me-1"></i> HTML
-            </button>
-            <button type="button" class="btn btn-outline-secondary category-btn" data-category="SQL">
-              <i class="fas fa-database me-1"></i> SQL
-            </button>
-          </div>
-          <input type="hidden" name="category" id="category-input">
+<!-- PREVIEW MODÁL -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="previewModalLabel">Prehľad cvičenia</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-center mb-3">
+          <img id="modal-author-photo" src="" class="rounded-circle me-3 border" width="40" height="40" alt="Autor">
+          <span id="modal-author-name" class="fw-medium text-dark"></span>
         </div>
-
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Podkategória</label>
-          <select name="subcategory" class="form-select" id="filter-subcategory">
-            <option value="">-- Všetky podkategórie --</option>
-          </select>
-        </div>
-
-        <div class="col-md-2">
-          <button class="btn btn-primary w-100">Filtrovať</button>
-        </div>
-      </form>
-
-      <!-- Náhodné cvičenie -->
-      <div class="mb-1">
-        <div style="max-width: 720px;">
-          <h5 class="mb-3 fs-5">
-            <i class="fas fa-random text-primary me-2"></i>Náhodné cvičenie
-          </h5>
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" style="height: 225px; object-fit: cover;" alt="random">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Andrea Kollova</span>
-            </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">List comprehension a filter</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-secondary">Prehľad</button>
-                  <button class="btn btn-sm btn-outline-secondary">Začať cvičenie</button>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
-              </div>
-            </div>
-          </div>
-        </div>
+        <h6 class="fw-bold mb-2" id="modal-title"></h6>
+        <p class="text-muted mb-1">
+          <span id="modal-category" class="me-3"></span>
+          <span id="modal-subcategory"></span>
+        </p>
+        <p class="mt-3" id="modal-description"></p>
       </div>
     </div>
   </div>
+</div>
 
+  <!-- BIELA sekcia s filtrami a náhodným cvičením -->
+    <div class="w-100 py-4">
+      <div class="container">
+        <h2 class="mb-3 fw-bold text-dark">Objavujte nové cvičenia</h2>
+
+        <!-- Filter -->
+        <form method="GET" id="filter-form" class="row align-items-end g-3 mb-4">
+          <div class="col-md-7">
+            <label class="form-label fw-semibold mb-2 text-secondary">Kategória</label>
+            <div class="d-flex flex-wrap gap-2">
+              {% for category, icon_file in icon_files.items() %}
+              <button type="button"
+                      class="btn btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center category-btn"
+                      data-category="{{ category }}"
+                      style="transition: all 0.3s ease;">
+                <img src="{{ url_for('static', filename='icons/' ~ icon_file) }}" alt="{{ category }}"
+                     style="height: 20px;" class="me-2">
+                <span class="fw-medium text-dark">{{ category }}</span>
+              </button>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="category" id="category-input">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-semibold text-secondary">Podkategória</label>
+            <select name="subcategory" class="form-select rounded-3" id="filter-subcategory">
+              <option value="">-- Všetky podkategórie --</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100 rounded-3">Filtrovať</button>
+          </div>
+        </form>
+
+        <!-- Náhodné cvičenie -->
+        <div class="mb-5 position-relative" style="max-width: 720px;">
+
+          <!-- Sem vlož minimalistický tag -->
+          <div class="position-absolute top-0 end-0 mt-2 me-2 px-2 py-1 rounded-pill d-flex align-items-center"
+               style="background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(6px); font-size: 0.8rem; font-weight: 500; color: #333; z-index: 10;">
+            <span class="me-1">🪄</span> Náhodné cvičenie
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            {% if random_exercise %}
+              {% set exercise, author = random_exercise %}
+
+              <!-- Obrázok s overlay -->
+              <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="position-relative d-block" style="height: 220px; overflow: hidden;">
+                <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}"
+                     class="w-100 h-100 object-fit-cover card-image-blur" alt="random">
+
+                <!-- Overlay pre autora -->
+                <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-dark bg-opacity-50 px-2 py-1 rounded-3 text-white" style="backdrop-filter: blur(6px);">
+                  <img src="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}"
+                       alt="{{ author.name }}"
+                       width="32" height="32" class="rounded-circle me-2 border border-light">
+                  <span class="small fw-semibold">{{ author.name }}</span>
+                </div>
+              </a>
+
+              <div class="card-body">
+                <h5 class="fw-bold mb-1">{{ exercise.title }}</h5>
+                <p class="text-muted small mb-3">
+                  <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                       alt="{{ exercise.category }}" style="height: 18px;" class="me-1">
+                  {{ exercise.subcategory }}
+                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary open-preview"
+                            data-bs-toggle="modal"
+                            data-bs-target="#previewModal"
+                            data-title="{{ exercise.title }}"
+                            data-category="{{ exercise.category }}"
+                            data-subcategory="{{ exercise.subcategory }}"
+                            data-description="{{ exercise.full_description }}"
+                            data-answers="{{ exercise.answers | join(', ') }}"
+                            data-author-name="{{ author.name }}"
+                            data-author-photo="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}">
+                      Prehľad
+                    </button>
+                    <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
+                  </div>
+
+                  <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                       alt="{{ exercise.category }}" style="height: 30px; width: auto;">
+                </div>
+              </div>
+            {% else %}
+              <p class="text-muted p-3">Žiadne náhodné cvičenie sa nenašlo.</p>
+            {% endif %}
+          </div>
+        </div>
   <!-- SIVÁ sekcia cez celú šírku pre všetky cvičenia -->
-  <div class="full-width-section py-5 bg-light">
+  <div class="full-width-section pt-4 pb-5 bg-light">
     <div class="container">
-      <h5 class="mb-4 fs-3">
+      <h5 class="mb-4 fs-4 fw-semibold">
         <i class="fas fa-code text-primary me-2"></i>Všetky cvičenia
       </h5>
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
-        {% for i in range(6) %}
+        {% for exercise, author in exercises %}
         <div class="col">
-          <div class="card shadow-sm position-relative">
-            <img src="{{ url_for('static', filename='peter.png') }}" class="card-img-top card-image-blur" style="height: 225px; object-fit: cover;" alt="cover">
-            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-light bg-opacity-75 px-2 py-1 rounded">
-              <img src="{{ url_for('static', filename='andrea.jpg') }}" alt="Andrea Kollova" width="32" height="32" class="rounded-circle me-2">
-              <span class="small text-dark fw-medium">Andrea Kollova</span>
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="height: 100%; position: relative;">
+          <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="position-relative d-block" style="height: 200px; overflow: hidden;">
+            <img src="{{ url_for('static', filename='uploads/covers/' ~ exercise.cover_image) }}"
+                 class="w-100 h-100 object-fit-cover card-image-blur" alt="cover">
+            <!-- Overlay pre autora -->
+            <div class="position-absolute top-0 start-0 m-2 d-flex align-items-center bg-dark bg-opacity-50 px-2 py-1 rounded-3 text-white" style="backdrop-filter: blur(6px);">
+              <img src="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}"
+                   alt="{{ author.name }}"
+                   width="32" height="32" class="rounded-circle me-2 border border-light">
+              <span class="small fw-semibold">{{ author.name }}</span>
             </div>
-            <div class="card-body">
-              <p class="card-text fw-bold mb-2">Ukážkové cvičenie č. {{ i + 1 }}</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <a href="#" class="btn btn-sm btn-outline-secondary">Prehľad</a>
-                  <a href="#" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
-                </div>
-                <small class="text-body-secondary"><i class="fab fa-python me-1"></i> Python</small>
+          </a>
+
+          <div class="card-body">
+            <h6 class="fw-bold mb-1">{{ exercise.title }}</h6>
+            <p class="text-muted small mb-3">
+              <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                   alt="{{ exercise.category }}" style="height: 12px;" class="me-1">
+              {{ exercise.subcategory }}
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-secondary open-preview"
+                        data-bs-toggle="modal"
+                        data-bs-target="#previewModal"
+                        data-title="{{ exercise.title }}"
+                        data-category="{{ exercise.category }}"
+                        data-subcategory="{{ exercise.subcategory }}"
+                        data-description="{{ exercise.full_description }}"
+                        data-answers="{{ exercise.answers | join(', ') }}"
+                        data-author-name="{{ author.name }}"
+                        data-author-photo="{{ url_for('static', filename='uploads/profiles/' ~ author.photo) }}">
+                  Prehľad
+                </button>
+                <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="btn btn-sm btn-outline-secondary">Začať cvičenie</a>
               </div>
+              <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(exercise.category, 'default.svg')) }}"
+                   alt="{{ exercise.category }} logo"
+                   style="height: 26px; width: auto;">
+            </div>
+
             </div>
           </div>
         </div>
+        {% else %}
+          <p>Žiadne cvičenia zatiaľ neboli pridané.</p>
         {% endfor %}
       </div>
     </div>

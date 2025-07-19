@@ -102,7 +102,9 @@ h1 {
 }
 
 .card-image-blur {
-  filter: blur(1px);
+  filter: blur(2px);
+  transition: filter 0.3s ease-in-out;
+  filter: brightness(45%) blur(1px);
   transition: filter 0.3s ease-in-out;
 }
 

@@ -6,6 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 from markupsafe import Markup
 import re
+import random
 
 category_icons = {
     "Python": "fab fa-python",
@@ -225,9 +226,41 @@ def moje_cvicenia():
 def profil():
     return render_template('profil.html')
 
-@app.route('/objavujte')
+@app.route("/objavujte", methods=["GET"])
 def objavujte():
-    return render_template('objavujte.html')
+    category = request.args.get('category')
+    subcategory = request.args.get('subcategory')
+
+    # Query všetky cvičenia s autormi
+    query = db.session.query(Exercise, User).join(User, Exercise.author_id == User.id)
+
+    # Filter podľa kategórie (ak je vyplnená)
+    if category:
+        query = query.filter(Exercise.category == category)
+
+    # Filter podľa podkategórie (ak je vyplnená)
+    if subcategory:
+        query = query.filter(Exercise.subcategory == subcategory)
+
+    # Výsledné cvičenia
+    exercises = query.all()
+
+    # Náhodné cvičenie z filtrovanej množiny (napr. len JS)
+    random_query = db.session.query(Exercise, User).join(User).filter(Exercise.published == True)
+
+    if category:
+        random_query = random_query.filter(Exercise.category == category)
+    if subcategory:
+        random_query = random_query.filter(Exercise.subcategory == subcategory)
+
+    filtered_exercises = random_query.all()
+    random_exercise = random.choice(filtered_exercises) if filtered_exercises else None
+
+    return render_template(
+        "objavujte.html",
+        exercises=exercises,
+        random_exercise=random_exercise
+    )
 
 @app.route('/cvicenie/<int:id>/publish')
 @login_required
