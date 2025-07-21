@@ -125,12 +125,29 @@
       </a>
 
       <!-- Right -->
-      <ul class="nav col-md-4 justify-content-end">
-        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Objavujte</a></li>
-        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Cvičenia</a></li>
-        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Projekty</a></li>
-        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">O platforme</a></li>
-      </ul>
+      <!-- Hamburger a offcanvas -->
+      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Menu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="nav flex-column">
+            <li class="nav-item"><a href="/" class="nav-link">Domov</a></li>
+            <li class="nav-item"><a href="/objavujte" class="nav-link">Objavujte</a></li>
+            <li class="nav-item"><a href="/projekty" class="nav-link">Projekty</a></li>
+            <li class="nav-item"><a href="/o-platforme" class="nav-link">O platforme</a></li>
+          </ul>
+          <form class="mt-3" role="search">
+            <input type="search" class="form-control" placeholder="Hľadať...">
+          </form>
+        </div>
+      </div>
+
     </footer>
   </div>
 {% endblock %}

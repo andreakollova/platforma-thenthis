@@ -300,9 +300,67 @@ h1 {
 .pos-right       { top: 52%; right: 9%; }
 .pos-bottom      { bottom: 10%; left: 50%; transform: translateX(-50%); }
 
-/* Skryť ikony na mobile */
+
+@media (max-width: 768px) {
+  header .logo-light {
+    margin: 0 auto !important;
+    display: block;
+  }
+}
+
+.floating-icon.pos-bottom-left { bottom: 12%; left: 12%; animation: sway7 9s ease-in-out infinite; }
+
+@keyframes sway7 {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(3px, 6px); }
+  50%  { transform: translate(-3px, -6px); }
+  75%  { transform: translate(2px, 4px); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (max-width: 768px) {
+  footer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  footer ul {
+    justify-content: center !important;
+    margin-top: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .floating-icon {
-    display: none;
+    width: 32px !important; /* menšie ikonky na mobile */
+  }
+
+  .floating-icon.pos-top         { top: 9% !important; }
+  .floating-icon.pos-top-left    { top: 22% !important; left: 4% !important; }
+  .floating-icon.pos-top-right   { top: 22% !important; right: 4% !important; }
+  .floating-icon.pos-left        { top: 59% !important; left: 3% !important; }
+  .floating-icon.pos-right       { top: 59% !important; right: 3% !important; }
+  .floating-icon.pos-bottom      { bottom: 13% !important; }
+}
+
+@media (max-width: 768px) {
+  main.container {
+    padding-left: 3px !important;
+    padding-right: 3px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-latest .container {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #exerciseBox pre,
+  #exerciseBox textarea,
+  #exerciseBox code {
+    line-height: 1.8 !important;
   }
 }
