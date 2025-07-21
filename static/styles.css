@@ -380,3 +380,17 @@ h1 {
     padding-top: 2rem !important;
     padding-bottom: 2.5rem !important;
   }
+
+  footer a:hover {
+  color: #0d6efd; /* Bootstrap primary color */
+  text-decoration: underline;
+}
+
+footer img.logo-light {
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+}
+
+footer img.logo-light:hover {
+  opacity: 1;
+}

@@ -274,3 +274,24 @@ html, body {
 .settings-dropdown .dropdown-item.text-danger {
   color: #dc2626 !important;
 }
+
+/* Obrázok bez filtra, rozmazanie robí overlay */
+.dashboard-card-image {
+  filter: none;
+  transition: transform 0.3s ease;
+}
+
+/* Overlay na tmavenie a blur */
+.overlay-blur-dark {
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(1px);
+  transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hover efekt – odmaskuje blur */
+a:hover .overlay-blur-dark {
+  backdrop-filter: blur(0px);
+  background-color: rgba(0, 0, 0, 0.1);
+}
