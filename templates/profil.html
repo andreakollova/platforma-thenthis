@@ -7,7 +7,7 @@
     <div class="col-md-8 col-lg-6">
       <div class="p-5 shadow-sm border rounded-4 bg-white">
         <div class="text-center mb-4">
-          <img src="{{ url_for('static', filename='andrea.jpg') }}"
+          <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.photo) }}"
                alt="Profilová fotka"
                class="rounded-circle shadow-sm"
                width="120"
@@ -15,16 +15,16 @@
                style="object-fit: cover; object-position: center;">
         </div>
 
-        <h2 class="text-center mb-3">Andrea Kollova</h2>
+        <h2 class="text-center mb-3">{{ current_user.name }}</h2>
 
         <div class="mb-4">
           <label class="form-label fw-semibold text-muted">Celé meno</label>
-          <input type="text" class="form-control" value="Andrea Kollova" disabled>
+          <input type="text" class="form-control" value="{{ current_user.name }}" disabled>
         </div>
 
         <div class="mb-4">
           <label class="form-label fw-semibold text-muted">Email</label>
-          <input type="email" class="form-control" value="andrea@andrea.sk" disabled>
+          <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
         </div>
 
         <div class="text-center">
