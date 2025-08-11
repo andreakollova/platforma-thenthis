@@ -386,11 +386,183 @@ h1 {
   text-decoration: underline;
 }
 
-footer img.logo-light {
-  opacity: 0.85;
-  transition: opacity 0.3s ease;
-}
-
 footer img.logo-light:hover {
   opacity: 1;
+}
+
+/* TU CHÝBALA ZÁTvORKA – uzatvárame @media (max-width: 768px) */
+}
+
+/* Úpravy pozícií ikon NA MOBILE */
+@media (max-width: 576px) {
+  /* Posunúť Python a CSS ikonu nižšie */
+  .floating-icon[src*="python.svg"],
+  .floating-icon[src*="css.svg"] {
+    margin-top: 15px;
+  }
+
+  /* Posunúť SQL ikonu ešte nižšie */
+  .floating-icon[src*="sql.svg"] {
+    margin-top: 250px;
+  }
+
+  /* Posunúť Bootstrap ikonu vyššie (negatívny margin) */
+  .floating-icon[src*="bootstrap.svg"] {
+    margin-top: -10px;
+  }
+}
+
+
+/* --- HERO ikony: presné posuny na mobile --- */
+@media (max-width: 576px) {
+  /* Python – nižšie (naľavo býva .pos-left) */
+  .floating-icon.pos-left[src*="python.svg"] {
+    top: 64% !important;   /* pôvodne 59% */
+  }
+
+  /* CSS – nižšie (napravo býva .pos-right) */
+  .floating-icon.pos-right[src*="css.svg"] {
+    top: 64% !important;   /* pôvodne 59% */
+  }
+
+  /* SQL – ešte nižšie (je dole, takže hrá s 'bottom') */
+  .floating-icon.pos-bottom[src*="sql.svg"] {
+    bottom: 6% !important; /* pôvodne ~13% -> menšie číslo = bližšie ku spodku */
+  }
+
+  /* Bootstrap – vyššie (je hore, takže menšie 'top') */
+  .floating-icon.pos-top[src*="bootstrap.svg"] {
+    top: 5% !important;    /* pôvodne ~9% */
+  }
+}
+
+/* --- úprava pozícií ikon pre mobil --- */
+@media (max-width: 576px) {
+  html body .floating-icon.pos-left[src$="python.svg"] { top: 64% !important; }
+  html body .floating-icon.pos-right[src$="css.svg"] { top: 64% !important; }
+  html body .floating-icon.pos-bottom[src$="sql.svg"] { bottom: 6% !important; }
+  html body .floating-icon.pos-top[src$="bootstrap.svg"] { top: 5% !important; }
+}
+
+/* Posun Python a CSS ikon na mobile */
+@media (max-width: 576px) {
+  img.floating-icon.pos-left[src*="python.svg"] {
+    top: 88% !important;
+    position: absolute !important;
+  }
+  img.floating-icon.pos-right[src*="css.svg"] {
+    top: 68% !important;
+    position: absolute !important;
+  }
+}
+
+/* Sekcia: "Najnovšie cvičenia" – mobilné vylepšenie */
+.home-latest .section-header .section-cta {
+  font-size: 0.95rem;
+  padding: .55rem .9rem;
+  border-radius: 12px;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.home-latest .section-header .section-cta:hover {
+  background-color: #f9f9f9;
+  border-color: #e9ecef;
+}
+
+/* Mobil ≤ 576px: stack, menší nadpis, tlačidlo na šírku */
+@media (max-width: 576px) {
+  .home-latest .section-header {
+    flex-direction: column;
+    align-items: stretch;      /* nech sa CTA roztiahne */
+    gap: .75rem;
+    margin-bottom: 1.25rem !important;
+  }
+  .home-latest .section-header h4 {
+    font-size: 1.35rem;        /* pôv. príliš veľké */
+    line-height: 1.2;
+    margin: 0;
+  }
+  .home-latest .section-header .section-cta {
+    width: 100%;               /* tlačidlo full-width */
+    justify-content: center;   /* text + šípka centrované */
+    padding: .7rem 1rem;
+    font-weight: 500;
+  }
+}
+
+/* Posun ikoniek na mobile */
+@media (max-width: 576px) {
+  .python-icon {
+    top: 40px !important; /* pôvodná hodnota - zníž alebo zvýš podľa potreby */
+  }
+  .css-icon {
+    top: 40px !important;
+  }
+  .sql-icon {
+    top: 60px !important;
+  }
+  .bootstrap-icon {
+    top: 0px !important;
+  }
+}
+
+/* Telefóny: odstráň horizontálne paddingy tela + containery rozťahni */
+@media (max-width: 576px) {
+  /* 1) zruš bočné paddingy na celom webe */
+  body {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 2) hlavný container z base.html */
+  main.container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 3) vnútorný container tejto sekcie (objavujte) */
+  .container.section-featured-mobile-narrow {
+    padding-left: 18px !important;   /* kľudne daj 0–12px podľa chuti */
+    padding-right: 18px !important;
+    max-width: 100% !important;
+  }
+
+  /* voliteľné: menšie gutters vo formulári s class g-3 */
+  .section-featured-mobile-narrow .row {
+    --bs-gutter-x: .5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .section-featured-mobile-narrow {
+    margin-top: -0.5rem !important;
+    padding-top: 0.25rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .section-all-exercises h2 {
+    margin-top: -2.5rem !important; /* menší horný margin */
+    padding-top: 0 !important;     /* zruší prípadný padding */
+  }
+}
+
+@media (max-width: 576px) {
+  /* zmenši medzeru POD náhodným cvičením (tam máš .mb-5) */
+  .section-featured-mobile-narrow .mb-5 {
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* zmenši horný padding SIVEJ sekcie */
+  .full-width-section {
+    padding-top: 0.5rem !important;
+  }
+
+  /* zmenši horný padding vnútorného kontajnera sivej sekcie */
+  .section-all-mobile-wide {
+    padding-top: 0.5rem !important; /* prebije tvoj predchádzajúci 2rem z <=768px */
+  }
+}
+
+@media (min-width: 576px) {
+  header .nav .nav-link { display: inline-block; } /* zarovná všetky */
 }
