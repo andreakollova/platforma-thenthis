@@ -398,7 +398,7 @@ footer img.logo-light:hover {
   /* Posunúť Python a CSS ikonu nižšie */
   .floating-icon[src*="python.svg"],
   .floating-icon[src*="css.svg"] {
-    margin-top: 15px;
+    margin-top: -25px;
   }
 
   /* Posunúť SQL ikonu ešte nižšie */
@@ -428,6 +428,17 @@ footer img.logo-light:hover {
   /* SQL – ešte nižšie (je dole, takže hrá s 'bottom') */
   .floating-icon.pos-bottom[src*="sql.svg"] {
     bottom: 6% !important; /* pôvodne ~13% -> menšie číslo = bližšie ku spodku */
+  }
+    /* HTML – napr. jemne hore */
+  .floating-icon[src*="html.svg"],
+  .floating-icon[src*="html5.svg"] {
+    margin-top: 88px; /* uprav podľa oka */
+  }
+
+  /* JS – napr. o niečo nižšie */
+  .floating-icon[src*="js.svg"],
+  .floating-icon[src*="javascript.svg"] {
+    margin-top: 88px; /* uprav podľa oka */
   }
 
   /* Bootstrap – vyššie (je hore, takže menšie 'top') */
@@ -566,3 +577,68 @@ footer img.logo-light:hover {
 @media (min-width: 576px) {
   header .nav .nav-link { display: inline-block; } /* zarovná všetky */
 }
+
+
+/* --- Exercise page: mobilné doladenia (≤576px) --- */
+@media (max-width: 576px) {
+  /* jemný bočný padding na stránke cvičenia */
+  main.container.py-3,
+  main.container.py-3 > * {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    padding-top: 4px !important;
+  }
+
+  /* hlavička karty cvičenia: nech sa zalomí a dýcha */
+  #exerciseBox .d-flex.justify-content-between {
+    align-items: stretch !important;
+    gap: 8px;
+  }
+
+  /* prepínače režimu vedľa seba, ale na šírku (ľahko trafiteľné) */
+  #modeButtons { width: 100%; }
+  #modeButtons button {
+    flex: 1 1 auto;
+    width: 50%;
+    padding: .65rem .75rem;
+    border-radius: 12px;
+  }
+
+  /* tlačidlo „Zobraziť riešenie“ pod prepínačmi, full-width */
+  #toggleActionBtn {
+    width: 100%;
+    padding: .65rem .9rem !important;
+    border-radius: 12px;
+  }
+
+  /* menší top spacing nad nadpisom a kompaktnejší nadpis */
+  h1.fw-bold.fs-3 {
+    font-size: 1.4rem !important;
+    margin-top: .25rem !important;
+    margin-bottom: .5rem !important;
+    line-height: 1.25;
+  }
+
+  /* kód – menšie vnútorné odsadenie + bezpečné horizontálne scrollovanie */
+  #exerciseBox .bg-dark.text-white {
+    padding: 8px !important;
+  }
+  #exerciseBox pre {
+    white-space: pre;           /* zachová formát */
+    overflow-x: auto;           /* ak treba, posuň do strany */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* spodný panel s Odoslať – od okrajov rovnako ako zvyšok */
+  #exerciseBox .px-4.py-3 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* trošku väčšie klikacie plochy */
+  #exerciseBox .btn-sm {
+    font-size: .95rem;
+    padding: .55rem .8rem;
+  }
+}
+

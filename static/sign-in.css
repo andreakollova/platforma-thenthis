@@ -23,3 +23,10 @@ body {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+@media (max-width: 576px) {
+  .form-signin .border {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+}
