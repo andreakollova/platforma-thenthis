@@ -1,0 +1,345 @@
+{% extends "base-dashboard.html" %}
+{% block title %}Kvíz – Tvorba & správa{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <h4 class="mb-0">Kvízy: Tvorba otázok</h4>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('kviz_spustit') }}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-play"></i> Spustiť kvíz
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- ĽAVO: formulár -->
+  <div class="col-lg-5">
+    <div class="card-dashboard">
+      <div class="d-flex align-items-center justify-content-between">
+        <h6 class="mb-0"><i class="fas fa-pen"></i> Nová otázka</h6>
+        <span class="badge bg-light text-dark">Python, JS, HTML, CSS, SQL</span>
+      </div>
+      <hr class="my-3">
+      <form id="questionForm" class="needs-validation" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Okruh</label>
+          <select class="form-select" id="category" required>
+            <option value="" selected disabled>Vyber okruh</option>
+            <option>Python</option>
+            <option>JS</option>
+            <option>HTML</option>
+            <option>CSS</option>
+            <option>SQL</option>
+          </select>
+          <div class="invalid-feedback">Zvoľ okruh.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Otázka</label>
+          <textarea class="form-control" id="question" rows="3" required placeholder="Sem napíš zadanie otázky..."></textarea>
+          <div class="invalid-feedback">Otázka je povinná.</div>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-12 col-md-6">
+            <label class="form-label">A)</label>
+            <input class="form-control" id="optA" required placeholder="Možnosť A">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="radio" name="correct" id="corrA" value="A" required>
+              <label class="form-check-label" for="corrA">Správna</label>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">B)</label>
+            <input class="form-control" id="optB" required placeholder="Možnosť B">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="radio" name="correct" id="corrB" value="B" required>
+              <label class="form-check-label" for="corrB">Správna</label>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">C)</label>
+            <input class="form-control" id="optC" required placeholder="Možnosť C">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="radio" name="correct" id="corrC" value="C" required>
+              <label class="form-check-label" for="corrC">Správna</label>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">D)</label>
+            <input class="form-control" id="optD" required placeholder="Možnosť D">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="radio" name="correct" id="corrD" value="D" required>
+              <label class="form-check-label" for="corrD">Správna</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Uložiť otázku</button>
+          <button type="reset" class="btn btn-light btn-sm">Vymazať</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PRAVO: zoznam + filtre -->
+  <div class="col-lg-7">
+    <div class="card-dashboard">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h6 class="mb-0"><i class="fas fa-list"></i> Moje otázky</h6>
+        <div class="d-flex gap-2">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="fas fa-filter"></i></span>
+            <select id="filterCategory" class="form-select form-select-sm" style="min-width:160px">
+              <option value="__all__" selected>Všetky okruhy</option>
+              <option>Python</option><option>JS</option><option>HTML</option><option>CSS</option><option>SQL</option>
+            </select>
+          </div>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input id="searchInput" type="text" class="form-control" placeholder="Hľadať v otázkach…">
+          </div>
+          <button id="clearAllBtn" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i> Zmazať všetko</button>
+        </div>
+      </div>
+
+      <hr class="my-3">
+
+      <!-- cards grid -->
+      <div id="questionsGrid" class="row g-3">
+        <!-- dynamicky -->
+      </div>
+      <div id="emptyState" class="text-muted small" style="display:none">Zatiaľ nemáš uložené otázky.</div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:12px">
+      <div class="modal-header">
+        <h6 class="modal-title">Upraviť otázku</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <input type="hidden" id="editId">
+          <div class="mb-2">
+            <label class="form-label">Okruh</label>
+            <select class="form-select" id="editCategory" required>
+              <option>Python</option><option>JS</option><option>HTML</option><option>CSS</option><option>SQL</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Otázka</label>
+            <textarea class="form-control" id="editQuestion" rows="3" required></textarea>
+          </div>
+          <div class="row g-2">
+            <div class="col-6"><label class="form-label">A)</label><input class="form-control" id="editA" required></div>
+            <div class="col-6"><label class="form-label">B)</label><input class="form-control" id="editB" required></div>
+            <div class="col-6"><label class="form-label">C)</label><input class="form-control" id="editC" required></div>
+            <div class="col-6"><label class="form-label">D)</label><input class="form-control" id="editD" required></div>
+          </div>
+          <div class="mt-2">
+            <label class="form-label">Správna</label>
+            <select class="form-select" id="editCorrect" required>
+              <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Zrušiť</button>
+        <button id="saveEditBtn" type="button" class="btn btn-primary">Uložiť</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const LS_KEY = 'quizQuestions';
+
+  // Elements – create
+  const form = document.getElementById('questionForm');
+  const category = document.getElementById('category');
+  const question = document.getElementById('question');
+  const optA = document.getElementById('optA');
+  const optB = document.getElementById('optB');
+  const optC = document.getElementById('optC');
+  const optD = document.getElementById('optD');
+
+  // Elements – list
+  const grid = document.getElementById('questionsGrid');
+  const emptyState = document.getElementById('emptyState');
+  const filterCategory = document.getElementById('filterCategory');
+  const searchInput = document.getElementById('searchInput');
+  const clearAllBtn = document.getElementById('clearAllBtn');
+
+  // Edit modal
+  const editModalEl = document.getElementById('editModal');
+  let editModal;
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.bootstrap) editModal = new bootstrap.Modal(editModalEl);
+  });
+  const editId = document.getElementById('editId');
+  const editCategory = document.getElementById('editCategory');
+  const editQuestion = document.getElementById('editQuestion');
+  const editA = document.getElementById('editA');
+  const editB = document.getElementById('editB');
+  const editC = document.getElementById('editC');
+  const editD = document.getElementById('editD');
+  const editCorrect = document.getElementById('editCorrect');
+  const saveEditBtn = document.getElementById('saveEditBtn');
+
+  // Storage helpers
+  const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  const save = (data) => localStorage.setItem(LS_KEY, JSON.stringify(data));
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  // Render list as cards
+  function renderGrid() {
+    const data = load();
+    const fc = filterCategory.value;
+    const q = (searchInput.value || '').toLowerCase();
+
+    const filtered = data.filter(item => {
+      const okCat = fc === '__all__' ? true : item.category === fc;
+      const okSearch = !q ? true :
+        item.question.toLowerCase().includes(q) ||
+        item.A.toLowerCase().includes(q) ||
+        item.B.toLowerCase().includes(q) ||
+        item.C.toLowerCase().includes(q) ||
+        item.D.toLowerCase().includes(q);
+      return okCat && okSearch;
+    });
+
+    grid.innerHTML = '';
+    emptyState.style.display = filtered.length ? 'none' : '';
+
+    filtered.forEach(item => {
+      const col = document.createElement('div');
+      col.className = 'col-12 col-md-6';
+      col.innerHTML = `
+        <div class="card-dashboard h-100">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="badge bg-light text-dark">${item.category}</span>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-light" data-action="edit" data-id="${item.id}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" data-action="del" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mt-2 small">${escapeHtml(item.question)}</div>
+          <ul class="mt-2 mb-0 small" style="padding-left:1rem">
+            <li>(A) ${escapeHtml(item.A)}</li>
+            <li>(B) ${escapeHtml(item.B)}</li>
+            <li>(C) ${escapeHtml(item.C)}</li>
+            <li>(D) ${escapeHtml(item.D)}</li>
+          </ul>
+          <div class="mt-2"><span class="text-muted small">Správna:</span> <strong>${item.correct}</strong></div>
+        </div>
+      `;
+      grid.appendChild(col);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  // Create
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated'); return;
+    }
+    const correct = form.querySelector('input[name="correct"]:checked')?.value;
+    if (!correct) return;
+
+    const data = load();
+    data.push({
+      id: uid(),
+      category: category.value,
+      question: question.value.trim(),
+      A: optA.value.trim(),
+      B: optB.value.trim(),
+      C: optC.value.trim(),
+      D: optD.value.trim(),
+      correct
+    });
+    save(data);
+    form.reset();
+    form.classList.remove('was-validated');
+    renderGrid();
+  });
+
+  // Edit/Delete
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const data = load();
+    const idx = data.findIndex(q => q.id === id);
+    if (idx === -1) return;
+
+    if (btn.dataset.action === 'del') {
+      if (confirm('Zmazať otázku?')) {
+        data.splice(idx, 1);
+        save(data);
+        renderGrid();
+      }
+      return;
+    }
+    if (btn.dataset.action === 'edit') {
+      const q = data[idx];
+      editId.value = q.id;
+      editCategory.value = q.category;
+      editQuestion.value = q.question;
+      editA.value = q.A;
+      editB.value = q.B;
+      editC.value = q.C;
+      editD.value = q.D;
+      editCorrect.value = q.correct;
+      editModal?.show();
+    }
+  });
+
+  saveEditBtn.addEventListener('click', () => {
+    const id = editId.value;
+    const data = load();
+    const idx = data.findIndex(q => q.id === id);
+    if (idx === -1) return;
+
+    data[idx] = {
+      ...data[idx],
+      category: editCategory.value,
+      question: editQuestion.value.trim(),
+      A: editA.value.trim(),
+      B: editB.value.trim(),
+      C: editC.value.trim(),
+      D: editD.value.trim(),
+      correct: editCorrect.value
+    };
+    save(data);
+    renderGrid();
+    editModal?.hide();
+  });
+
+  // Filters
+  filterCategory.addEventListener('change', renderGrid);
+  searchInput.addEventListener('input', renderGrid);
+  clearAllBtn.addEventListener('click', () => {
+    if (confirm('Naozaj zmazať všetky otázky?')) { localStorage.removeItem(LS_KEY); renderGrid(); }
+  });
+
+  // Init
+  renderGrid();
+})();
+</script>
+{% endblock %}

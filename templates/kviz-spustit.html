@@ -1,0 +1,201 @@
+{% extends "base-dashboard.html" %}
+{% block title %}Kvíz – Spustiť{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <h4 class="mb-0">Spustiť kvíz</h4>
+  <a href="{{ url_for('kviz') }}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Späť na tvorbu</a>
+</div>
+
+<div class="card-dashboard mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-sm-6 col-md-4">
+      <label class="form-label">Okruh</label>
+      <select id="quizCategory" class="form-select">
+        <option value="__all__">Všetko</option>
+        <option>Python</option><option>JS</option><option>HTML</option><option>CSS</option><option>SQL</option>
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Počet otázok</label>
+      <input id="quizCount" type="number" class="form-control" min="1" value="5">
+    </div>
+    <div class="col-md-5 d-grid d-md-flex gap-2">
+      <button id="startQuizBtn" class="btn btn-primary"><i class="fas fa-play"></i> Spustiť</button>
+      <button id="resetQuizBtn" class="btn btn-light" disabled>Zrušiť</button>
+    </div>
+  </div>
+</div>
+
+<div id="quizArea" class="card-dashboard" style="display:none">
+  <!-- Progress -->
+  <div class="mb-3">
+    <div class="d-flex justify-content-between small text-muted">
+      <span id="progressText">Otázka 1/5</span>
+      <span id="categoryChip" class="badge bg-light text-dark"></span>
+    </div>
+    <div class="progress" style="height: 8px;">
+      <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- Otázka -->
+  <div id="qBox">
+    <!-- dynamicky -->
+  </div>
+
+  <!-- Ovládanie -->
+  <div class="d-flex justify-content-between mt-3">
+    <button id="prevBtn" class="btn btn-light" disabled><i class="fas fa-chevron-left"></i> Predchádzajúca</button>
+    <div class="d-flex gap-2">
+      <button id="finishBtn" class="btn btn-outline-secondary" disabled>Vyhodnotiť</button>
+      <button id="nextBtn" class="btn btn-primary">Ďalšia <i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Výsledok -->
+<div id="resultBox" class="card-dashboard mt-3" style="display:none">
+  <h6 class="mb-2">Výsledok</h6>
+  <div id="scoreLine" class="fw-semibold mb-2"></div>
+  <div id="answerReview" class="small"></div>
+  <div class="mt-3 d-flex gap-2">
+    <button id="retryBtn" class="btn btn-primary btn-sm"><i class="fas fa-redo"></i> Skúsiť znova</button>
+    <a href="{{ url_for('kviz') }}" class="btn btn-light btn-sm">Späť na otázky</a>
+  </div>
+</div>
+
+<script>
+(function() {
+  const LS_KEY = 'quizQuestions';
+  const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // Elements
+  const quizCategory = document.getElementById('quizCategory');
+  const quizCount = document.getElementById('quizCount');
+  const startQuizBtn = document.getElementById('startQuizBtn');
+  const resetQuizBtn = document.getElementById('resetQuizBtn');
+  const quizArea = document.getElementById('quizArea');
+  const qBox = document.getElementById('qBox');
+  const progressText = document.getElementById('progressText');
+  const progressBar = document.getElementById('progressBar');
+  const categoryChip = document.getElementById('categoryChip');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const finishBtn = document.getElementById('finishBtn');
+  const resultBox = document.getElementById('resultBox');
+  const scoreLine = document.getElementById('scoreLine');
+  const answerReview = document.getElementById('answerReview');
+  const retryBtn = document.getElementById('retryBtn');
+
+  // State
+  let questions = [];
+  let idx = 0;
+  let answers = {}; // {index: 'A'|'B'|'C'|'D'}
+
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+
+  function startQuiz() {
+    const pool = load().filter(q => quizCategory.value === '__all__' || q.category === quizCategory.value);
+    const count = Math.max(1, parseInt(quizCount.value || '1', 10));
+    if (!pool.length) { alert('V zvolenom okruhu nemáš žiadne otázky.'); return; }
+    shuffle(pool);
+    questions = pool.slice(0, count);
+    idx = 0; answers = {};
+    categoryChip.textContent = quizCategory.value === '__all__' ? 'Mix' : quizCategory.value;
+
+    quizArea.style.display = '';
+    resultBox.style.display = 'none';
+    resetQuizBtn.disabled = false;
+    finishBtn.disabled = questions.length === 0;
+    prevBtn.disabled = true;
+    renderQuestion();
+    updateProgress();
+  }
+
+  function renderQuestion() {
+    const q = questions[idx];
+    qBox.innerHTML = `
+      <div class="mb-2 fw-semibold">${escapeHtml(q.question)}</div>
+      <div class="mt-2">
+        ${['A','B','C','D'].map(letter => `
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="q" id="opt${letter}" value="${letter}" ${answers[idx]===letter?'checked':''}>
+            <label class="form-check-label" for="opt${letter}">(${letter}) ${escapeHtml(q[letter])}</label>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    // enable/disable buttons
+    nextBtn.disabled = (idx === questions.length - 1);
+    finishBtn.disabled = false;
+    prevBtn.disabled = (idx === 0);
+
+    // on change, store answer
+    qBox.querySelectorAll('input[name="q"]').forEach(r => {
+      r.addEventListener('change', (e) => { answers[idx] = e.target.value; });
+    });
+  }
+
+  function updateProgress() {
+    progressText.textContent = `Otázka ${idx+1}/${questions.length}`;
+    const pct = Math.round(((idx+1)/questions.length)*100);
+    progressBar.style.width = pct + '%';
+  }
+
+  function next() {
+    if (idx < questions.length - 1) {
+      idx++; renderQuestion(); updateProgress();
+    }
+  }
+  function prev() {
+    if (idx > 0) {
+      idx--; renderQuestion(); updateProgress();
+    }
+  }
+
+  function evaluate() {
+    let correct = 0;
+    let review = '';
+    questions.forEach((q, i) => {
+      const chosen = answers[i] || '-';
+      const ok = chosen === q.correct;
+      if (ok) correct++;
+      review += `
+        <div class="mb-1">
+          <strong>${i+1}.</strong> Správna: <b>${q.correct}</b>,
+          Tvoja: <span class="${ok?'text-success':'text-danger'}">${chosen}</span>
+          ${!ok ? `<div class="text-muted">(${q.A?'A: '+escapeHtml(q.A)+'; ':''}${q.B?'B: '+escapeHtml(q.B)+'; ':''}${q.C?'C: '+escapeHtml(q.C)+'; ':''}${q.D?'D: '+escapeHtml(q.D):''})</div>` : ''}
+        </div>`;
+    });
+    scoreLine.textContent = `Skóre: ${correct} / ${questions.length}`;
+    answerReview.innerHTML = review;
+    resultBox.style.display = '';
+    window.scrollTo({ top: resultBox.offsetTop - 80, behavior: 'smooth' });
+  }
+
+  function resetAll() {
+    questions = [];
+    idx = 0;
+    answers = {};
+    quizArea.style.display = 'none';
+    resultBox.style.display = 'none';
+    resetQuizBtn.disabled = true;
+  }
+
+  // Wireup
+  startQuizBtn.addEventListener('click', startQuiz);
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+  finishBtn.addEventListener('click', evaluate);
+  resetQuizBtn.addEventListener('click', resetAll);
+  retryBtn.addEventListener('click', startQuiz);
+
+  // Optional: načítanie parametrov z query (?cat=Python&n=10)
+  const params = new URLSearchParams(location.search);
+  if (params.get('cat')) quizCategory.value = params.get('cat');
+  if (params.get('n')) quizCount.value = params.get('n');
+})();
+</script>
+{% endblock %}

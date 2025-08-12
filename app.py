@@ -336,5 +336,15 @@ def random_page():
 def o_platforme():
     return render_template('platforma.html')
 
+@app.route('/kviz')
+@login_required
+def kviz():
+    return render_template('kviz.html', user=current_user)
+
+@app.route('/kviz-spustit')
+@login_required
+def kviz_spustit():
+    return render_template('kviz-spustit.html', user=current_user)
+
 if __name__ == '__main__':
     app.run(debug=True)
