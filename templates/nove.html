@@ -150,22 +150,22 @@
 
     <div class="mb-3">
       <label class="form-label">
-        <b>Zadaj celý kód (dopĺňané slová označ pomocou <code>{{ '{{' }}slovo{{ '}}' }}</code>)</b>
+        <b>Zadaj celý kód (dopĺňané slová označ pomocou <code>{{ '@@' }}slovo{{ '@@' }}</code>)</b>
       </label>
       <textarea
         class="form-control font-monospace"
         name="code"
         rows="10"
         placeholder="Príklad:
-      {{'{{'}}class{{'}}'}} Person:
-        {{'{{'}}def{{'}}'}} __init__({{'{{'}}self{{'}}'}}, name):
-          {{'{{'}}self{{'}}'}}.name = name"
+      {{'@@'}}class{{'@@'}} Person:
+        {{'@@'}}def{{'@@'}} __init__({{'@@'}}self{{'@@'}}, name):
+          {{'@@'}}self{{'@@'}}.name = name"
       >{{ exercise.code_raw if exercise }}</textarea>
       <small class="text-muted">
         Pre dopĺňačku označ slová, ktoré sa majú dopĺňať, ako napr.
-        <code>{{ '{{' }}class{{ '}}' }}</code>,
-        <code>{{ '{{' }}self{{ '}}' }}</code>,
-        <code>{{ '{{' }}def{{ '}}' }}</code>.
+        <code>{{ '@@' }}class{{ '@@' }}</code>,
+        <code>{{ '@@' }}self{{ '@@' }}</code>,
+        <code>{{ '@@' }}def{{ '@@' }}</code>.
       </small>
     </div>
 

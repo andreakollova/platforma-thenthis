@@ -55,7 +55,7 @@ class Exercise(db.Model):
     @property
     def answers(self):
         if self.code_raw:
-            return list(dict.fromkeys(re.findall(r"\{\{\s*(.*?)\s*\}\}", self.code_raw)))
+            return list(dict.fromkeys(re.findall(r"@@\s*(.*?)\s*@@", self.code_raw)))
         return []
 
 
@@ -146,7 +146,7 @@ def nove_cvicenie():
         full_description = request.form['full_description']
         code_raw = request.form['code']
         code_with_inputs = re.sub(
-            r"\{\{\s*(.*?)\s*\}\}",
+            r"@@\s*(.*?)\s*@@",
             r"<input type='text' class='code-input' data-answer='\1' style='width:70px;'>",
             code_raw
         )
@@ -176,7 +176,7 @@ def nove_cvicenie():
             exercise=new_exercise,
             author=current_user,
             is_preview=True,
-            solution_clean=re.sub(r"\{\{\s*(.*?)\s*\}\}", r"\1", code_raw or ""),
+            solution_clean=re.sub(r"@@\s*(.*?)\s*@@", r"\1", code_raw or ""),
             category_icon=category_icons.get(category, "fas fa-code")
         )
 
@@ -190,7 +190,7 @@ def exercise_detail(id):
     author = User.query.get(exercise.author_id)
 
     # 🔧 Vygeneruj výsledný kód bez {{ ... }}
-    final_code = re.sub(r"\{\{\s*(.*?)\s*\}\}", r"\1", exercise.code_raw or "")
+    final_code = re.sub(r"@@\s*(.*?)\s*@@", r"\1", exercise.code_raw or "")
 
     return render_template(
         'cvicenie.html',
@@ -295,7 +295,7 @@ def edit_exercise(id):
         exercise.full_description = request.form['full_description']
         code_raw = request.form['code']
         exercise.code = Markup(re.sub(
-            r"\{\{\s*(.*?)\s*\}\}",
+            r"@@\s*(.*?)\s*@@",
             r"<input type='text' class='code-input' data-answer='\1' style='width:70px;'>",
             code_raw
         ))
