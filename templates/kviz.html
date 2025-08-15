@@ -3,188 +3,44 @@
 
 {% block content %}
 <style>
-  :root{
-    --panel:#ffffff;
-    --text:#111827;
-    --muted:#6b7280;
-    --line:#d9dee6;       /* o kúsok tmavší divider */
-    --soft:#f3f5f8;       /* jemná sivá plocha (ikony/select disabled) */
-    --soft-2:#eef2f6;     /* ešte svetlejšia varianta */
-    --ring:#0d6efd;
+  /* jemné doladenia vzhľadu listu */
+  .icon-quiz {
+    width: 28px; height: 28px; object-fit: contain;
+  }
+  .list-group-item:hover { background: #fafafa; }
+  .btn-ghost {
+    border: 0; background: transparent; color: #6b7280;  /* muted sivá */
+  }
+  .btn-ghost:hover { color: #111827; background: #f3f4f6; }
+  .badge-subtle {
+    background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
   }
 
-  /* Karta / panel */
-  .card-dashboard{
-    border:1px solid var(--line);
-    border-radius:16px;
-    background:var(--panel);
-    padding:18px 16px; /* o trochu kompaktnejšie */
-    box-shadow:0 1px 2px rgba(0,0,0,.04);
-  }
-  .card-dashboard > h6{
-    font-weight:600; letter-spacing:.2px;
-    margin-bottom:2px;            /* menej miesta pod nadpisom */
-  }
-  .card-dashboard hr{
-    border:0; height:1.5px;       /* výraznejší divider */
-    background:var(--line);
-    margin:10px 0 14px;           /* menšia medzera pod “Nová otázka” */
-  }
-
-  /* Form prvky – čisté a konzistentné */
-  .form-control, .form-select{
-    border-radius:12px !important;
-    border:1px solid var(--line);
-    background:#fff;
-  }
-  .form-control:focus, .form-select:focus{
-    border-color:var(--ring);
-    box-shadow:0 0 0 .2rem rgba(13,110,253,.12);
-  }
-  .input-group-text{
-    border-radius:12px 0 0 12px !important;
-    background: var(--soft);
-    border:1px solid var(--line);
-    border-right:0;
-    color: var(--muted);
-  }
-  .form-floating > label{ color:#98a1ad; }
-
-  /* Nižšie výšky pre ‘form-floating’ textové inputy (A–D) */
-  .form-floating > .form-control:not(textarea){
-    height:44px;                 /* z ~52px na kompaktnejších 44px */
-    padding-top:.8rem; padding-bottom:.8rem;
-  }
-
-  /* Disabled select – zreteľne nekliknuteľný (svetlosivý panel) */
-  .form-select:disabled,
-  select[disabled]{
-    background: var(--soft);     /* o pár odtieňov tmavšie než biela */
-    color:#94a3b8;               /* utlmený text */
-    border-color: var(--line);
-    opacity:1;                   /* nech nie je vyblednutý */
-    cursor:not-allowed;
-  }
-  /* “placeholder” vo vypnutom selecte – ešte kontrastnejší */
-  select[disabled] option[disabled]{
-    color:#9aa7b6;
-  }
-
-  /* Toolbar input-group */
-  .input-group.input-group-sm{ border-radius:12px; }
-  .input-group.input-group-sm .form-select{ border-left:0; }
-
-  /* Zoznam otázok – modern flat štýl + výraznejšia deliaca čiara */
-  .list-group{
-    border-radius:14px;
-    overflow:hidden;
-    border:1px solid var(--line);
-  }
-  .list-group-item{
-    border:0;
-    border-bottom:1px solid var(--line);
-    padding:14px 16px;
-    transition:background .15s ease;
-  }
-  .list-group-item:last-child{ border-bottom:0; }
-  .list-group-item:hover{ background:#fafafa; }
-
-  /* Ikonky kategórií */
-  .icon-quiz{
-    width:22px; height:22px; object-fit:contain; flex:0 0 22px; opacity:.96;
-  }
-
-  /* Badges */
-  .badge-subtle{
-    background:#f3f4f6; color:#374151; border:1px solid #e5e7eb;
-    padding:.26rem .6rem; border-radius:999px; font-weight:500; font-size:.72rem;
-  }
-
-  /* Akčné ikonky (edit/kôš) – menšie, muted, veľký hit-area */
-  .btn-ghost{
-    border:0; background:transparent; color:#6b7280;
-    border-radius:10px; padding:6px;
-    transition:background .15s ease, color .15s ease;
-  }
-  .btn-ghost:hover{ background:#f3f4f6; color:#374151; }
-  .btn-ghost:focus-visible{ outline:2px solid rgba(13,110,253,.24); outline-offset:2px; border-radius:10px; }
-  .btn-ghost.btn-sm i{ font-size:14px; width:16px; height:16px; line-height:16px; }
-  .btn-ghost[data-action="del"] i{ color:#9ca3af; transition:color .15s ease; }
-  .btn-ghost[data-action="del"]:hover i{ color:#4b5563; }
-
-  /* Napojenie Okruh + Podkategória */
-
-
-.select-group {
-  display: flex;
-  flex-direction: column;
+/* Menšie ikony edit a kôš */
+.btn-ghost.btn-sm i {
+  font-size: 16px; /* menšie než default */
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
 }
 
-.select-group .form-select:first-child {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+/* Mutnutá farba koša */
+.btn-ghost[data-action="del"] i {
+  color: #9ca3af; /* jemná sivá */
+  transition: color 0.2s ease;
 }
 
-.select-group .form-select:last-child {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  margin-top: -1px; /* spojenie hraníc */
-}
-
-  /* --- Napojené selecty pod seba (Okruh → Podkategória) --- */
-.select-stack{ display:flex; flex-direction:column; }
-
-.select-stack .input-group{
-  border-radius:12px;
-}
-
-/* zruš dolné rohy na hornom riadku a horné rohy na dolnom riadku */
-.select-stack .input-group:first-child .form-select{
-  border-bottom-left-radius:0 !important;
-  border-bottom-right-radius:0 !important;
-}
-.select-stack .input-group:first-child .input-group-text{
-  border-bottom-left-radius:0 !important;
-}
-
-.select-stack .input-group:last-child{
-  margin-top:-1px; /* spoj hranicu */
-}
-.select-stack .input-group:last-child .form-select{
-  border-top-left-radius:0 !important;
-  border-top-right-radius:0 !important;
-}
-.select-stack .input-group:last-child .input-group-text{
-  border-top-left-radius:0 !important;
-}
-
-/* menší variant pre toolbar (sm) */
-.select-stack.select-stack-sm .input-group{
-  border-radius:10px;
-}
-.select-stack.select-stack-sm .input-group:first-child .form-select{
-  border-bottom-left-radius:0 !important;
-  border-bottom-right-radius:0 !important;
-}
-.select-stack.select-stack-sm .input-group:first-child .input-group-text{
-  border-bottom-left-radius:0 !important;
-}
-.select-stack.select-stack-sm .input-group:last-child .form-select{
-  border-top-left-radius:0 !important;
-  border-top-right-radius:0 !important;
-}
-.select-stack.select-stack-sm .input-group:last-child .input-group-text{
-  border-top-left-radius:0 !important;
+.btn-ghost[data-action="del"]:hover i {
+  color: #4b5563; /* tmavšia sivá pri hoveri */
 }
 
 
 </style>
 
-
-
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
   <div>
     <h4 class="mb-1">Kvízy: Tvorba otázok</h4>
+    <div class="text-muted small">Python • JavaScript • HTML • CSS • SQL</div>
   </div>
   <a href="{{ url_for('kviz_spustit') }}" class="btn btn-primary btn-sm">
     <i class="fas fa-play me-1"></i> Spustiť kvíz
@@ -199,12 +55,9 @@
       <hr class="my-3">
 
       <form id="questionForm" class="needs-validation" novalidate>
-      <!-- OKRUH + PODKATEGÓRIA (napojené do jedného bloku) -->
-      <div class="mb-3">
-        <label class="form-label fw-semibold">Okruh & Podkategória</label>
-
-        <div class="select-stack">
-          <!-- Horný: Okruh -->
+        <!-- OKRUH -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Okruh</label>
           <div class="input-group">
             <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
             <select class="form-select" id="category" required>
@@ -215,18 +68,21 @@
               <option>CSS</option>
               <option>SQL</option>
             </select>
+            <div class="invalid-feedback">Zvoľ okruh.</div>
           </div>
+        </div>
 
-          <!-- Dolný: Podkategória (disabled, kým nie je okruh) -->
+        <!-- PODKATEGÓRIA -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Podkategória</label>
           <div class="input-group">
             <span class="input-group-text"><i class="fa-solid fa-table-cells-large"></i></span>
             <select class="form-select" id="subcategory" required disabled>
               <option value="" selected disabled>Najprv vyber okruh</option>
             </select>
+            <div class="invalid-feedback">Zvoľ podkategóriu.</div>
           </div>
         </div>
-      </div>
-
 
         <!-- OTÁZKA -->
         <div class="form-floating mb-3">
@@ -292,10 +148,9 @@
     <div class="card-dashboard">
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h6 class="mb-0">Hotové otázky</h6>
-
-        <div class="select-stack select-stack-sm" style="min-width:220px">
-          <!-- Horný: filter okruhu -->
-          <div class="input-group input-group-sm">
+        <div class="d-flex flex-wrap gap-2">
+          <!-- Filter podľa kategórie -->
+          <div class="input-group input-group-sm" style="min-width:220px">
             <span class="input-group-text"><i class="fas fa-filter"></i></span>
             <select id="filterCategory" class="form-select form-select-sm">
               <option value="__all__" selected>Všetky okruhy</option>
@@ -307,23 +162,24 @@
             </select>
           </div>
 
-          <!-- Dolný: filter podkategórie -->
-          <div class="input-group input-group-sm">
+          <!-- Filter podľa podkategórie -->
+          <div class="input-group input-group-sm" style="min-width:220px">
             <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
             <select id="filterSubcategory" class="form-select form-select-sm" disabled>
               <option value="__all__" selected>Všetky podkategórie</option>
             </select>
           </div>
         </div>
-      </div> <!-- ✨ chýbalo: uzavretie hlavičky karty -->
+      </div>
 
       <hr class="my-3">
 
-      <ul id="questionsList" class="list-group list-group-flush"></ul>
-      <div id="emptyState" class="text-muted small mt-2" style="display:none">
-        Zatiaľ nemáš uložené otázky.
-      </div>
+      <ul id="questionsList" class="list-group list-group-flush">
+        <!-- dynamicky -->
+      </ul>
+      <div id="emptyState" class="text-muted small mt-2" style="display:none">Zatiaľ nemáš uložené otázky.</div>
     </div>
+  </div>
 
 
 <!-- EDIT MODAL -->
