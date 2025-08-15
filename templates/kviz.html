@@ -2,72 +2,276 @@
 {% block title %}Kvíz – Tvorba & správa{% endblock %}
 
 {% block content %}
+<style>
+  :root{
+    --panel:#ffffff;
+    --text:#111827;
+    --muted:#6b7280;
+    --line:#d9dee6;       /* o kúsok tmavší divider */
+    --soft:#f3f5f8;       /* jemná sivá plocha (ikony/select disabled) */
+    --soft-2:#eef2f6;     /* ešte svetlejšia varianta */
+    --ring:#0d6efd;
+  }
+
+  /* Karta / panel */
+  .card-dashboard{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:var(--panel);
+    padding:18px 16px; /* o trochu kompaktnejšie */
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  .card-dashboard > h6{
+    font-weight:600; letter-spacing:.2px;
+    margin-bottom:2px;            /* menej miesta pod nadpisom */
+  }
+  .card-dashboard hr{
+    border:0; height:1.5px;       /* výraznejší divider */
+    background:var(--line);
+    margin:10px 0 14px;           /* menšia medzera pod “Nová otázka” */
+  }
+
+  /* Form prvky – čisté a konzistentné */
+  .form-control, .form-select{
+    border-radius:12px !important;
+    border:1px solid var(--line);
+    background:#fff;
+  }
+  .form-control:focus, .form-select:focus{
+    border-color:var(--ring);
+    box-shadow:0 0 0 .2rem rgba(13,110,253,.12);
+  }
+  .input-group-text{
+    border-radius:12px 0 0 12px !important;
+    background: var(--soft);
+    border:1px solid var(--line);
+    border-right:0;
+    color: var(--muted);
+  }
+  .form-floating > label{ color:#98a1ad; }
+
+  /* Nižšie výšky pre ‘form-floating’ textové inputy (A–D) */
+  .form-floating > .form-control:not(textarea){
+    height:44px;                 /* z ~52px na kompaktnejších 44px */
+    padding-top:.8rem; padding-bottom:.8rem;
+  }
+
+  /* Disabled select – zreteľne nekliknuteľný (svetlosivý panel) */
+  .form-select:disabled,
+  select[disabled]{
+    background: var(--soft);     /* o pár odtieňov tmavšie než biela */
+    color:#94a3b8;               /* utlmený text */
+    border-color: var(--line);
+    opacity:1;                   /* nech nie je vyblednutý */
+    cursor:not-allowed;
+  }
+  /* “placeholder” vo vypnutom selecte – ešte kontrastnejší */
+  select[disabled] option[disabled]{
+    color:#9aa7b6;
+  }
+
+  /* Toolbar input-group */
+  .input-group.input-group-sm{ border-radius:12px; }
+  .input-group.input-group-sm .form-select{ border-left:0; }
+
+  /* Zoznam otázok – modern flat štýl + výraznejšia deliaca čiara */
+  .list-group{
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .list-group-item{
+    border:0;
+    border-bottom:1px solid var(--line);
+    padding:14px 16px;
+    transition:background .15s ease;
+  }
+  .list-group-item:last-child{ border-bottom:0; }
+  .list-group-item:hover{ background:#fafafa; }
+
+  /* Ikonky kategórií */
+  .icon-quiz{
+    width:22px; height:22px; object-fit:contain; flex:0 0 22px; opacity:.96;
+  }
+
+  /* Badges */
+  .badge-subtle{
+    background:#f3f4f6; color:#374151; border:1px solid #e5e7eb;
+    padding:.26rem .6rem; border-radius:999px; font-weight:500; font-size:.72rem;
+  }
+
+  /* Akčné ikonky (edit/kôš) – menšie, muted, veľký hit-area */
+  .btn-ghost{
+    border:0; background:transparent; color:#6b7280;
+    border-radius:10px; padding:6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .btn-ghost:hover{ background:#f3f4f6; color:#374151; }
+  .btn-ghost:focus-visible{ outline:2px solid rgba(13,110,253,.24); outline-offset:2px; border-radius:10px; }
+  .btn-ghost.btn-sm i{ font-size:14px; width:16px; height:16px; line-height:16px; }
+  .btn-ghost[data-action="del"] i{ color:#9ca3af; transition:color .15s ease; }
+  .btn-ghost[data-action="del"]:hover i{ color:#4b5563; }
+
+  /* Napojenie Okruh + Podkategória */
+
+
+.select-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.select-group .form-select:first-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.select-group .form-select:last-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: -1px; /* spojenie hraníc */
+}
+
+  /* --- Napojené selecty pod seba (Okruh → Podkategória) --- */
+.select-stack{ display:flex; flex-direction:column; }
+
+.select-stack .input-group{
+  border-radius:12px;
+}
+
+/* zruš dolné rohy na hornom riadku a horné rohy na dolnom riadku */
+.select-stack .input-group:first-child .form-select{
+  border-bottom-left-radius:0 !important;
+  border-bottom-right-radius:0 !important;
+}
+.select-stack .input-group:first-child .input-group-text{
+  border-bottom-left-radius:0 !important;
+}
+
+.select-stack .input-group:last-child{
+  margin-top:-1px; /* spoj hranicu */
+}
+.select-stack .input-group:last-child .form-select{
+  border-top-left-radius:0 !important;
+  border-top-right-radius:0 !important;
+}
+.select-stack .input-group:last-child .input-group-text{
+  border-top-left-radius:0 !important;
+}
+
+/* menší variant pre toolbar (sm) */
+.select-stack.select-stack-sm .input-group{
+  border-radius:10px;
+}
+.select-stack.select-stack-sm .input-group:first-child .form-select{
+  border-bottom-left-radius:0 !important;
+  border-bottom-right-radius:0 !important;
+}
+.select-stack.select-stack-sm .input-group:first-child .input-group-text{
+  border-bottom-left-radius:0 !important;
+}
+.select-stack.select-stack-sm .input-group:last-child .form-select{
+  border-top-left-radius:0 !important;
+  border-top-right-radius:0 !important;
+}
+.select-stack.select-stack-sm .input-group:last-child .input-group-text{
+  border-top-left-radius:0 !important;
+}
+
+
+</style>
+
+
+
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-  <h4 class="mb-0">Kvízy: Tvorba otázok</h4>
-  <div class="d-flex gap-2">
-    <a href="{{ url_for('kviz_spustit') }}" class="btn btn-outline-primary btn-sm">
-      <i class="fas fa-play"></i> Spustiť kvíz
-    </a>
+  <div>
+    <h4 class="mb-1">Kvízy: Tvorba otázok</h4>
   </div>
+  <a href="{{ url_for('kviz_spustit') }}" class="btn btn-primary btn-sm">
+    <i class="fas fa-play me-1"></i> Spustiť kvíz
+  </a>
 </div>
 
 <div class="row g-4">
   <!-- ĽAVO: formulár -->
   <div class="col-lg-5">
     <div class="card-dashboard">
-      <div class="d-flex align-items-center justify-content-between">
-        <h6 class="mb-0"><i class="fas fa-pen"></i> Nová otázka</h6>
-        <span class="badge bg-light text-dark">Python, JS, HTML, CSS, SQL</span>
-      </div>
+      <h6 class="mb-0">Nová otázka</h6>
       <hr class="my-3">
-      <form id="questionForm" class="needs-validation" novalidate>
-        <div class="mb-3">
-          <label class="form-label">Okruh</label>
-          <select class="form-select" id="category" required>
-            <option value="" selected disabled>Vyber okruh</option>
-            <option>Python</option>
-            <option>JS</option>
-            <option>HTML</option>
-            <option>CSS</option>
-            <option>SQL</option>
-          </select>
-          <div class="invalid-feedback">Zvoľ okruh.</div>
-        </div>
 
-        <div class="mb-3">
-          <label class="form-label">Otázka</label>
-          <textarea class="form-control" id="question" rows="3" required placeholder="Sem napíš zadanie otázky..."></textarea>
+      <form id="questionForm" class="needs-validation" novalidate>
+      <!-- OKRUH + PODKATEGÓRIA (napojené do jedného bloku) -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Okruh & Podkategória</label>
+
+        <div class="select-stack">
+          <!-- Horný: Okruh -->
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
+            <select class="form-select" id="category" required>
+              <option value="" selected disabled>Vyber okruh</option>
+              <option>Python</option>
+              <option>JavaScript</option>
+              <option>HTML</option>
+              <option>CSS</option>
+              <option>SQL</option>
+            </select>
+          </div>
+
+          <!-- Dolný: Podkategória (disabled, kým nie je okruh) -->
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-table-cells-large"></i></span>
+            <select class="form-select" id="subcategory" required disabled>
+              <option value="" selected disabled>Najprv vyber okruh</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+
+        <!-- OTÁZKA -->
+        <div class="form-floating mb-3">
+          <textarea class="form-control" id="question" style="height: 110px" required></textarea>
+          <label for="question">Znenie otázky</label>
           <div class="invalid-feedback">Otázka je povinná.</div>
         </div>
 
-        <div class="row g-2">
+        <!-- ODPOVEDE -->
+        <div class="row g-3">
           <div class="col-12 col-md-6">
-            <label class="form-label">A)</label>
-            <input class="form-control" id="optA" required placeholder="Možnosť A">
+            <div class="form-floating">
+              <input class="form-control" id="optA" placeholder="Možnosť A" required>
+              <label for="optA">A) Možnosť</label>
+            </div>
             <div class="form-check mt-2">
               <input class="form-check-input" type="radio" name="correct" id="corrA" value="A" required>
               <label class="form-check-label" for="corrA">Správna</label>
             </div>
           </div>
           <div class="col-12 col-md-6">
-            <label class="form-label">B)</label>
-            <input class="form-control" id="optB" required placeholder="Možnosť B">
+            <div class="form-floating">
+              <input class="form-control" id="optB" placeholder="Možnosť B" required>
+              <label for="optB">B) Možnosť</label>
+            </div>
             <div class="form-check mt-2">
               <input class="form-check-input" type="radio" name="correct" id="corrB" value="B" required>
               <label class="form-check-label" for="corrB">Správna</label>
             </div>
           </div>
           <div class="col-12 col-md-6">
-            <label class="form-label">C)</label>
-            <input class="form-control" id="optC" required placeholder="Možnosť C">
+            <div class="form-floating">
+              <input class="form-control" id="optC" placeholder="Možnosť C" required>
+              <label for="optC">C) Možnosť</label>
+            </div>
             <div class="form-check mt-2">
               <input class="form-check-input" type="radio" name="correct" id="corrC" value="C" required>
               <label class="form-check-label" for="corrC">Správna</label>
             </div>
           </div>
           <div class="col-12 col-md-6">
-            <label class="form-label">D)</label>
-            <input class="form-control" id="optD" required placeholder="Možnosť D">
+            <div class="form-floating">
+              <input class="form-control" id="optD" placeholder="Možnosť D" required>
+              <label for="optD">D) Možnosť</label>
+            </div>
             <div class="form-check mt-2">
               <input class="form-check-input" type="radio" name="correct" id="corrD" value="D" required>
               <label class="form-check-label" for="corrD">Správna</label>
@@ -76,44 +280,51 @@
         </div>
 
         <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Uložiť otázku</button>
-          <button type="reset" class="btn btn-light btn-sm">Vymazať</button>
+          <button type="submit" class="btn btn-primary btn-sm">Uložiť otázku</button>
+          <button type="reset" class="btn btn-outline-secondary btn-sm">Vymazať</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- PRAVO: zoznam + filtre -->
+  <!-- PRAVO: HOTOVÉ OTÁZKY – LIST -->
   <div class="col-lg-7">
     <div class="card-dashboard">
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <h6 class="mb-0"><i class="fas fa-list"></i> Moje otázky</h6>
-        <div class="d-flex gap-2">
+        <h6 class="mb-0">Hotové otázky</h6>
+
+        <div class="select-stack select-stack-sm" style="min-width:220px">
+          <!-- Horný: filter okruhu -->
           <div class="input-group input-group-sm">
             <span class="input-group-text"><i class="fas fa-filter"></i></span>
-            <select id="filterCategory" class="form-select form-select-sm" style="min-width:160px">
+            <select id="filterCategory" class="form-select form-select-sm">
               <option value="__all__" selected>Všetky okruhy</option>
-              <option>Python</option><option>JS</option><option>HTML</option><option>CSS</option><option>SQL</option>
+              <option>Python</option>
+              <option>JavaScript</option>
+              <option>HTML</option>
+              <option>CSS</option>
+              <option>SQL</option>
             </select>
           </div>
+
+          <!-- Dolný: filter podkategórie -->
           <div class="input-group input-group-sm">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input id="searchInput" type="text" class="form-control" placeholder="Hľadať v otázkach…">
+            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+            <select id="filterSubcategory" class="form-select form-select-sm" disabled>
+              <option value="__all__" selected>Všetky podkategórie</option>
+            </select>
           </div>
-          <button id="clearAllBtn" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i> Zmazať všetko</button>
         </div>
-      </div>
+      </div> <!-- ✨ chýbalo: uzavretie hlavičky karty -->
 
       <hr class="my-3">
 
-      <!-- cards grid -->
-      <div id="questionsGrid" class="row g-3">
-        <!-- dynamicky -->
+      <ul id="questionsList" class="list-group list-group-flush"></ul>
+      <div id="emptyState" class="text-muted small mt-2" style="display:none">
+        Zatiaľ nemáš uložené otázky.
       </div>
-      <div id="emptyState" class="text-muted small" style="display:none">Zatiaľ nemáš uložené otázky.</div>
     </div>
-  </div>
-</div>
+
 
 <!-- EDIT MODAL -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -129,18 +340,22 @@
           <div class="mb-2">
             <label class="form-label">Okruh</label>
             <select class="form-select" id="editCategory" required>
-              <option>Python</option><option>JS</option><option>HTML</option><option>CSS</option><option>SQL</option>
+              <option>Python</option><option>JavaScript</option><option>HTML</option><option>CSS</option><option>SQL</option>
             </select>
           </div>
           <div class="mb-2">
-            <label class="form-label">Otázka</label>
-            <textarea class="form-control" id="editQuestion" rows="3" required></textarea>
+            <label class="form-label">Podkategória</label>
+            <select class="form-select" id="editSubcategory" required></select>
+          </div>
+          <div class="form-floating mb-2">
+            <textarea class="form-control" id="editQuestion" style="height: 100px" required></textarea>
+            <label for="editQuestion">Znenie otázky</label>
           </div>
           <div class="row g-2">
-            <div class="col-6"><label class="form-label">A)</label><input class="form-control" id="editA" required></div>
-            <div class="col-6"><label class="form-label">B)</label><input class="form-control" id="editB" required></div>
-            <div class="col-6"><label class="form-label">C)</label><input class="form-control" id="editC" required></div>
-            <div class="col-6"><label class="form-label">D)</label><input class="form-control" id="editD" required></div>
+            <div class="col-6"><div class="form-floating"><input class="form-control" id="editA" placeholder="A" required><label for="editA">A) Možnosť</label></div></div>
+            <div class="col-6"><div class="form-floating"><input class="form-control" id="editB" placeholder="B" required><label for="editB">B) Možnosť</label></div></div>
+            <div class="col-6"><div class="form-floating mt-2 mt-md-0"><input class="form-control" id="editC" placeholder="C" required><label for="editC">C) Možnosť</label></div></div>
+            <div class="col-6"><div class="form-floating mt-2 mt-md-0"><input class="form-control" id="editD" placeholder="D" required><label for="editD">D) Možnosť</label></div></div>
           </div>
           <div class="mt-2">
             <label class="form-label">Správna</label>
@@ -159,26 +374,90 @@
 </div>
 
 <script>
-(function() {
+(function () {
   const LS_KEY = 'quizQuestions';
 
-  // Elements – create
+  // --- ikonky + subkategórie ---
+  const iconMap = {
+    'Python': 'python.svg',
+    'JavaScript': 'js.svg',
+    'HTML': 'html.svg',
+    'CSS': 'css.svg',
+    'SQL': 'mysql.svg'
+  };
+  const subcats = {
+    Python: [
+      'Premenné a typy','Funkcie a parametre','Podmienky (if / else)','Cykly (for / while)',
+      'Zoznamy a tuplá','Slovníky a množiny','Reťazce a metódy','OOP – triedy a objekty',
+      'Dedičnosť a super()','Moduly a importy','Práca so súbormi','Výnimky (try / except)',
+      'List comprehension','Lambda, map, filter','Dekorátory','Testovanie (unittest, pytest)',
+      'Flask – základy','Flask – routovanie a šablóny','Jinja2 – šablónovací jazyk'
+    ],
+    JavaScript: [
+      'Základy syntaxe','DOM manipulácia','Funkcie a callbacky','Události (events)',
+      'Podmienky a cykly','Fetch API / Ajax','LocalStorage','ES6+ features'
+    ],
+    CSS: [
+      'Selektory a štruktúra','Farby a pozadia','Flexbox','Grid layout',
+      'Responsívny dizajn','Animácie','Pseudo triedy','Premenné a BEM'
+    ],
+    HTML: [
+      'Základná štruktúra','Formuláre','Semantika','Tabuľky',
+      'Odkazy a obrázky','Multimédiá','Meta tagy','Základy SEO'
+    ],
+    SQL: [
+      'SELECT a FROM','WHERE a logika','JOIN operácie','GROUP BY a COUNT',
+      'INSERT, UPDATE, DELETE','Indexy a optimalizácia','Agregačné funkcie','Poddotazy'
+    ]
+  };
+
+  // --- helpers ---
+  const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  const save = (data) => localStorage.setItem(LS_KEY, JSON.stringify(data));
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const isComplete = (q) =>
+    q.category && q.subcategory && q.question && q.A && q.B && q.C && q.D && ['A', 'B', 'C', 'D'].includes(q.correct);
+
+  function fillSubcategories(selectEl, cat, placeholder = 'Vyber podkategóriu') {
+    selectEl.innerHTML = '';
+    if (!cat || !subcats[cat]) {
+      selectEl.disabled = true;
+      selectEl.innerHTML = `<option value="" selected disabled>Najprv vyber okruh</option>`;
+      return;
+    }
+    selectEl.disabled = false;
+    const def = document.createElement('option');
+    def.value = '';
+    def.textContent = placeholder;
+    def.disabled = true;
+    def.selected = true;
+    selectEl.appendChild(def);
+    subcats[cat].forEach((sc) => {
+      const o = document.createElement('option');
+      o.value = sc;
+      o.textContent = sc;
+      selectEl.appendChild(o);
+    });
+  }
+
+  // --- CREATE FORM elements ---
   const form = document.getElementById('questionForm');
   const category = document.getElementById('category');
+  const subcategory = document.getElementById('subcategory');
   const question = document.getElementById('question');
   const optA = document.getElementById('optA');
   const optB = document.getElementById('optB');
   const optC = document.getElementById('optC');
   const optD = document.getElementById('optD');
 
-  // Elements – list
-  const grid = document.getElementById('questionsGrid');
+  // --- LIST/filters elements ---
+  const list = document.getElementById('questionsList');
   const emptyState = document.getElementById('emptyState');
   const filterCategory = document.getElementById('filterCategory');
-  const searchInput = document.getElementById('searchInput');
-  const clearAllBtn = document.getElementById('clearAllBtn');
+  const filterSubcategory = document.getElementById('filterSubcategory');
 
-  // Edit modal
+  // --- EDIT MODAL elements ---
   const editModalEl = document.getElementById('editModal');
   let editModal;
   document.addEventListener('DOMContentLoaded', () => {
@@ -186,6 +465,7 @@
   });
   const editId = document.getElementById('editId');
   const editCategory = document.getElementById('editCategory');
+  const editSubcategory = document.getElementById('editSubcategory');
   const editQuestion = document.getElementById('editQuestion');
   const editA = document.getElementById('editA');
   const editB = document.getElementById('editB');
@@ -194,70 +474,84 @@
   const editCorrect = document.getElementById('editCorrect');
   const saveEditBtn = document.getElementById('saveEditBtn');
 
-  // Storage helpers
-  const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-  const save = (data) => localStorage.setItem(LS_KEY, JSON.stringify(data));
-  const uid = () => Math.random().toString(36).slice(2, 9);
+  // --- dynamic subcategory (create) ---
+  category.addEventListener('change', () => fillSubcategories(subcategory, category.value));
 
-  // Render list as cards
-  function renderGrid() {
-    const data = load();
+  // --- dynamic subcategory (edit) ---
+  editCategory.addEventListener('change', () =>
+    fillSubcategories(editSubcategory, editCategory.value, 'Vyber podkategóriu')
+  );
+
+  // --- filters: when category changes, rebuild subcategory filter ---
+  filterCategory.addEventListener('change', () => {
+    const cat = filterCategory.value;
+    // reset subcategory
+    filterSubcategory.innerHTML = `<option value="__all__" selected>Všetky podkategórie</option>`;
+    if (cat !== '__all__' && subcats[cat]) {
+      filterSubcategory.disabled = false;
+      subcats[cat].forEach((sc) => {
+        const o = document.createElement('option');
+        o.value = sc;
+        o.textContent = sc;
+        filterSubcategory.appendChild(o);
+      });
+    } else {
+      filterSubcategory.disabled = true;
+    }
+    renderList();
+  });
+  filterSubcategory.addEventListener('change', renderList);
+
+  // --- render list ---
+  function renderList() {
+    const data = load().filter(isComplete);
     const fc = filterCategory.value;
-    const q = (searchInput.value || '').toLowerCase();
+    const fs = filterSubcategory.value;
 
-    const filtered = data.filter(item => {
+    const filtered = data.filter((item) => {
       const okCat = fc === '__all__' ? true : item.category === fc;
-      const okSearch = !q ? true :
-        item.question.toLowerCase().includes(q) ||
-        item.A.toLowerCase().includes(q) ||
-        item.B.toLowerCase().includes(q) ||
-        item.C.toLowerCase().includes(q) ||
-        item.D.toLowerCase().includes(q);
-      return okCat && okSearch;
+      const okSub = fs === '__all__' || filterSubcategory.disabled ? true : item.subcategory === fs;
+      return okCat && okSub;
     });
 
-    grid.innerHTML = '';
+    list.innerHTML = '';
     emptyState.style.display = filtered.length ? 'none' : '';
 
-    filtered.forEach(item => {
-      const col = document.createElement('div');
-      col.className = 'col-12 col-md-6';
-      col.innerHTML = `
-        <div class="card-dashboard h-100">
-          <div class="d-flex align-items-center justify-content-between">
-            <span class="badge bg-light text-dark">${item.category}</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-light" data-action="edit" data-id="${item.id}">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" data-action="del" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-              </button>
+    filtered.forEach((item) => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex align-items-start justify-content-between gap-3';
+      const iconSrc = `/static/icons/${iconMap[item.category] || 'code.svg'}`;
+
+      li.innerHTML = `
+        <div class="d-flex align-items-start gap-3">
+          <img class="icon-quiz" src="${iconSrc}" alt="${item.category}">
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="badge badge-subtle">${item.category}</span>
+              ${item.subcategory ? `<span class="badge badge-subtle">${escapeHtml(item.subcategory)}</span>` : ''}
             </div>
+            <div class="mt-1 small">${escapeHtml(item.question)}</div>
           </div>
-          <div class="mt-2 small">${escapeHtml(item.question)}</div>
-          <ul class="mt-2 mb-0 small" style="padding-left:1rem">
-            <li>(A) ${escapeHtml(item.A)}</li>
-            <li>(B) ${escapeHtml(item.B)}</li>
-            <li>(C) ${escapeHtml(item.C)}</li>
-            <li>(D) ${escapeHtml(item.D)}</li>
-          </ul>
-          <div class="mt-2"><span class="text-muted small">Správna:</span> <strong>${item.correct}</strong></div>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+          <button class="btn-ghost btn-sm" data-action="edit" data-id="${item.id}" title="Upraviť">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn-ghost btn-sm" data-action="del" data-id="${item.id}" title="Zmazať">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
       `;
-      grid.appendChild(col);
+      list.appendChild(li);
     });
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  }
-
-  // Create
+  // --- create submit ---
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!form.checkValidity()) {
-      form.classList.add('was-validated'); return;
+      form.classList.add('was-validated');
+      return;
     }
     const correct = form.querySelector('input[name="correct"]:checked')?.value;
     if (!correct) return;
@@ -266,6 +560,7 @@
     data.push({
       id: uid(),
       category: category.value,
+      subcategory: subcategory.value,
       question: question.value.trim(),
       A: optA.value.trim(),
       B: optB.value.trim(),
@@ -274,32 +569,41 @@
       correct
     });
     save(data);
+
+    // reset form
     form.reset();
     form.classList.remove('was-validated');
-    renderGrid();
+    subcategory.disabled = true;
+    subcategory.innerHTML = `<option value="" selected disabled>Najprv vyber okruh</option>`;
+
+    // re-render list (works now because renderList is in same scope)
+    renderList();
   });
 
-  // Edit/Delete
-  grid.addEventListener('click', (e) => {
+  // --- edit/delete delegation on list ---
+  list.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action]');
     if (!btn) return;
     const id = btn.getAttribute('data-id');
     const data = load();
-    const idx = data.findIndex(q => q.id === id);
+    const idx = data.findIndex((q) => q.id === id);
     if (idx === -1) return;
 
     if (btn.dataset.action === 'del') {
       if (confirm('Zmazať otázku?')) {
         data.splice(idx, 1);
         save(data);
-        renderGrid();
+        renderList();
       }
       return;
     }
+
     if (btn.dataset.action === 'edit') {
       const q = data[idx];
       editId.value = q.id;
       editCategory.value = q.category;
+      fillSubcategories(editSubcategory, q.category, 'Vyber podkategóriu');
+      editSubcategory.value = q.subcategory || '';
       editQuestion.value = q.question;
       editA.value = q.A;
       editB.value = q.B;
@@ -310,15 +614,17 @@
     }
   });
 
+  // --- save edit ---
   saveEditBtn.addEventListener('click', () => {
     const id = editId.value;
     const data = load();
-    const idx = data.findIndex(q => q.id === id);
+    const idx = data.findIndex((q) => q.id === id);
     if (idx === -1) return;
 
     data[idx] = {
       ...data[idx],
       category: editCategory.value,
+      subcategory: editSubcategory.value,
       question: editQuestion.value.trim(),
       A: editA.value.trim(),
       B: editB.value.trim(),
@@ -327,19 +633,15 @@
       correct: editCorrect.value
     };
     save(data);
-    renderGrid();
+    renderList();
     editModal?.hide();
   });
 
-  // Filters
-  filterCategory.addEventListener('change', renderGrid);
-  searchInput.addEventListener('input', renderGrid);
-  clearAllBtn.addEventListener('click', () => {
-    if (confirm('Naozaj zmazať všetky otázky?')) { localStorage.removeItem(LS_KEY); renderGrid(); }
-  });
-
-  // Init
-  renderGrid();
+  // --- init ---
+  // default stav: subcategory filter vypnutý
+  filterSubcategory.disabled = true;
+  renderList();
 })();
 </script>
+
 {% endblock %}
