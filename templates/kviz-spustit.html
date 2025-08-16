@@ -2,54 +2,200 @@
 {% block title %}Kvíz – Spustiť{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-  <h4 class="mb-0">Spustiť kvíz</h4>
-  <a href="{{ url_for('kviz') }}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Späť na tvorbu</a>
+<style>
+  :root{
+    --panel:#fff;
+    --soft:#f8fafc;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e5e7eb;
+    --ring:#3b82f6;
+    --ring-weak:rgba(59,130,246,.08);
+    --ring-weak-2:rgba(59,130,246,.12);
+    --success:#16a34a;
+    --danger:#dc2626;
+  }
+
+  /* ====== HLAVIČKA + TOOLBAR ====== */
+  .app-head{
+    display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-bottom:12px;
+  }
+  .app-head h4{ margin:0; letter-spacing:.2px; color:var(--text); font-weight:700; }
+  .btn-ghost{
+    border:1px solid var(--line); background:#fff; color:#111827;
+    padding:.45rem .65rem; border-radius:10px;
+  }
+  .btn-ghost:hover{ background:#f3f4f6; }
+
+  .card-dashboard{
+    border:1px solid var(--line);
+    background:var(--panel); border-radius:16px; padding:16px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+
+  .toolbar .form-label{ font-weight:600; color:#334155; margin-bottom:6px; }
+  .toolbar .form-select, .toolbar .form-control{
+    height:40px; border-radius:10px; border:1px solid var(--line); padding:.5rem .7rem;
+  }
+  .toolbar .form-select:focus, .toolbar .form-control:focus{
+    border-color:#c7d2fe; box-shadow:0 0 0 .2rem var(--ring-weak);
+  }
+  .toolbar .btn{ border-radius:10px; }
+  .toolbar .btn-primary{ padding:.55rem .8rem; }   /* ako predtým */
+  .toolbar .btn-light{ border:1px solid var(--line); } /* ako predtým */
+  .hint{ color:var(--muted); font-size:.82rem; }
+
+  /* jemná inline hláška (keď nie sú otázky) */
+  .empty-msg{
+    display:none; margin-top:8px; font-size:.9rem; color:#334155;
+    background:#f8fafc; border:1px dashed #e2e8f0; border-radius:10px; padding:.5rem .7rem;
+  }
+
+  /* ikony v tlačidlách – vždy viditeľné (bez zmeny vzhľadu tlačidiel) */
+  .btn i{ opacity:1; vertical-align:middle; }
+  #startQuizBtn i{ margin-right:.5rem; }
+  #nextBtn i{ margin-left:.5rem; }
+  #resetQuizBtn i{ margin-right:.45rem; }
+
+  /* ====== PO SPUSTENÍ – PRÉMIOVÝ LOOK ====== */
+  .quiz-premium{
+    background:#ffffffcc;
+    backdrop-filter:saturate(140%) blur(6px);
+    -webkit-backdrop-filter:saturate(140%) blur(6px);
+    box-shadow:0 8px 20px rgba(15,23,42,.08);
+  }
+
+  .quiz-premium .quiz-progress{ margin-bottom:14px; }
+  .quiz-premium .quiz-meta{
+    display:flex; align-items:center; justify-content:space-between;
+    color:var(--muted); font-size:.88rem; font-weight:600;
+  }
+
+  .quiz-premium .chip{
+    display:inline-flex; align-items:center; gap:.45rem;
+    padding:.26rem .65rem; border-radius:999px; background:#eef2ff; color:#3730a3; font-weight:700; font-size:.75rem;
+    border:1px solid #e0e7ff;
+  }
+  .quiz-premium .chip img{ width:16px; height:16px; object-fit:contain; }
+  .quiz-premium .chip .icons{ display:inline-flex; align-items:center; gap:6px; }
+  .quiz-premium .chip .icons img{ opacity:.95; }
+
+  .quiz-premium .progress{ background:#eef2ff; height:9px; border-radius:999px; overflow:hidden; }
+  .quiz-premium .progress-bar{
+    background:linear-gradient(90deg,#60a5fa,#3b82f6 60%,#2563eb);
+    transition:width .35s ease;
+  }
+  .quiz-premium .steps{ display:flex; gap:6px; margin-top:8px; }
+  .quiz-premium .step-dot{
+    width:8px; height:8px; border-radius:50%; background:#e5e7eb; flex:0 0 auto;
+    transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .quiz-premium .step-dot.active{ background:#93c5fd; box-shadow:0 0 0 4px var(--ring-weak-2); transform:scale(1.12); }
+
+  .quiz-premium .q-title{ font-weight:800; font-size:1.1rem; color:#0b1220; }
+
+  /* choice cards */
+  .quiz-premium .choices{ margin-top:.6rem; }
+  .quiz-premium .choice{
+    position:relative; display:flex; align-items:center; gap:.7rem;
+    border:1px solid var(--line); border-radius:14px; padding:.7rem .8rem; background:#fff;
+    cursor:pointer; user-select:none;
+    transition:background .15s, border-color .15s, box-shadow .15s, transform .06s;
+  }
+  .quiz-premium .choice + .choice{ margin-top:10px; }
+  .quiz-premium .choice:hover{ background:#f9fafb; border-color:#d7dceb; }
+  .quiz-premium .choice:active{ transform:scale(.997); }
+
+  /* skryté rádio – kliká cez JS na celú kartu */
+  .quiz-premium .choice input{ position:absolute; opacity:0; width:0; height:0; }
+
+  .quiz-premium .bullet{
+    width:20px; height:20px; border:2px solid #cbd5e1; border-radius:50%; display:inline-block; flex:0 0 auto; background:#fff;
+  }
+  .quiz-premium .choice .label{ color:#0f172a; font-weight:600; }
+  .quiz-premium .choice.checked{ border-color:#bfdbfe; box-shadow:0 0 0 .3rem var(--ring-weak); background:#fbfdff; }
+  .quiz-premium .choice.checked .bullet{ border-color:#3b82f6; background:#3b82f6; box-shadow:inset 0 0 0 4px #fff; }
+
+  /* actions */
+  .quiz-premium .quiz-actions{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-top:16px; }
+  .quiz-premium .quiz-actions .btn{ border-radius:12px; }
+  .quiz-premium .quiz-actions .btn-light{ border:1px solid var(--line); }
+
+  /* výsledok */
+  .score{ font-weight:800; }
+  .result-line .ok{ color:var(--success); font-weight:800; }
+  .result-line .bad{ color:var(--danger); font-weight:800; }
+
+  @media (prefers-reduced-motion:reduce){
+    .quiz-premium .progress-bar, .quiz-premium .choice, .quiz-premium .step-dot{ transition:none; }
+  }
+</style>
+
+<div class="app-head">
+  <h4>Spustiť kvíz</h4>
+  <a href="{{ url_for('kviz') }}" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left me-1"></i> Späť na tvorbu</a>
 </div>
 
-<div class="card-dashboard mb-3">
-  <div class="row g-2 align-items-end">
-    <div class="col-sm-6 col-md-4">
+<!-- Toolbar -->
+<div class="card-dashboard toolbar mb-3">
+  <div class="row g-3 align-items-end">
+    <!-- KATEGÓRIA -->
+    <div class="col-sm-6 col-md-3">
       <label class="form-label">Okruh</label>
       <select id="quizCategory" class="form-select">
         <option value="__all__">Všetko</option>
-        <option>Python</option><option>JS</option><option>HTML</option><option>CSS</option><option>SQL</option>
+        <option>Python</option>
+        <option>JavaScript</option>
+        <option>HTML</option>
+        <option>CSS</option>
+        <option>SQL</option>
       </select>
     </div>
+
+    <!-- PODKATEGÓRIA (dynamická) -->
     <div class="col-sm-6 col-md-3">
+      <label class="form-label">Podkategória</label>
+      <select id="quizSubcategory" class="form-select">
+        <option value="__all__">Všetko</option>
+      </select>
+    </div>
+
+    <!-- POČET -->
+    <div class="col-sm-6 col-md-2">
       <label class="form-label">Počet otázok</label>
       <input id="quizCount" type="number" class="form-control" min="1" value="5">
     </div>
-    <div class="col-md-5 d-grid d-md-flex gap-2">
-      <button id="startQuizBtn" class="btn btn-primary"><i class="fas fa-play"></i> Spustiť</button>
-      <button id="resetQuizBtn" class="btn btn-light" disabled>Zrušiť</button>
+
+    <!-- AKCIE (ako predtým) -->
+    <div class="col-md-4 d-grid d-md-flex gap-2">
+      <button id="startQuizBtn" class="btn btn-primary w-100 w-md-auto"><i class="fas fa-play me-1"></i> Spustiť</button>
+      <button id="resetQuizBtn" class="btn btn-light" disabled><i class="fas fa-ban me-1"></i> Zrušiť</button>
     </div>
   </div>
+  <div id="emptyMsg" class="empty-msg"></div>
+  <div class="hint mt-2">Tip: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> vyberú odpoveď, <kbd>P</kbd>/<kbd>N</kbd> predchádzajúca/ďalšia, <kbd>Enter</kbd> = ďalej/vyhodnotiť.</div>
 </div>
 
-<div id="quizArea" class="card-dashboard" style="display:none">
-  <!-- Progress -->
-  <div class="mb-3">
-    <div class="d-flex justify-content-between small text-muted">
+<!-- Quiz karta -->
+<div id="quizArea" class="card-dashboard quiz-premium" style="display:none">
+  <div class="quiz-progress">
+    <div class="quiz-meta">
       <span id="progressText">Otázka 1/5</span>
-      <span id="categoryChip" class="badge bg-light text-dark"></span>
+      <span id="categoryChip" class="chip">Mix</span>
     </div>
-    <div class="progress" style="height: 8px;">
-      <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+    <div class="progress mt-2">
+      <div id="progressBar" class="progress-bar" role="progressbar" style="width:0%"></div>
     </div>
+    <div id="steps" class="steps"></div>
   </div>
 
-  <!-- Otázka -->
-  <div id="qBox">
-    <!-- dynamicky -->
-  </div>
+  <div id="qBox"></div>
 
-  <!-- Ovládanie -->
-  <div class="d-flex justify-content-between mt-3">
-    <button id="prevBtn" class="btn btn-light" disabled><i class="fas fa-chevron-left"></i> Predchádzajúca</button>
+  <div class="quiz-actions">
+    <button id="prevBtn" class="btn btn-light" disabled><i class="fas fa-chevron-left me-1"></i> Predchádzajúca</button>
     <div class="d-flex gap-2">
       <button id="finishBtn" class="btn btn-outline-secondary" disabled>Vyhodnotiť</button>
-      <button id="nextBtn" class="btn btn-primary">Ďalšia <i class="fas fa-chevron-right"></i></button>
+      <button id="nextBtn" class="btn btn-primary">Ďalšia <i class="fas fa-chevron-right ms-1"></i></button>
     </div>
   </div>
 </div>
@@ -57,10 +203,10 @@
 <!-- Výsledok -->
 <div id="resultBox" class="card-dashboard mt-3" style="display:none">
   <h6 class="mb-2">Výsledok</h6>
-  <div id="scoreLine" class="fw-semibold mb-2"></div>
+  <div id="scoreLine" class="score mb-2"></div>
   <div id="answerReview" class="small"></div>
   <div class="mt-3 d-flex gap-2">
-    <button id="retryBtn" class="btn btn-primary btn-sm"><i class="fas fa-redo"></i> Skúsiť znova</button>
+    <button id="retryBtn" class="btn btn-primary btn-sm"><i class="fas fa-redo me-1"></i> Skúsiť znova</button>
     <a href="{{ url_for('kviz') }}" class="btn btn-light btn-sm">Späť na otázky</a>
   </div>
 </div>
@@ -68,11 +214,23 @@
 <script>
 (function() {
   const LS_KEY = 'quizQuestions';
+  const ICON_BASE = '/static/icons/';
+
+  // Ikonky podľa kategórie
+  const iconMap = {
+    'Python': 'python.svg',
+    'JavaScript': 'js.svg',
+    'HTML': 'html.svg',
+    'CSS': 'css.svg',
+    'SQL': 'mysql.svg'
+  };
+
   const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
   const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   // Elements
   const quizCategory = document.getElementById('quizCategory');
+  const quizSubcategory = document.getElementById('quizSubcategory');
   const quizCount = document.getElementById('quizCount');
   const startQuizBtn = document.getElementById('startQuizBtn');
   const resetQuizBtn = document.getElementById('resetQuizBtn');
@@ -80,6 +238,7 @@
   const qBox = document.getElementById('qBox');
   const progressText = document.getElementById('progressText');
   const progressBar = document.getElementById('progressBar');
+  const stepsEl = document.getElementById('steps');
   const categoryChip = document.getElementById('categoryChip');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
@@ -88,6 +247,7 @@
   const scoreLine = document.getElementById('scoreLine');
   const answerReview = document.getElementById('answerReview');
   const retryBtn = document.getElementById('retryBtn');
+  const emptyMsg = document.getElementById('emptyMsg');
 
   // State
   let questions = [];
@@ -96,64 +256,164 @@
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
 
+  function showEmpty(msg){
+    emptyMsg.textContent = msg;
+    emptyMsg.style.display = 'block';
+  }
+  function hideEmpty(){
+    emptyMsg.textContent = '';
+    emptyMsg.style.display = 'none';
+  }
+
+  // Subkategórie podľa zvoleného okruhu
+  function populateSubcategories(){
+    const data = load();
+    const cat = quizCategory.value;
+
+    const subs = new Set();
+    data.forEach(q => {
+      if (cat === '__all__' || q.category === cat) {
+        if (q.subcategory) subs.add(q.subcategory);
+      }
+    });
+
+    quizSubcategory.innerHTML = '<option value="__all__">Všetko</option>';
+    [...subs].sort().forEach(sc => {
+      const opt = document.createElement('option');
+      opt.value = sc;
+      opt.textContent = sc;
+      quizSubcategory.appendChild(opt);
+    });
+
+    // info keď nie sú otázky v danom okruhu
+    const pool = data.filter(q => cat === '__all__' || q.category === cat);
+    if (!pool.length && cat !== '__all__') {
+      showEmpty(`V okruhu „${cat}” zatiaľ nie sú žiadne otázky.`);
+    } else {
+      hideEmpty();
+    }
+  }
+
+  function renderCategoryChip(catValue){
+    if (catValue === '__all__') {
+      // zobraz všetky ikonky
+      const allIcons = Object.values(iconMap)
+        .map(name => `<img src="${ICON_BASE}${name}" alt="" title="">`)
+        .join('');
+      categoryChip.innerHTML = `<span class="icons">${allIcons}</span><span>Mix</span>`;
+      return;
+    }
+    const icon = iconMap[catValue];
+    if (icon) {
+      categoryChip.innerHTML = `<img src="${ICON_BASE}${icon}" alt="${catValue}"> <span>${catValue}</span>`;
+    } else {
+      categoryChip.textContent = catValue;
+    }
+  }
+
+  function poolForSelection(){
+    let pool = load().filter(q => (quizCategory.value === '__all__' || q.category === quizCategory.value));
+    if (quizSubcategory.value !== '__all__') {
+      pool = pool.filter(q => q.subcategory === quizSubcategory.value);
+    }
+    return pool;
+  }
+
+  function drawSteps(){
+    stepsEl.innerHTML = '';
+    for (let i=0;i<questions.length;i++){
+      const dot = document.createElement('div');
+      dot.className = 'step-dot' + (i===idx ? ' active':'');
+      stepsEl.appendChild(dot);
+    }
+  }
+
   function startQuiz() {
-    const pool = load().filter(q => quizCategory.value === '__all__' || q.category === quizCategory.value);
+    const pool = poolForSelection();
     const count = Math.max(1, parseInt(quizCount.value || '1', 10));
-    if (!pool.length) { alert('V zvolenom okruhu nemáš žiadne otázky.'); return; }
+
+    if (!pool.length) {
+      const catLabel = quizCategory.value === '__all__' ? 'zvolenom výbere' : `okruhu „${quizCategory.value}”`;
+      const scPart = (quizSubcategory.value !== '__all__') ? ` a podkategórii „${quizSubcategory.value}”` : '';
+      showEmpty(`V ${catLabel}${scPart} zatiaľ nie sú žiadne otázky.`);
+      quizArea.style.display = 'none';
+      resultBox.style.display = 'none';
+      return;
+    } else {
+      hideEmpty();
+    }
+
     shuffle(pool);
     questions = pool.slice(0, count);
     idx = 0; answers = {};
-    categoryChip.textContent = quizCategory.value === '__all__' ? 'Mix' : quizCategory.value;
+    renderCategoryChip(quizCategory.value);
 
     quizArea.style.display = '';
     resultBox.style.display = 'none';
     resetQuizBtn.disabled = false;
     finishBtn.disabled = questions.length === 0;
     prevBtn.disabled = true;
+
     renderQuestion();
     updateProgress();
+    drawSteps();
   }
 
   function renderQuestion() {
     const q = questions[idx];
+    const letters = ['A','B','C','D'];
+
+    const choicesHtml = letters.map(letter => {
+      const checked = answers[idx] === letter ? 'checked' : '';
+      return `
+        <label class="choice ${checked ? 'checked' : ''}">
+          <input type="radio" name="q" value="${letter}" ${checked}>
+          <span class="bullet"></span>
+          <span class="label">(${letter}) ${escapeHtml(q[letter])}</span>
+        </label>
+      `;
+    }).join('');
+
     qBox.innerHTML = `
-      <div class="mb-2 fw-semibold">${escapeHtml(q.question)}</div>
-      <div class="mt-2">
-        ${['A','B','C','D'].map(letter => `
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="q" id="opt${letter}" value="${letter}" ${answers[idx]===letter?'checked':''}>
-            <label class="form-check-label" for="opt${letter}">(${letter}) ${escapeHtml(q[letter])}</label>
-          </div>
-        `).join('')}
-      </div>
+      <div class="q-title">${escapeHtml(q.question)}</div>
+      <div class="choices">${choicesHtml}</div>
     `;
-    // enable/disable buttons
+
+    // klik na celú kartu
+    qBox.querySelectorAll('.choice').forEach(choice => {
+      choice.addEventListener('click', () => {
+        const input = choice.querySelector('input[type="radio"]');
+        if (!input.checked) {
+          input.checked = true;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    });
+
+    // synchronizácia stavu
+    qBox.querySelectorAll('input[name="q"]').forEach(r => {
+      r.addEventListener('change', (e) => {
+        answers[idx] = e.target.value;
+        qBox.querySelectorAll('.choice').forEach(c => c.classList.remove('checked'));
+        e.target.closest('.choice')?.classList.add('checked');
+      });
+    });
+
     nextBtn.disabled = (idx === questions.length - 1);
     finishBtn.disabled = false;
     prevBtn.disabled = (idx === 0);
-
-    // on change, store answer
-    qBox.querySelectorAll('input[name="q"]').forEach(r => {
-      r.addEventListener('change', (e) => { answers[idx] = e.target.value; });
-    });
   }
 
   function updateProgress() {
     progressText.textContent = `Otázka ${idx+1}/${questions.length}`;
     const pct = Math.round(((idx+1)/questions.length)*100);
     progressBar.style.width = pct + '%';
+    progressBar.setAttribute('aria-valuenow', pct);
+    [...stepsEl.children].forEach((d, i) => d.classList.toggle('active', i === idx));
   }
 
-  function next() {
-    if (idx < questions.length - 1) {
-      idx++; renderQuestion(); updateProgress();
-    }
-  }
-  function prev() {
-    if (idx > 0) {
-      idx--; renderQuestion(); updateProgress();
-    }
-  }
+  function next() { if (idx < questions.length - 1) { idx++; renderQuestion(); updateProgress(); } }
+  function prev() { if (idx > 0) { idx--; renderQuestion(); updateProgress(); } }
 
   function evaluate() {
     let correct = 0;
@@ -163,10 +423,13 @@
       const ok = chosen === q.correct;
       if (ok) correct++;
       review += `
-        <div class="mb-1">
-          <strong>${i+1}.</strong> Správna: <b>${q.correct}</b>,
-          Tvoja: <span class="${ok?'text-success':'text-danger'}">${chosen}</span>
-          ${!ok ? `<div class="text-muted">(${q.A?'A: '+escapeHtml(q.A)+'; ':''}${q.B?'B: '+escapeHtml(q.B)+'; ':''}${q.C?'C: '+escapeHtml(q.C)+'; ':''}${q.D?'D: '+escapeHtml(q.D):''})</div>` : ''}
+        <div class="result-line mb-2">
+          <strong>${i+1}.</strong>
+          <span class="ms-2">Správna: <b>${q.correct}</b></span>
+          <span class="ms-2">Tvoja: <span class="${ok?'ok':'bad'}">${chosen}</span></span>
+          ${!ok ? `<div class="text-muted small mt-1">
+            A: ${escapeHtml(q.A)} · B: ${escapeHtml(q.B)} · C: ${escapeHtml(q.C)} · D: ${escapeHtml(q.D)}
+          </div>` : ''}
         </div>`;
     });
     scoreLine.textContent = `Skóre: ${correct} / ${questions.length}`;
@@ -184,6 +447,30 @@
     resetQuizBtn.disabled = true;
   }
 
+  // Live zmeny – dopĺňanie subkategórií a reset subcat na „Všetko“
+  quizCategory.addEventListener('change', () => {
+    populateSubcategories();
+    quizSubcategory.value = '__all__';
+  });
+
+  // Keyboard shortcuts (ponechané)
+  document.addEventListener('keydown', (e)=>{
+    if (quizArea.style.display === 'none') return;
+    const key = e.key.toLowerCase();
+    if (['1','2','3','4'].includes(key)) {
+      const map = { '1':'A','2':'B','3':'C','4':'D' };
+      const letter = map[key];
+      const input = qBox.querySelector(`input[name="q"][value="${letter}"]`);
+      if (input) { input.checked = true; input.dispatchEvent(new Event('change',{bubbles:true})); }
+    } else if (key === 'n') {
+      next();
+    } else if (key === 'p') {
+      prev();
+    } else if (key === 'enter') {
+      if (idx === questions.length - 1) evaluate(); else next();
+    }
+  });
+
   // Wireup
   startQuizBtn.addEventListener('click', startQuiz);
   nextBtn.addEventListener('click', next);
@@ -192,9 +479,13 @@
   resetQuizBtn.addEventListener('click', resetAll);
   retryBtn.addEventListener('click', startQuiz);
 
-  // Optional: načítanie parametrov z query (?cat=Python&n=10)
+  // Init
+  populateSubcategories();
+
+  // Optional: query params (?cat=Python&sub=Podkategoria&n=10)
   const params = new URLSearchParams(location.search);
-  if (params.get('cat')) quizCategory.value = params.get('cat');
+  if (params.get('cat')) { quizCategory.value = params.get('cat'); populateSubcategories(); }
+  if (params.get('sub')) { quizSubcategory.value = params.get('sub'); }
   if (params.get('n')) quizCount.value = params.get('n');
 })();
 </script>
