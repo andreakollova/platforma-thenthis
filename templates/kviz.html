@@ -3,45 +3,107 @@
 
 {% block content %}
 <style>
-  /* jemné doladenia vzhľadu listu */
-  .icon-quiz {
-    width: 28px; height: 28px; object-fit: contain;
-  }
-  .list-group-item:hover { background: #fafafa; }
-  .btn-ghost {
-    border: 0; background: transparent; color: #6b7280;  /* muted sivá */
-  }
-  .btn-ghost:hover { color: #111827; background: #f3f4f6; }
-  .badge-subtle {
-    background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
+  :root{
+    --panel:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e5e7eb;
+    --ring:#3b82f6;
+    --soft:#f8fafc;
   }
 
-/* Menšie ikony edit a kôš */
-.btn-ghost.btn-sm i {
-  font-size: 16px; /* menšie než default */
-  width: 16px;
-  height: 16px;
-  line-height: 16px;
-}
+  .page-head h4{ font-weight:600; letter-spacing:.2px; color:var(--text); }
+  .card-dashboard{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:var(--panel);
+    padding:16px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  hr{ border-color:var(--line); opacity:1; }
 
-/* Mutnutá farba koša */
-.btn-ghost[data-action="del"] i {
-  color: #9ca3af; /* jemná sivá */
-  transition: color 0.2s ease;
-}
+  /* ----- Inputs (no floating) ----- */
+  .field{ margin-bottom:14px; }
+  .field label.form-label{
+    display:block; margin-bottom:6px; font-weight:600; color:#334155; font-size:.92rem;
+  }
+  .field .form-control,
+  .field .form-select{
+    height:40px; padding:.5rem .7rem; font-size:.94rem;
+    border:1px solid var(--line); border-radius:10px; background:#fff;
+  }
+  .field textarea.form-control{
+    height:60px; /* bolo 120px */
+    resize:vertical;
+    padding:.65rem .75rem;
+  }
+  .form-control::placeholder{ color:#9aa3af; font-size:.9rem; }
+  .form-control:focus, .form-select:focus{
+    border-color:#c7d2fe;
+    box-shadow:0 0 0 .2rem rgba(59,130,246,.08);
+  }
 
-.btn-ghost[data-action="del"]:hover i {
-  color: #4b5563; /* tmavšia sivá pri hoveri */
-}
+  /* ----- Modern 'Správna' chip (scoped) ----- */
+  .answers .option-block{ display:block; }
+  .answers .option-block + .option-block{ margin-top:18px; } /* more space before next option */
 
+  .answers .option-label{
+    display:block; margin-bottom:6px; font-weight:600; color:#334155; font-size:.92rem;
+  }
+  .answers .form-control{
+    height:40px; padding:.5rem .7rem; font-size:.94rem;
+    border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+  }
+  .answers .form-control::placeholder{ color:#9aa3af; font-size:.9rem; }
+  .answers .form-control:focus{
+    border-color:#c7d2fe; box-shadow:0 0 0 .2rem rgba(59,130,246,.08); outline:0;
+  }
+
+  .answers .chip-row{ margin-top:6px; display:flex; align-items:center; }
+  .answers .correct-radio{ position:absolute; width:0; height:0; opacity:0; pointer-events:none; }
+  .answers .chip{
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.26rem .56rem; font-size:.8rem; line-height:1;
+    border:1px solid #e5e7eb; border-radius:999px;
+    background:#fff; color:#334155; cursor:pointer; user-select:none;
+    transition:background .15s, color .15s, border-color .15s, box-shadow .15s;
+  }
+  .answers .correct-radio:focus + .chip{ box-shadow:0 0 0 .2rem rgba(59,130,246,.15); }
+  .answers .correct-radio:checked + .chip{ background:#3b82f6; border-color:#3b82f6; color:#fff; }
+  .answers .chip::before{
+    content:""; width:12px; height:12px; border-radius:50%; border:2px solid currentColor;
+    display:inline-block; transform:translateY(1px);
+  }
+  .answers .correct-radio:checked + .chip::before{
+    content:"✓"; width:auto; height:auto; border:0; font-weight:700; font-size:.78rem;
+  }
+
+  /* List */
+  .icon-quiz{ width:24px; height:24px; object-fit:contain; }
+  .badge-subtle{
+    background:#f1f5f9; color:#334155; border:1px solid #e2e8f0;
+    font-weight:500; border-radius:999px; padding:.18rem .6rem; font-size:.75rem;
+  }
+  .list-group-item{ padding:.7rem .6rem; border-color:var(--line); }
+  .list-group-item:hover{ background:#fafafa; }
+  #emptyState{ color:var(--muted); }
+
+  .btn-ghost{
+    border:0; background:transparent; color:#6b7280; padding:.35rem .5rem; border-radius:10px;
+  }
+  .btn-ghost:hover{ background:#f3f4f6; color:#111827; }
+  .btn-ghost.btn-sm i{ font-size:16px; width:16px; height:16px; line-height:16px; }
+  .btn-ghost[data-action="del"] i{ color:#9ca3af; }
+
+  .input-group-text{ background:var(--soft); border-color:var(--line); color:#6b7280; }
+  .btn-primary.btn-sm{ padding:.45rem .7rem; border-radius:10px; }
+
+  .modal-content{ border-radius:14px; }
 
 </style>
 
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-  <div>
-    <h4 class="mb-1">Kvízy: Tvorba otázok</h4>
-    <div class="text-muted small">Python • JavaScript • HTML • CSS • SQL</div>
-  </div>
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 page-head">
+  <h4 class="mb-0">Kvízy: Tvorba otázok</h4>
   <a href="{{ url_for('kviz_spustit') }}" class="btn btn-primary btn-sm">
     <i class="fas fa-play me-1"></i> Spustiť kvíz
   </a>
@@ -51,33 +113,29 @@
   <!-- ĽAVO: formulár -->
   <div class="col-lg-5">
     <div class="card-dashboard">
-      <h6 class="mb-0">Nová otázka</h6>
-      <hr class="my-3">
+      <h6 class="mb-1">Nová otázka</h6>
+      <hr class="my-2">
 
       <form id="questionForm" class="needs-validation" novalidate>
         <!-- OKRUH -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Okruh</label>
+        <div class="field">
+          <label class="form-label">Okruh</label>
           <div class="input-group">
             <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
-            <select class="form-select" id="category" required>
+            <select class="form-select" id="category" required aria-label="Okruh">
               <option value="" selected disabled>Vyber okruh</option>
-              <option>Python</option>
-              <option>JavaScript</option>
-              <option>HTML</option>
-              <option>CSS</option>
-              <option>SQL</option>
+              <option>Python</option><option>JavaScript</option><option>HTML</option><option>CSS</option><option>SQL</option>
             </select>
             <div class="invalid-feedback">Zvoľ okruh.</div>
           </div>
         </div>
 
         <!-- PODKATEGÓRIA -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Podkategória</label>
+        <div class="field">
+          <label class="form-label">Podkategória</label>
           <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-table-cells-large"></i></span>
-            <select class="form-select" id="subcategory" required disabled>
+            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+            <select class="form-select" id="subcategory" required disabled aria-label="Podkategória">
               <option value="" selected disabled>Najprv vyber okruh</option>
             </select>
             <div class="invalid-feedback">Zvoľ podkategóriu.</div>
@@ -85,57 +143,61 @@
         </div>
 
         <!-- OTÁZKA -->
-        <div class="form-floating mb-3">
-          <textarea class="form-control" id="question" style="height: 110px" required></textarea>
-          <label for="question">Znenie otázky</label>
+        <div class="field">
+          <label class="form-label" for="question">Znenie otázky</label>
+          <textarea class="form-control" id="question" placeholder="Sem napíš otázku…" required></textarea>
           <div class="invalid-feedback">Otázka je povinná.</div>
         </div>
 
-        <!-- ODPOVEDE -->
-        <div class="row g-3">
+        <!-- ODPOVEDE (A–D) – minimal modern -->
+        <div class="row g-3 answers">
+          <!-- A -->
           <div class="col-12 col-md-6">
-            <div class="form-floating">
+            <div class="option-block">
+              <label class="option-label" for="optA">A) Možnosť</label>
               <input class="form-control" id="optA" placeholder="Možnosť A" required>
-              <label for="optA">A) Možnosť</label>
-            </div>
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="radio" name="correct" id="corrA" value="A" required>
-              <label class="form-check-label" for="corrA">Správna</label>
+              <div class="chip-row">
+                <input class="correct-radio" type="radio" name="correct" id="corrA" value="A" required>
+                <label class="chip" for="corrA">Správna</label>
+              </div>
             </div>
           </div>
+          <!-- B -->
           <div class="col-12 col-md-6">
-            <div class="form-floating">
+            <div class="option-block">
+              <label class="option-label" for="optB">B) Možnosť</label>
               <input class="form-control" id="optB" placeholder="Možnosť B" required>
-              <label for="optB">B) Možnosť</label>
-            </div>
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="radio" name="correct" id="corrB" value="B" required>
-              <label class="form-check-label" for="corrB">Správna</label>
+              <div class="chip-row">
+                <input class="correct-radio" type="radio" name="correct" id="corrB" value="B" required>
+                <label class="chip" for="corrB">Správna</label>
+              </div>
             </div>
           </div>
+          <!-- C -->
           <div class="col-12 col-md-6">
-            <div class="form-floating">
+            <div class="option-block">
+              <label class="option-label" for="optC">C) Možnosť</label>
               <input class="form-control" id="optC" placeholder="Možnosť C" required>
-              <label for="optC">C) Možnosť</label>
-            </div>
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="radio" name="correct" id="corrC" value="C" required>
-              <label class="form-check-label" for="corrC">Správna</label>
+              <div class="chip-row">
+                <input class="correct-radio" type="radio" name="correct" id="corrC" value="C" required>
+                <label class="chip" for="corrC">Správna</label>
+              </div>
             </div>
           </div>
+          <!-- D -->
           <div class="col-12 col-md-6">
-            <div class="form-floating">
+            <div class="option-block">
+              <label class="option-label" for="optD">D) Možnosť</label>
               <input class="form-control" id="optD" placeholder="Možnosť D" required>
-              <label for="optD">D) Možnosť</label>
-            </div>
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="radio" name="correct" id="corrD" value="D" required>
-              <label class="form-check-label" for="corrD">Správna</label>
+              <div class="chip-row">
+                <input class="correct-radio" type="radio" name="correct" id="corrD" value="D" required>
+                <label class="chip" for="corrD">Správna</label>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="d-flex gap-2 mt-3">
+        <div class="d-flex gap-2 mt-2">
           <button type="submit" class="btn btn-primary btn-sm">Uložiť otázku</button>
           <button type="reset" class="btn btn-outline-secondary btn-sm">Vymazať</button>
         </div>
@@ -149,43 +211,33 @@
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h6 class="mb-0">Hotové otázky</h6>
         <div class="d-flex flex-wrap gap-2">
-          <!-- Filter podľa kategórie -->
           <div class="input-group input-group-sm" style="min-width:220px">
             <span class="input-group-text"><i class="fas fa-filter"></i></span>
-            <select id="filterCategory" class="form-select form-select-sm">
+            <select id="filterCategory" class="form-select form-select-sm" aria-label="Filter: okruh">
               <option value="__all__" selected>Všetky okruhy</option>
-              <option>Python</option>
-              <option>JavaScript</option>
-              <option>HTML</option>
-              <option>CSS</option>
-              <option>SQL</option>
+              <option>Python</option><option>JavaScript</option><option>HTML</option><option>CSS</option><option>SQL</option>
             </select>
           </div>
-
-          <!-- Filter podľa podkategórie -->
           <div class="input-group input-group-sm" style="min-width:220px">
             <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
-            <select id="filterSubcategory" class="form-select form-select-sm" disabled>
+            <select id="filterSubcategory" class="form-select form-select-sm" disabled aria-label="Filter: podkategória">
               <option value="__all__" selected>Všetky podkategórie</option>
             </select>
           </div>
         </div>
       </div>
 
-      <hr class="my-3">
-
-      <ul id="questionsList" class="list-group list-group-flush">
-        <!-- dynamicky -->
-      </ul>
-      <div id="emptyState" class="text-muted small mt-2" style="display:none">Zatiaľ nemáš uložené otázky.</div>
+      <hr class="my-2">
+      <ul id="questionsList" class="list-group list-group-flush"></ul>
+      <div id="emptyState" class="small mt-2" style="display:none">Zatiaľ nemáš uložené otázky.</div>
     </div>
   </div>
+</div>
 
-
-<!-- EDIT MODAL -->
+<!-- EDIT MODAL (keeps dropdown for simplicity) -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:12px">
+    <div class="modal-content">
       <div class="modal-header">
         <h6 class="modal-title">Upraviť otázku</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
@@ -193,29 +245,54 @@
       <div class="modal-body">
         <form id="editForm">
           <input type="hidden" id="editId">
-          <div class="mb-2">
+
+          <div class="field">
             <label class="form-label">Okruh</label>
             <select class="form-select" id="editCategory" required>
               <option>Python</option><option>JavaScript</option><option>HTML</option><option>CSS</option><option>SQL</option>
             </select>
           </div>
-          <div class="mb-2">
+
+          <div class="field">
             <label class="form-label">Podkategória</label>
             <select class="form-select" id="editSubcategory" required></select>
           </div>
-          <div class="form-floating mb-2">
-            <textarea class="form-control" id="editQuestion" style="height: 100px" required></textarea>
-            <label for="editQuestion">Znenie otázky</label>
+
+          <div class="field">
+            <label class="form-label" for="editQuestion">Znenie otázky</label>
+            <textarea class="form-control" id="editQuestion" placeholder="Uprav otázku…" required></textarea>
           </div>
-          <div class="row g-2">
-            <div class="col-6"><div class="form-floating"><input class="form-control" id="editA" placeholder="A" required><label for="editA">A) Možnosť</label></div></div>
-            <div class="col-6"><div class="form-floating"><input class="form-control" id="editB" placeholder="B" required><label for="editB">B) Možnosť</label></div></div>
-            <div class="col-6"><div class="form-floating mt-2 mt-md-0"><input class="form-control" id="editC" placeholder="C" required><label for="editC">C) Možnosť</label></div></div>
-            <div class="col-6"><div class="form-floating mt-2 mt-md-0"><input class="form-control" id="editD" placeholder="D" required><label for="editD">D) Možnosť</label></div></div>
+
+          <div class="row">
+            <div class="col-6">
+              <div class="field">
+                <label class="form-label" for="editA">A) Možnosť</label>
+                <input class="form-control" id="editA" placeholder="A" required>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="field">
+                <label class="form-label" for="editB">B) Možnosť</label>
+                <input class="form-control" id="editB" placeholder="B" required>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="field">
+                <label class="form-label" for="editC">C) Možnosť</label>
+                <input class="form-control" id="editC" placeholder="C" required>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="field">
+                <label class="form-label" for="editD">D) Možnosť</label>
+                <input class="form-control" id="editD" placeholder="D" required>
+              </div>
+            </div>
           </div>
-          <div class="mt-2">
-            <label class="form-label">Správna</label>
-            <select class="form-select" id="editCorrect" required>
+
+          <div class="field">
+            <label class="form-label mb-1" for="editCorrect">Správna odpoveď</label>
+            <select class="form-select" id="editCorrect" required style="width:auto; height:36px; padding:.3rem .6rem;">
               <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
             </select>
           </div>
@@ -233,269 +310,179 @@
 (function () {
   const LS_KEY = 'quizQuestions';
 
-  // --- ikonky + subkategórie ---
+  // ikonky + subkategórie
   const iconMap = {
-    'Python': 'python.svg',
-    'JavaScript': 'js.svg',
-    'HTML': 'html.svg',
-    'CSS': 'css.svg',
-    'SQL': 'mysql.svg'
+    'Python':'python.svg','JavaScript':'js.svg','HTML':'html.svg','CSS':'css.svg','SQL':'mysql.svg'
   };
   const subcats = {
-    Python: [
-      'Premenné a typy','Funkcie a parametre','Podmienky (if / else)','Cykly (for / while)',
-      'Zoznamy a tuplá','Slovníky a množiny','Reťazce a metódy','OOP – triedy a objekty',
-      'Dedičnosť a super()','Moduly a importy','Práca so súbormi','Výnimky (try / except)',
-      'List comprehension','Lambda, map, filter','Dekorátory','Testovanie (unittest, pytest)',
-      'Flask – základy','Flask – routovanie a šablóny','Jinja2 – šablónovací jazyk'
-    ],
-    JavaScript: [
-      'Základy syntaxe','DOM manipulácia','Funkcie a callbacky','Události (events)',
-      'Podmienky a cykly','Fetch API / Ajax','LocalStorage','ES6+ features'
-    ],
-    CSS: [
-      'Selektory a štruktúra','Farby a pozadia','Flexbox','Grid layout',
-      'Responsívny dizajn','Animácie','Pseudo triedy','Premenné a BEM'
-    ],
-    HTML: [
-      'Základná štruktúra','Formuláre','Semantika','Tabuľky',
-      'Odkazy a obrázky','Multimédiá','Meta tagy','Základy SEO'
-    ],
-    SQL: [
-      'SELECT a FROM','WHERE a logika','JOIN operácie','GROUP BY a COUNT',
-      'INSERT, UPDATE, DELETE','Indexy a optimalizácia','Agregačné funkcie','Poddotazy'
-    ]
+    Python:['Premenné a typy','Funkcie a parametre','Podmienky (if / else)','Cykly (for / while)','Zoznamy a tuplá','Slovníky a množiny','Reťazce a metódy','OOP – triedy a objekty','Dedičnosť a super()','Moduly a importy','Práca so súbormi','Výnimky (try / except)','List comprehension','Lambda, map, filter','Dekorátory','Testovanie (unittest, pytest)','Flask – základy','Flask – routovanie a šablóny','Jinja2 – šablónovací jazyk'],
+    JavaScript:['Základy syntaxe','DOM manipulácia','Funkcie a callbacky','Události (events)','Podmienky a cykly','Fetch API / Ajax','LocalStorage','ES6+ features'],
+    CSS:['Selektory a štruktúra','Farby a pozadia','Flexbox','Grid layout','Responsívny dizajn','Animácie','Pseudo triedy','Premenné a BEM'],
+    HTML:['Základná štruktúra','Formuláre','Semantika','Tabuľky','Odkazy a obrázky','Multimédiá','Meta tagy','Základy SEO'],
+    SQL:['SELECT a FROM','WHERE a logika','JOIN operácie','GROUP BY a COUNT','INSERT, UPDATE, DELETE','Indexy a optimalizácia','Agregačné funkcie','Poddotazy']
   };
 
-  // --- helpers ---
+  // helpers
   const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-  const save = (data) => localStorage.setItem(LS_KEY, JSON.stringify(data));
-  const uid = () => Math.random().toString(36).slice(2, 9);
-  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const isComplete = (q) =>
-    q.category && q.subcategory && q.question && q.A && q.B && q.C && q.D && ['A', 'B', 'C', 'D'].includes(q.correct);
+  const save = (d) => localStorage.setItem(LS_KEY, JSON.stringify(d));
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const escapeHtml = (s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const isComplete = (q)=> q.category&&q.subcategory&&q.question&&q.A&&q.B&&q.C&&q.D&&['A','B','C','D'].includes(q.correct);
 
-  function fillSubcategories(selectEl, cat, placeholder = 'Vyber podkategóriu') {
-    selectEl.innerHTML = '';
-    if (!cat || !subcats[cat]) {
-      selectEl.disabled = true;
-      selectEl.innerHTML = `<option value="" selected disabled>Najprv vyber okruh</option>`;
+  function fillSubcategories(selectEl, cat, placeholder='Vyber podkategóriu'){
+    selectEl.innerHTML='';
+    if(!cat||!subcats[cat]){
+      selectEl.disabled=true;
+      selectEl.innerHTML=`<option value="" selected disabled>Najprv vyber okruh</option>`;
       return;
     }
-    selectEl.disabled = false;
-    const def = document.createElement('option');
-    def.value = '';
-    def.textContent = placeholder;
-    def.disabled = true;
-    def.selected = true;
+    selectEl.disabled=false;
+    const def=document.createElement('option');
+    def.value=''; def.textContent=placeholder; def.disabled=true; def.selected=true;
     selectEl.appendChild(def);
-    subcats[cat].forEach((sc) => {
-      const o = document.createElement('option');
-      o.value = sc;
-      o.textContent = sc;
-      selectEl.appendChild(o);
+    subcats[cat].forEach(sc=>{
+      const o=document.createElement('option'); o.value=sc; o.textContent=sc; selectEl.appendChild(o);
     });
   }
 
-  // --- CREATE FORM elements ---
-  const form = document.getElementById('questionForm');
-  const category = document.getElementById('category');
-  const subcategory = document.getElementById('subcategory');
-  const question = document.getElementById('question');
-  const optA = document.getElementById('optA');
-  const optB = document.getElementById('optB');
-  const optC = document.getElementById('optC');
-  const optD = document.getElementById('optD');
+  // elements
+  const form=document.getElementById('questionForm');
+  const category=document.getElementById('category');
+  const subcategory=document.getElementById('subcategory');
+  const question=document.getElementById('question');
+  const optA=document.getElementById('optA');
+  const optB=document.getElementById('optB');
+  const optC=document.getElementById('optC');
+  const optD=document.getElementById('optD');
 
-  // --- LIST/filters elements ---
-  const list = document.getElementById('questionsList');
-  const emptyState = document.getElementById('emptyState');
-  const filterCategory = document.getElementById('filterCategory');
-  const filterSubcategory = document.getElementById('filterSubcategory');
+  const list=document.getElementById('questionsList');
+  const emptyState=document.getElementById('emptyState');
+  const filterCategory=document.getElementById('filterCategory');
+  const filterSubcategory=document.getElementById('filterSubcategory');
 
-  // --- EDIT MODAL elements ---
-  const editModalEl = document.getElementById('editModal');
-  let editModal;
-  document.addEventListener('DOMContentLoaded', () => {
-    if (window.bootstrap) editModal = new bootstrap.Modal(editModalEl);
-  });
-  const editId = document.getElementById('editId');
-  const editCategory = document.getElementById('editCategory');
-  const editSubcategory = document.getElementById('editSubcategory');
-  const editQuestion = document.getElementById('editQuestion');
-  const editA = document.getElementById('editA');
-  const editB = document.getElementById('editB');
-  const editC = document.getElementById('editC');
-  const editD = document.getElementById('editD');
-  const editCorrect = document.getElementById('editCorrect');
-  const saveEditBtn = document.getElementById('saveEditBtn');
+  // modal
+  const editModalEl=document.getElementById('editModal'); let editModal;
+  document.addEventListener('DOMContentLoaded',()=>{ if(window.bootstrap) editModal=new bootstrap.Modal(editModalEl); });
+  const editId=document.getElementById('editId');
+  const editCategory=document.getElementById('editCategory');
+  const editSubcategory=document.getElementById('editSubcategory');
+  const editQuestion=document.getElementById('editQuestion');
+  const editA=document.getElementById('editA');
+  const editB=document.getElementById('editB');
+  const editC=document.getElementById('editC');
+  const editD=document.getElementById('editD');
+  const editCorrect=document.getElementById('editCorrect');
+  const saveEditBtn=document.getElementById('saveEditBtn');
 
-  // --- dynamic subcategory (create) ---
-  category.addEventListener('change', () => fillSubcategories(subcategory, category.value));
+  // dynamic selects
+  category.addEventListener('change',()=>fillSubcategories(subcategory, category.value));
+  editCategory.addEventListener('change',()=>fillSubcategories(editSubcategory, editCategory.value,'Vyber podkategóriu'));
 
-  // --- dynamic subcategory (edit) ---
-  editCategory.addEventListener('change', () =>
-    fillSubcategories(editSubcategory, editCategory.value, 'Vyber podkategóriu')
-  );
-
-  // --- filters: when category changes, rebuild subcategory filter ---
-  filterCategory.addEventListener('change', () => {
-    const cat = filterCategory.value;
-    // reset subcategory
-    filterSubcategory.innerHTML = `<option value="__all__" selected>Všetky podkategórie</option>`;
-    if (cat !== '__all__' && subcats[cat]) {
-      filterSubcategory.disabled = false;
-      subcats[cat].forEach((sc) => {
-        const o = document.createElement('option');
-        o.value = sc;
-        o.textContent = sc;
-        filterSubcategory.appendChild(o);
+  // filters
+  filterCategory.addEventListener('change',()=>{
+    const cat=filterCategory.value;
+    filterSubcategory.innerHTML=`<option value="__all__" selected>Všetky podkategórie</option>`;
+    if(cat!=='__all__'&&subcats[cat]){
+      filterSubcategory.disabled=false;
+      subcats[cat].forEach(sc=>{
+        const o=document.createElement('option'); o.value=sc; o.textContent=sc; filterSubcategory.appendChild(o);
       });
     } else {
-      filterSubcategory.disabled = true;
+      filterSubcategory.disabled=true;
     }
     renderList();
   });
-  filterSubcategory.addEventListener('change', renderList);
+  filterSubcategory.addEventListener('change',renderList);
 
-  // --- render list ---
-  function renderList() {
-    const data = load().filter(isComplete);
-    const fc = filterCategory.value;
-    const fs = filterSubcategory.value;
-
-    const filtered = data.filter((item) => {
-      const okCat = fc === '__all__' ? true : item.category === fc;
-      const okSub = fs === '__all__' || filterSubcategory.disabled ? true : item.subcategory === fs;
-      return okCat && okSub;
-    });
-
-    list.innerHTML = '';
-    emptyState.style.display = filtered.length ? 'none' : '';
-
-    filtered.forEach((item) => {
-      const li = document.createElement('li');
-      li.className = 'list-group-item d-flex align-items-start justify-content-between gap-3';
-      const iconSrc = `/static/icons/${iconMap[item.category] || 'code.svg'}`;
-
-      li.innerHTML = `
+  // render list
+  function renderList(){
+    const data=load().filter(isComplete);
+    const fc=filterCategory.value, fs=filterSubcategory.value;
+    const filtered=data.filter(it=> (fc==='__all__'?true:it.category===fc) && (fs==='__all__'||filterSubcategory.disabled?true:it.subcategory===fs));
+    list.innerHTML=''; emptyState.style.display=filtered.length?'none':'';
+    filtered.forEach(item=>{
+      const li=document.createElement('li'); li.className='list-group-item d-flex align-items-start justify-content-between gap-3';
+      const iconSrc=`/static/icons/${iconMap[item.category]||'code.svg'}`;
+      li.innerHTML=`
         <div class="d-flex align-items-start gap-3">
           <img class="icon-quiz" src="${iconSrc}" alt="${item.category}">
           <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-              <span class="badge badge-subtle">${item.category}</span>
-              ${item.subcategory ? `<span class="badge badge-subtle">${escapeHtml(item.subcategory)}</span>` : ''}
+              <span class="badge-subtle">${item.category}</span>
+              ${item.subcategory?`<span class="badge-subtle">${escapeHtml(item.subcategory)}</span>`:''}
             </div>
             <div class="mt-1 small">${escapeHtml(item.question)}</div>
           </div>
         </div>
         <div class="d-flex align-items-center gap-1">
-          <button class="btn-ghost btn-sm" data-action="edit" data-id="${item.id}" title="Upraviť">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-ghost btn-sm" data-action="del" data-id="${item.id}" title="Zmazať">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `;
+          <button class="btn-ghost btn-sm" data-action="edit" data-id="${item.id}" title="Upraviť"><i class="fas fa-edit"></i></button>
+          <button class="btn-ghost btn-sm" data-action="del" data-id="${item.id}" title="Zmazať"><i class="fas fa-trash"></i></button>
+        </div>`;
       list.appendChild(li);
     });
   }
 
-  // --- create submit ---
-  form.addEventListener('submit', (e) => {
+  // create submit
+  form.addEventListener('submit',(e)=>{
     e.preventDefault();
-    if (!form.checkValidity()) {
-      form.classList.add('was-validated');
-      return;
-    }
-    const correct = form.querySelector('input[name="correct"]:checked')?.value;
-    if (!correct) return;
-
-    const data = load();
+    if(!form.checkValidity()){ form.classList.add('was-validated'); return; }
+    const correct=form.querySelector('input[name="correct"]:checked')?.value; if(!correct) return;
+    const data=load();
     data.push({
-      id: uid(),
-      category: category.value,
-      subcategory: subcategory.value,
-      question: question.value.trim(),
-      A: optA.value.trim(),
-      B: optB.value.trim(),
-      C: optC.value.trim(),
-      D: optD.value.trim(),
+      id:uid(),
+      category:category.value,
+      subcategory:subcategory.value,
+      question:question.value.trim(),
+      A:optA.value.trim(),
+      B:optB.value.trim(),
+      C:optC.value.trim(),
+      D:optD.value.trim(),
       correct
     });
     save(data);
-
-    // reset form
-    form.reset();
-    form.classList.remove('was-validated');
-    subcategory.disabled = true;
-    subcategory.innerHTML = `<option value="" selected disabled>Najprv vyber okruh</option>`;
-
-    // re-render list (works now because renderList is in same scope)
+    form.reset(); form.classList.remove('was-validated');
+    subcategory.disabled=true; subcategory.innerHTML=`<option value="" selected disabled>Najprv vyber okruh</option>`;
     renderList();
   });
 
-  // --- edit/delete delegation on list ---
-  list.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const id = btn.getAttribute('data-id');
-    const data = load();
-    const idx = data.findIndex((q) => q.id === id);
-    if (idx === -1) return;
+  // list actions
+  list.addEventListener('click',(e)=>{
+    const btn=e.target.closest('button[data-action]'); if(!btn) return;
+    const id=btn.getAttribute('data-id'); const data=load(); const idx=data.findIndex(q=>q.id===id); if(idx===-1) return;
 
-    if (btn.dataset.action === 'del') {
-      if (confirm('Zmazať otázku?')) {
-        data.splice(idx, 1);
-        save(data);
-        renderList();
-      }
+    if(btn.dataset.action==='del'){
+      if(confirm('Zmazať otázku?')){ data.splice(idx,1); save(data); renderList(); }
       return;
     }
 
-    if (btn.dataset.action === 'edit') {
-      const q = data[idx];
-      editId.value = q.id;
-      editCategory.value = q.category;
+    if(btn.dataset.action==='edit'){
+      const q=data[idx];
+      editId.value=q.id;
+      editCategory.value=q.category;
       fillSubcategories(editSubcategory, q.category, 'Vyber podkategóriu');
-      editSubcategory.value = q.subcategory || '';
-      editQuestion.value = q.question;
-      editA.value = q.A;
-      editB.value = q.B;
-      editC.value = q.C;
-      editD.value = q.D;
-      editCorrect.value = q.correct;
+      editSubcategory.value=q.subcategory || '';
+      editQuestion.value=q.question;
+      editA.value=q.A; editB.value=q.B; editC.value=q.C; editD.value=q.D;
+      editCorrect.value=q.correct;
       editModal?.show();
     }
   });
 
-  // --- save edit ---
-  saveEditBtn.addEventListener('click', () => {
-    const id = editId.value;
-    const data = load();
-    const idx = data.findIndex((q) => q.id === id);
-    if (idx === -1) return;
-
-    data[idx] = {
-      ...data[idx],
-      category: editCategory.value,
-      subcategory: editSubcategory.value,
-      question: editQuestion.value.trim(),
-      A: editA.value.trim(),
-      B: editB.value.trim(),
-      C: editC.value.trim(),
-      D: editD.value.trim(),
-      correct: editCorrect.value
+  // save edit
+  saveEditBtn.addEventListener('click',()=>{
+    const id=editId.value; const data=load(); const idx=data.findIndex(q=>q.id===id); if(idx===-1) return;
+    data[idx]={ ...data[idx],
+      category:editCategory.value,
+      subcategory:editSubcategory.value,
+      question:editQuestion.value.trim(),
+      A:editA.value.trim(), B:editB.value.trim(), C:editC.value.trim(), D:editD.value.trim(),
+      correct:editCorrect.value
     };
-    save(data);
-    renderList();
-    editModal?.hide();
+    save(data); renderList(); editModal?.hide();
   });
 
-  // --- init ---
-  // default stav: subcategory filter vypnutý
-  filterSubcategory.disabled = true;
+  // init
+  filterSubcategory.disabled=true;
   renderList();
 })();
 </script>
