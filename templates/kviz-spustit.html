@@ -2,6 +2,7 @@
 {% block title %}Kvíz – Spustiť{% endblock %}
 
 {% block content %}
+
 <style>
   :root{
     --panel:#fff;
@@ -14,6 +15,8 @@
     --ring-weak-2:rgba(59,130,246,.12);
     --success:#16a34a;
     --danger:#dc2626;
+    --success-bg:#ecfdf5;
+    --danger-bg:#fef2f2;
   }
 
   /* ====== HLAVIČKA ====== */
@@ -120,6 +123,27 @@
   .quiz-premium .choice.checked{ border-color:#bfdbfe; box-shadow:0 0 0 .3rem var(--ring-weak); background:#fbfdff; }
   .quiz-premium .choice.checked .bullet{ border-color:#3b82f6; background:#3b82f6; box-shadow:inset 0 0 0 4px #fff; }
 
+  /* >>> spätná väzba po kliknutí na Ďalšia <<< */
+  .quiz-premium .choice.correct{
+    border-color:var(--success);
+    background:var(--success-bg);
+    box-shadow:0 0 0 .24rem rgba(22,163,74,.12);
+  }
+  .quiz-premium .choice.wrong{
+    border-color:var(--danger);
+    background:var(--danger-bg);
+    box-shadow:0 0 0 .24rem rgba(220,38,38,.12);
+  }
+  /* jemný nudge, keď nie je nič vybraté */
+  .choices.need-answer{
+    animation: pulseRing .6s ease;
+  }
+  @keyframes pulseRing{
+    0%{ box-shadow:0 0 0 0 rgba(59,130,246,.0); }
+    30%{ box-shadow:0 0 0 .35rem var(--ring-weak-2); }
+    100%{ box-shadow:0 0 0 0 rgba(59,130,246,.0); }
+  }
+
   .quiz-premium .quiz-actions{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-top:16px; }
   .quiz-premium .quiz-actions .btn{ border-radius:12px; }
 
@@ -133,7 +157,7 @@
   .btn-min-primary i {
     margin-right: .5rem;
     color: #fff;
-    font-size: 0.9rem; /* menšia ikonka */
+    font-size: 0.9rem;
   }
 </style>
 
@@ -213,13 +237,11 @@
   </div>
 </div>
 
-
 <script>
 (function() {
   const LS_KEY = 'quizQuestions';
   const ICON_BASE = '/static/icons/';
 
-  // Ikonky podľa kategórie
   const iconMap = {
     'Python': 'python.svg',
     'JavaScript': 'js.svg',
@@ -255,6 +277,7 @@
   let questions = [];
   let idx = 0;
   let answers = {}; // {index: 'A'|'B'|'C'|'D'}
+  let locking = false; // počas spätnéj väzby zablokuj ovládanie
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
 
@@ -267,7 +290,6 @@
     emptyMsg.style.display = 'none';
   }
 
-  // Subkategórie podľa zvoleného okruhu
   function populateSubcategories(){
     const data = load();
     const cat = quizCategory.value;
@@ -287,7 +309,6 @@
       quizSubcategory.appendChild(opt);
     });
 
-    // info keď nie sú otázky v danom okruhu
     const pool = data.filter(q => cat === '__all__' || q.category === cat);
     if (!pool.length && cat !== '__all__') {
       showEmpty(`V okruhu „${cat}” zatiaľ nie sú žiadne otázky.`);
@@ -298,7 +319,6 @@
 
   function renderCategoryChip(catValue){
     if (catValue === '__all__') {
-      // zobraz všetky ikonky
       const allIcons = Object.values(iconMap)
         .map(name => `<img src="${ICON_BASE}${name}" alt="" title="">`)
         .join('');
@@ -352,6 +372,7 @@
   }
 
   function renderQuestion() {
+    locking = false;
     const q = questions[idx];
     const letters = ['A','B','C','D'];
 
@@ -371,9 +392,9 @@
       <div class="choices">${choicesHtml}</div>
     `;
 
-    // klik na celú kartu
     qBox.querySelectorAll('.choice').forEach(choice => {
       choice.addEventListener('click', () => {
+        if (locking) return;
         const input = choice.querySelector('input[type="radio"]');
         if (!input.checked) {
           input.checked = true;
@@ -382,9 +403,9 @@
       });
     });
 
-    // synchronizácia stavu
     qBox.querySelectorAll('input[name="q"]').forEach(r => {
       r.addEventListener('change', (e) => {
+        if (locking) return;
         answers[idx] = e.target.value;
         qBox.querySelectorAll('.choice').forEach(c => c.classList.remove('checked'));
         e.target.closest('.choice')?.classList.add('checked');
@@ -403,8 +424,42 @@
     progressBar.setAttribute('aria-valuenow', pct);
   }
 
-  function next() { if (idx < questions.length - 1) { idx++; renderQuestion(); updateProgress(); } }
-  function prev() { if (idx > 0) { idx--; renderQuestion(); updateProgress(); } }
+  // >>> spätná väzba a auto-advance
+  function feedbackThenAdvance(){
+    if (locking) return;
+    const chosen = answers[idx];
+    if (!chosen){
+      const choices = qBox.querySelector('.choices');
+      choices.classList.add('need-answer');
+      setTimeout(()=>choices.classList.remove('need-answer'), 600);
+      return;
+    }
+    locking = true;
+
+    const correctLetter = questions[idx].correct;
+    const choicesEls = qBox.querySelectorAll('.choice');
+    choicesEls.forEach(el=>{
+      const val = el.querySelector('input').value;
+      el.classList.remove('checked'); // zruš modré označenie
+      if (val === correctLetter) el.classList.add('correct');
+      if (val === chosen && chosen !== correctLetter) el.classList.add('wrong');
+    });
+
+    setTimeout(()=>{
+      if (idx === questions.length - 1){
+        evaluate();
+      } else {
+        idx++;
+        renderQuestion();
+        updateProgress();
+      }
+    }, 700);
+  }
+
+  function prev() {
+    if (locking) return;
+    if (idx > 0) { idx--; renderQuestion(); updateProgress(); }
+  }
 
   function evaluate() {
     let correct = 0;
@@ -438,7 +493,7 @@
     resetQuizBtn.disabled = true;
   }
 
-  // Live zmeny – dopĺňanie subkategórií a reset subcat na „Všetko“
+  // Live zmeny subkategórií
   quizCategory.addEventListener('change', () => {
     populateSubcategories();
     quizSubcategory.value = '__all__';
@@ -453,18 +508,16 @@
       const letter = map[key];
       const input = qBox.querySelector(`input[name="q"][value="${letter}"]`);
       if (input) { input.checked = true; input.dispatchEvent(new Event('change',{bubbles:true})); }
-    } else if (key === 'n') {
-      next();
+    } else if (key === 'n' || key === 'enter') {
+      feedbackThenAdvance();
     } else if (key === 'p') {
       prev();
-    } else if (key === 'enter') {
-      if (idx === questions.length - 1) evaluate(); else next();
     }
   });
 
   // Wireup
   startQuizBtn.addEventListener('click', startQuiz);
-  nextBtn.addEventListener('click', next);
+  nextBtn.addEventListener('click', feedbackThenAdvance);
   prevBtn.addEventListener('click', prev);
   finishBtn.addEventListener('click', evaluate);
   resetQuizBtn.addEventListener('click', resetAll);
@@ -480,4 +533,5 @@
   if (params.get('n')) quizCount.value = params.get('n');
 })();
 </script>
+
 {% endblock %}
