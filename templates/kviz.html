@@ -22,7 +22,7 @@
   }
   hr{ border-color:var(--line); opacity:1; }
 
-  /* ----- Inputs (no floating) ----- */
+  /* ----- Inputs ----- */
   .field{ margin-bottom:14px; }
   .field label.form-label{
     display:block; margin-bottom:6px; font-weight:600; color:#334155; font-size:.92rem;
@@ -33,60 +33,61 @@
     border:1px solid var(--line); border-radius:10px; background:#fff;
   }
   .field textarea.form-control{
-    height:60px; /* bolo 120px */
-    resize:vertical;
-    padding:.65rem .75rem;
+    height:60px; resize:vertical; padding:.65rem .75rem;
   }
   .form-control::placeholder{ color:#9aa3af; font-size:.9rem; }
   .form-control:focus, .form-select:focus{
-    border-color:#c7d2fe;
-    box-shadow:0 0 0 .2rem rgba(59,130,246,.08);
+    border-color:#c7d2fe; box-shadow:0 0 0 .2rem rgba(59,130,246,.08);
   }
 
-  /* ----- Modern 'Správna' chip (scoped) ----- */
-  .answers .option-block{ display:block; }
-  .answers .option-block + .option-block{ margin-top:18px; } /* more space before next option */
-
-  .answers .option-label{
-    display:block; margin-bottom:6px; font-weight:600; color:#334155; font-size:.92rem;
-  }
-  .answers .form-control{
-    height:40px; padding:.5rem .7rem; font-size:.94rem;
-    border:1px solid #e5e7eb; border-radius:10px; background:#fff;
-  }
-  .answers .form-control::placeholder{ color:#9aa3af; font-size:.9rem; }
-  .answers .form-control:focus{
-    border-color:#c7d2fe; box-shadow:0 0 0 .2rem rgba(59,130,246,.08); outline:0;
-  }
-
+  /* ----- 'Správna' chip ----- */
+  .answers .option-block + .option-block{ margin-top:18px; }
+  .answers .option-label{ display:block; margin-bottom:6px; font-weight:600; color:#334155; font-size:.92rem; }
+  .answers .form-control{ height:40px; }
   .answers .chip-row{ margin-top:6px; display:flex; align-items:center; }
   .answers .correct-radio{ position:absolute; width:0; height:0; opacity:0; pointer-events:none; }
   .answers .chip{
     display:inline-flex; align-items:center; gap:.4rem;
     padding:.26rem .56rem; font-size:.8rem; line-height:1;
-    border:1px solid #e5e7eb; border-radius:999px;
-    background:#fff; color:#334155; cursor:pointer; user-select:none;
-    transition:background .15s, color .15s, border-color .15s, box-shadow .15s;
+    border:1px solid #e5e7eb; border-radius:999px; background:#fff; color:#334155;
+    cursor:pointer; user-select:none; transition:background .15s, color .15s, border-color .15s, box-shadow .15s;
   }
   .answers .correct-radio:focus + .chip{ box-shadow:0 0 0 .2rem rgba(59,130,246,.15); }
   .answers .correct-radio:checked + .chip{ background:#3b82f6; border-color:#3b82f6; color:#fff; }
-  .answers .chip::before{
-    content:""; width:12px; height:12px; border-radius:50%; border:2px solid currentColor;
-    display:inline-block; transform:translateY(1px);
-  }
-  .answers .correct-radio:checked + .chip::before{
-    content:"✓"; width:auto; height:auto; border:0; font-weight:700; font-size:.78rem;
-  }
+  .answers .chip::before{ content:""; width:12px; height:12px; border-radius:50%; border:2px solid currentColor; display:inline-block; transform:translateY(1px); }
+  .answers .correct-radio:checked + .chip::before{ content:"✓"; width:auto; height:auto; border:0; font-weight:700; font-size:.78rem; }
 
-  /* List */
+  /* ----- Hotové otázky list ----- */
   .icon-quiz{ width:24px; height:24px; object-fit:contain; }
   .badge-subtle{
     background:#f1f5f9; color:#334155; border:1px solid #e2e8f0;
     font-weight:500; border-radius:999px; padding:.18rem .6rem; font-size:.75rem;
   }
   .list-group-item{ padding:.7rem .6rem; border-color:var(--line); }
+
+  /* Globálny hover pre iné listy (ponechaný) */
   .list-group-item:hover{ background:#fafafa; }
-  #emptyState{ color:var(--muted); }
+
+  /* >>> VYPNUTIE HOVERU LEN PRE HOTOVÉ OTÁZKY <<< */
+  #questionsList .list-group-item,
+  #questionsList .list-group-item:hover,
+  #questionsList .list-group-item:focus,
+  #questionsList .list-group-item:active{
+    background:#fff !important;
+    transition:none;
+  }
+
+  /* vypni akékoľvek "sivenie" aj na celej sekcii Hotové otázky (nadpis, okraje, medzery) */
+  .card-questions,
+  .card-questions:hover{
+    background:var(--panel) !important;
+  }
+  .card-questions .list-group:hover,
+  .card-questions hr:hover{
+    background:transparent !important;
+  }
+
+  #emptyState{ color:#6b7280; }
 
   .btn-ghost{
     border:0; background:transparent; color:#6b7280; padding:.35rem .5rem; border-radius:10px;
@@ -100,6 +101,24 @@
 
   .modal-content{ border-radius:14px; }
 
+  /* ----- Pagination (menšie) ----- */
+  .pager{
+    display:flex; flex-wrap:wrap; gap:.32rem; align-items:center; justify-content:flex-end;
+    margin-top:10px;
+  }
+  .pager .page-btn{
+    border:1px solid #e2e8f0; background:#fff; color:#111827;
+    border-radius:8px; padding:.28rem .48rem; font-size:.80rem; line-height:1;
+  }
+  .pager .page-btn:hover{ background:#f9fafb; }
+  .pager .page-btn[disabled]{ opacity:.5; cursor:not-allowed; }
+  .pager .page-num{
+    border:1px solid #e2e8f0; background:#fff; color:#111827;
+    min-width:30px; text-align:center; border-radius:8px; padding:.28rem .45rem; font-size:.80rem;
+  }
+  .pager .page-num.active{
+    background:#eef2ff; border-color:#c7d2fe; color:#1e3a8a; font-weight:700;
+  }
 </style>
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 page-head">
@@ -149,9 +168,8 @@
           <div class="invalid-feedback">Otázka je povinná.</div>
         </div>
 
-        <!-- ODPOVEDE (A–D) – minimal modern -->
+        <!-- ODPOVEDE (A–D) -->
         <div class="row g-3 answers">
-          <!-- A -->
           <div class="col-12 col-md-6">
             <div class="option-block">
               <label class="option-label" for="optA">A) Možnosť</label>
@@ -162,7 +180,6 @@
               </div>
             </div>
           </div>
-          <!-- B -->
           <div class="col-12 col-md-6">
             <div class="option-block">
               <label class="option-label" for="optB">B) Možnosť</label>
@@ -173,7 +190,6 @@
               </div>
             </div>
           </div>
-          <!-- C -->
           <div class="col-12 col-md-6">
             <div class="option-block">
               <label class="option-label" for="optC">C) Možnosť</label>
@@ -184,7 +200,6 @@
               </div>
             </div>
           </div>
-          <!-- D -->
           <div class="col-12 col-md-6">
             <div class="option-block">
               <label class="option-label" for="optD">D) Možnosť</label>
@@ -207,7 +222,8 @@
 
   <!-- PRAVO: HOTOVÉ OTÁZKY – LIST -->
   <div class="col-lg-7">
-    <div class="card-dashboard">
+    <!-- pridaná trieda card-questions -->
+    <div class="card-dashboard card-questions">
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h6 class="mb-0">Hotové otázky</h6>
         <div class="d-flex flex-wrap gap-2">
@@ -229,12 +245,16 @@
 
       <hr class="my-2">
       <ul id="questionsList" class="list-group list-group-flush"></ul>
+
+      <!-- stránkovanie -->
+      <div id="pagination" class="pager"></div>
+
       <div id="emptyState" class="small mt-2" style="display:none">Zatiaľ nemáš uložené otázky.</div>
     </div>
   </div>
 </div>
 
-<!-- EDIT MODAL (keeps dropdown for simplicity) -->
+<!-- EDIT MODAL -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -309,6 +329,8 @@
 <script>
 (function () {
   const LS_KEY = 'quizQuestions';
+  const PAGE_SIZE = 6;
+  let currentPage = 1;
 
   // ikonky + subkategórie
   const iconMap = {
@@ -359,6 +381,7 @@
   const emptyState=document.getElementById('emptyState');
   const filterCategory=document.getElementById('filterCategory');
   const filterSubcategory=document.getElementById('filterSubcategory');
+  const paginationEl=document.getElementById('pagination');
 
   // modal
   const editModalEl=document.getElementById('editModal'); let editModal;
@@ -390,18 +413,85 @@
     } else {
       filterSubcategory.disabled=true;
     }
+    currentPage = 1;
     renderList();
   });
-  filterSubcategory.addEventListener('change',renderList);
+  filterSubcategory.addEventListener('change',()=>{ currentPage = 1; renderList(); });
+
+  // data helpers
+  function getFiltered(){
+    const data=load().filter(isComplete);
+    const fc=filterCategory.value, fs=filterSubcategory.value;
+    return data.filter(it=> (fc==='__all__'?true:it.category===fc) && (fs==='__all__'||filterSubcategory.disabled?true:it.subcategory===fs));
+  }
+
+  // pagination
+  function renderPagination(total){
+    paginationEl.innerHTML = '';
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.textContent = 'Predošlá';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.dataset.nav = 'prev';
+    paginationEl.appendChild(prevBtn);
+
+    // čísla strán (kompaktne: max 7 viditeľných)
+    const windowSize = 7;
+    let start = Math.max(1, currentPage - Math.floor(windowSize/2));
+    let end = start + windowSize - 1;
+    if (end > totalPages){ end = totalPages; start = Math.max(1, end - windowSize + 1); }
+
+    for (let p = start; p <= end; p++){
+      const b = document.createElement('button');
+      b.className = 'page-num' + (p===currentPage ? ' active' : '');
+      b.textContent = p;
+      b.dataset.page = p;
+      paginationEl.appendChild(b);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.textContent = 'Ďalšia';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.dataset.nav = 'next';
+    paginationEl.appendChild(nextBtn);
+  }
+
+  paginationEl.addEventListener('click',(e)=>{
+    const p = e.target.dataset.page ? parseInt(e.target.dataset.page,10) : null;
+    const nav = e.target.dataset.nav;
+    const total = getFiltered().length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+    if (p){
+      currentPage = p;
+      renderList();
+    } else if (nav === 'prev' && currentPage > 1){
+      currentPage--; renderList();
+    } else if (nav === 'next' && currentPage < totalPages){
+      currentPage++; renderList();
+    }
+  });
 
   // render list
   function renderList(){
-    const data=load().filter(isComplete);
-    const fc=filterCategory.value, fs=filterSubcategory.value;
-    const filtered=data.filter(it=> (fc==='__all__'?true:it.category===fc) && (fs==='__all__'||filterSubcategory.disabled?true:it.subcategory===fs));
-    list.innerHTML=''; emptyState.style.display=filtered.length?'none':'';
-    filtered.forEach(item=>{
-      const li=document.createElement('li'); li.className='list-group-item d-flex align-items-start justify-content-between gap-3';
+    const filtered = getFiltered();
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    list.innerHTML='';
+    emptyState.style.display = total ? 'none' : '';
+
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+    pageItems.forEach(item=>{
+      const li=document.createElement('li');
+      li.className='list-group-item d-flex align-items-start justify-content-between gap-3';
       const iconSrc=`/static/icons/${iconMap[item.category]||'code.svg'}`;
       li.innerHTML=`
         <div class="d-flex align-items-start gap-3">
@@ -420,6 +510,8 @@
         </div>`;
       list.appendChild(li);
     });
+
+    renderPagination(total);
   }
 
   // create submit
@@ -442,6 +534,7 @@
     save(data);
     form.reset(); form.classList.remove('was-validated');
     subcategory.disabled=true; subcategory.innerHTML=`<option value="" selected disabled>Najprv vyber okruh</option>`;
+    currentPage = Math.max(1, Math.ceil(load().filter(isComplete).length / PAGE_SIZE)); // skoč na poslednú stranu
     renderList();
   });
 
@@ -451,7 +544,13 @@
     const id=btn.getAttribute('data-id'); const data=load(); const idx=data.findIndex(q=>q.id===id); if(idx===-1) return;
 
     if(btn.dataset.action==='del'){
-      if(confirm('Zmazať otázku?')){ data.splice(idx,1); save(data); renderList(); }
+      if(confirm('Zmazať otázku?')){
+        data.splice(idx,1); save(data);
+        const totalAfter = getFiltered().length;
+        const totalPages = Math.max(1, Math.ceil(totalAfter / PAGE_SIZE));
+        if (currentPage > totalPages) currentPage = totalPages;
+        renderList();
+      }
       return;
     }
 
@@ -482,6 +581,7 @@
   });
 
   // init
+  fillSubcategories(subcategory, null);
   filterSubcategory.disabled=true;
   renderList();
 })();
