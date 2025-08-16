@@ -226,7 +226,6 @@
 
 <script>
 (function() {
-  const LS_KEY = 'quizQuestions';
   const ICON_BASE = '/static/icons/';
 
   const iconMap = {
@@ -236,9 +235,6 @@
     'CSS': 'css.svg',
     'SQL': 'mysql.svg'
   };
-
-  const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   // Elements
   const quizCategory = document.getElementById('quizCategory');
@@ -265,42 +261,23 @@
   let idx = 0;
   let answers = {}; // {index: 'A'|'B'|'C'|'D'}
 
-  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-  function showEmpty(msg){
-    emptyMsg.textContent = msg;
-    emptyMsg.style.display = 'block';
-  }
-  function hideEmpty(){
-    emptyMsg.textContent = '';
-    emptyMsg.style.display = 'none';
-  }
+  function showEmpty(msg){ emptyMsg.textContent = msg; emptyMsg.style.display = 'block'; }
+  function hideEmpty(){ emptyMsg.textContent = ''; emptyMsg.style.display = 'none'; }
 
-  function populateSubcategories(){
-    const data = load();
-    const cat = quizCategory.value;
+  async function fetchRandomPool(count){
+    const params = new URLSearchParams();
+    params.set('scope','mine'); // ak chceš zdieľaný pool všetkých, daj 'all'
+    if (quizCategory.value !== '__all__') params.set('category', quizCategory.value);
+    if (quizSubcategory.value !== '__all__') params.set('subcategory', quizSubcategory.value);
+    params.set('limit', count);
+    params.set('random', '1');
 
-    const subs = new Set();
-    data.forEach(q => {
-      if (cat === '__all__' || q.category === cat) {
-        if (q.subcategory) subs.add(q.subcategory);
-      }
-    });
-
-    quizSubcategory.innerHTML = '<option value="__all__">Všetko</option>';
-    [...subs].sort().forEach(sc => {
-      const opt = document.createElement('option');
-      opt.value = sc;
-      opt.textContent = sc;
-      quizSubcategory.appendChild(opt);
-    });
-
-    const pool = data.filter(q => cat === '__all__' || q.category === cat);
-    if (!pool.length && cat !== '__all__') {
-      showEmpty(`V okruhu „${cat}” zatiaľ nie sú žiadne otázky.`);
-    } else {
-      hideEmpty();
-    }
+    const r = await fetch(`/api/questions?${params.toString()}`, {credentials:'same-origin'});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Nepodarilo sa načítať otázky.');
+    return j.items || [];
   }
 
   function renderCategoryChip(catValue){
@@ -319,42 +296,37 @@
     }
   }
 
-  function poolForSelection(){
-    let pool = load().filter(q => (quizCategory.value === '__all__' || q.category === quizCategory.value));
-    if (quizSubcategory.value !== '__all__') {
-      pool = pool.filter(q => q.subcategory === quizSubcategory.value);
-    }
-    return pool;
-  }
-
-  function startQuiz() {
-    const pool = poolForSelection();
+  async function startQuiz() {
     const count = Math.max(1, parseInt(quizCount.value || '1', 10));
+    try{
+      const pool = await fetchRandomPool(count);
+      if (!pool.length){
+        const catLabel = quizCategory.value === '__all__' ? 'zvolenom výbere' : `okruhu „${quizCategory.value}”`;
+        const scPart = (quizSubcategory.value !== '__all__') ? ` a podkategórii „${quizSubcategory.value}”` : '';
+        showEmpty(`V ${catLabel}${scPart} zatiaľ nie sú žiadne otázky.`);
+        quizArea.style.display = 'none';
+        resultBox.style.display = 'none';
+        return;
+      }
+      hideEmpty();
 
-    if (!pool.length) {
-      const catLabel = quizCategory.value === '__all__' ? 'zvolenom výbere' : `okruhu „${quizCategory.value}”`;
-      const scPart = (quizSubcategory.value !== '__all__') ? ` a podkategórii „${quizSubcategory.value}”` : '';
-      showEmpty(`V ${catLabel}${scPart} zatiaľ nie sú žiadne otázky.`);
+      questions = pool;
+      idx = 0; answers = {};
+      renderCategoryChip(quizCategory.value);
+
+      quizArea.style.display = '';
+      resultBox.style.display = 'none';
+      resetQuizBtn.disabled = false;
+      finishBtn.disabled = questions.length === 0;
+      prevBtn.disabled = true;
+
+      renderQuestion();
+      updateProgress();
+    } catch(err){
+      showEmpty(err.message || 'Chyba pri načítaní otázok.');
       quizArea.style.display = 'none';
       resultBox.style.display = 'none';
-      return;
-    } else {
-      hideEmpty();
     }
-
-    shuffle(pool);
-    questions = pool.slice(0, count);
-    idx = 0; answers = {};
-    renderCategoryChip(quizCategory.value);
-
-    quizArea.style.display = '';
-    resultBox.style.display = 'none';
-    resetQuizBtn.disabled = false;
-    finishBtn.disabled = questions.length === 0;
-    prevBtn.disabled = true;
-
-    renderQuestion();
-    updateProgress();
   }
 
   function renderQuestion() {
@@ -377,7 +349,6 @@
       <div class="choices">${choicesHtml}</div>
     `;
 
-    // klik na celú kartu
     qBox.querySelectorAll('.choice').forEach(choice => {
       choice.addEventListener('click', () => {
         const input = choice.querySelector('input[type="radio"]');
@@ -388,7 +359,6 @@
       });
     });
 
-    // synchronizácia stavu
     qBox.querySelectorAll('input[name="q"]').forEach(r => {
       r.addEventListener('change', (e) => {
         answers[idx] = e.target.value;
@@ -397,11 +367,9 @@
       });
     });
 
-    // stav tlačidiel
     prevBtn.disabled = (idx === 0);
 
     if (idx === questions.length - 1) {
-      // posledná otázka → skryť Ďalšia a spraviť 'Vyhodnotiť' modré
       nextBtn.style.display = 'none';
       finishBtn.style.display = '';
       finishBtn.classList.remove('btn-outline-secondary');
@@ -421,7 +389,6 @@
     progressBar.setAttribute('aria-valuenow', pct);
   }
 
-  // zobraz krátky farebný feedback na aktuálnej otázke
   function flashFeedback(){
     const q = questions[idx];
     const chosen = answers[idx];
@@ -430,7 +397,6 @@
     const choiceEls = Array.from(qBox.querySelectorAll('.choice'));
     const map = {A:0,B:1,C:2,D:3};
 
-    // vyčisti predchádzajúce označenia
     choiceEls.forEach(el => el.classList.remove('is-correct','is-wrong'));
 
     if (chosen === q.correct){
@@ -443,7 +409,6 @@
   }
 
   function next() {
-    // najprv feedback, potom posun
     const hadAnswer = flashFeedback();
     const go = () => {
       if (idx < questions.length - 1) {
@@ -495,12 +460,6 @@
     resetQuizBtn.disabled = true;
   }
 
-  // Live zmeny – dopĺňanie subkategórií a reset subcat na „Všetko“
-  quizCategory.addEventListener('change', () => {
-    populateSubcategories();
-    quizSubcategory.value = '__all__';
-  });
-
   // Keyboard shortcuts
   document.addEventListener('keydown', (e)=>{
     if (quizArea.style.display === 'none') return;
@@ -516,7 +475,6 @@
       prev();
     } else if (key === 'enter') {
       if (idx === questions.length - 1) {
-        // na poslednej: krátky feedback a potom vyhodnotenie
         const had = flashFeedback();
         if (had) { setTimeout(evaluate, 650); } else { evaluate(); }
       } else {
@@ -540,15 +498,16 @@
   resetQuizBtn.addEventListener('click', resetAll);
   retryBtn.addEventListener('click', startQuiz);
 
-  // Init
-  populateSubcategories();
+  // Init: dynamické subkategórie podľa uložených otázok (voliteľné)
+  // Môžeš doplniť načítanie z /api/subcategories ak chceš filtrovať len tie, čo existujú.
 
   // Optional: query params (?cat=Python&sub=Podkategoria&n=10)
   const params = new URLSearchParams(location.search);
-  if (params.get('cat')) { quizCategory.value = params.get('cat'); populateSubcategories(); }
+  if (params.get('cat')) { quizCategory.value = params.get('cat'); }
   if (params.get('sub')) { quizSubcategory.value = params.get('sub'); }
   if (params.get('n')) quizCount.value = params.get('n');
 })();
 </script>
+
 
 {% endblock %}

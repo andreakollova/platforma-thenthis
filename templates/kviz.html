@@ -334,11 +334,10 @@
 
 <script>
 (function () {
-  const LS_KEY = 'quizQuestions';
-  const PAGE_SIZE = 6;
+  const PAGE_SIZE = 6;         // server-side pagination
   let currentPage = 1;
 
-  // ikonky + subkategórie
+  // ikonky + subkategórie (môžeš ponechať statické; prípadne čítať /api/subcategories)
   const iconMap = {
     'Python':'python.svg','JavaScript':'js.svg','HTML':'html.svg','CSS':'css.svg','SQL':'mysql.svg'
   };
@@ -350,13 +349,58 @@
     SQL:['SELECT a FROM','WHERE a logika','JOIN operácie','GROUP BY a COUNT','INSERT, UPDATE, DELETE','Indexy a optimalizácia','Agregačné funkcie','Poddotazy']
   };
 
-  // helpers
-  const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-  const save = (d) => localStorage.setItem(LS_KEY, JSON.stringify(d));
-  const uid = () => Math.random().toString(36).slice(2,9);
-  const escapeHtml = (s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const isComplete = (q)=> q.category&&q.subcategory&&q.question&&q.A&&q.B&&q.C&&q.D&&['A','B','C','D'].includes(q.correct);
+  // ---------- API helpers ----------
+  async function apiList({category, subcategory, page, page_size}) {
+    const params = new URLSearchParams();
+    params.set('scope','mine');
+    if (category && category !== '__all__') params.set('category', category);
+    if (subcategory && subcategory !== '__all__') params.set('subcategory', subcategory);
+    params.set('page', page || 1);
+    params.set('page_size', page_size || PAGE_SIZE);
 
+    const r = await fetch(`/api/questions?${params.toString()}`, {credentials:'same-origin'});
+    if (!r.ok) throw new Error('Nepodarilo sa načítať otázky.');
+    return r.json(); // {items,total,page,page_size}
+  }
+
+  async function apiCreate(payload){
+    const r = await fetch('/api/questions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Ukladanie zlyhalo.');
+    return j.item;
+  }
+
+  async function apiUpdate(id, payload){
+    const r = await fetch(`/api/questions/${id}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Uprava zlyhala.');
+    return j.item;
+  }
+
+  async function apiDelete(id){
+    const r = await fetch(`/api/questions/${id}`, {
+      method:'DELETE',
+      credentials:'same-origin'
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(()=>({}));
+      throw new Error(j.error || 'Mazanie zlyhalo.');
+    }
+    return true;
+  }
+
+  // ---------- UI helpers ----------
+  const escapeHtml = (s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   function fillSubcategories(selectEl, cat, placeholder='Vyber podkategóriu'){
     selectEl.innerHTML='';
     if(!cat||!subcats[cat]){
@@ -373,7 +417,7 @@
     });
   }
 
-  // elements
+  // ---------- Elements ----------
   const form=document.getElementById('questionForm');
   const category=document.getElementById('category');
   const subcategory=document.getElementById('subcategory');
@@ -424,14 +468,7 @@
   });
   filterSubcategory.addEventListener('change',()=>{ currentPage = 1; renderList(); });
 
-  // data helpers
-  function getFiltered(){
-    const data=load().filter(isComplete);
-    const fc=filterCategory.value, fs=filterSubcategory.value;
-    return data.filter(it=> (fc==='__all__'?true:it.category===fc) && (fs==='__all__'||filterSubcategory.disabled?true:it.subcategory===fs));
-  }
-
-  // pagination
+  // ---------- Pagination ----------
   function renderPagination(total){
     paginationEl.innerHTML = '';
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -444,7 +481,6 @@
     prevBtn.dataset.nav = 'prev';
     paginationEl.appendChild(prevBtn);
 
-    // čísla strán (kompaktne: max 7 viditeľných)
     const windowSize = 7;
     let start = Math.max(1, currentPage - Math.floor(windowSize/2));
     let end = start + windowSize - 1;
@@ -469,121 +505,145 @@
   paginationEl.addEventListener('click',(e)=>{
     const p = e.target.dataset.page ? parseInt(e.target.dataset.page,10) : null;
     const nav = e.target.dataset.nav;
-    const total = getFiltered().length;
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-    if (p){
-      currentPage = p;
-      renderList();
-    } else if (nav === 'prev' && currentPage > 1){
-      currentPage--; renderList();
-    } else if (nav === 'next' && currentPage < totalPages){
-      currentPage++; renderList();
-    }
+    if (p){ currentPage = p; renderList(); }
+    else if (nav === 'prev' && currentPage > 1){ currentPage--; renderList(); }
+    else if (nav === 'next'){ currentPage++; renderList(); }
   });
 
-  // render list
-  function renderList(){
-    const filtered = getFiltered();
-    const total = filtered.length;
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    if (currentPage > totalPages) currentPage = totalPages;
+  // ---------- Render list (server fetch) ----------
+  async function renderList(){
+    list.innerHTML = '';
+    emptyState.style.display = 'none';
 
-    list.innerHTML='';
-    emptyState.style.display = total ? 'none' : '';
+    try{
+      const { items, total } = await apiList({
+        category: filterCategory.value,
+        subcategory: filterSubcategory.disabled ? '__all__' : filterSubcategory.value,
+        page: currentPage,
+        page_size: PAGE_SIZE
+      });
 
-    const startIdx = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+      if (!total){
+        emptyState.style.display = '';
+        renderPagination(0);
+        return;
+      }
 
-    pageItems.forEach(item=>{
-      const li=document.createElement('li');
-      li.className='list-group-item d-flex align-items-start justify-content-between gap-3';
-      const iconSrc=`/static/icons/${iconMap[item.category]||'code.svg'}`;
-      li.innerHTML=`
-        <div class="d-flex align-items-start gap-3">
-          <img class="icon-quiz" src="${iconSrc}" alt="${item.category}">
-          <div>
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <span class="badge-subtle">${item.category}</span>
-              ${item.subcategory?`<span class="badge-subtle">${escapeHtml(item.subcategory)}</span>`:''}
+      items.forEach(item=>{
+        const li=document.createElement('li');
+        li.className='list-group-item d-flex align-items-start justify-content-between gap-3';
+        const iconSrc=`/static/icons/${iconMap[item.category]||'code.svg'}`;
+        li.innerHTML=`
+          <div class="d-flex align-items-start gap-3">
+            <img class="icon-quiz" src="${iconSrc}" alt="${item.category}">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge-subtle">${item.category}</span>
+                ${item.subcategory?`<span class="badge-subtle">${escapeHtml(item.subcategory)}</span>`:''}
+              </div>
+              <div class="mt-1 small">${escapeHtml(item.question)}</div>
             </div>
-            <div class="mt-1 small">${escapeHtml(item.question)}</div>
           </div>
-        </div>
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn-ghost btn-sm" data-action="edit" data-id="${item.id}" title="Upraviť"><i class="fas fa-edit"></i></button>
-          <button class="btn-ghost btn-sm" data-action="del" data-id="${item.id}" title="Zmazať"><i class="fas fa-trash"></i></button>
-        </div>`;
-      list.appendChild(li);
-    });
+          <div class="d-flex align-items-center gap-1">
+            <button class="btn-ghost btn-sm" data-action="edit" data-id="${item.id}" title="Upraviť"><i class="fas fa-edit"></i></button>
+            <button class="btn-ghost btn-sm" data-action="del" data-id="${item.id}" title="Zmazať"><i class="fas fa-trash"></i></button>
+          </div>`;
+        list.appendChild(li);
+      });
 
-    renderPagination(total);
+      renderPagination(total);
+    } catch(err){
+      emptyState.textContent = err.message || 'Chyba pri načítaní otázok.';
+      emptyState.style.display = '';
+      renderPagination(0);
+    }
   }
 
-  // create submit
-  form.addEventListener('submit',(e)=>{
+  // ---------- Create submit ----------
+  form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     if(!form.checkValidity()){ form.classList.add('was-validated'); return; }
     const correct=form.querySelector('input[name="correct"]:checked')?.value; if(!correct) return;
-    const data=load();
-    data.push({
-      id:uid(),
-      category:category.value,
-      subcategory:subcategory.value,
-      question:question.value.trim(),
-      A:optA.value.trim(),
-      B:optB.value.trim(),
-      C:optC.value.trim(),
-      D:optD.value.trim(),
-      correct
-    });
-    save(data);
-    form.reset(); form.classList.remove('was-validated');
-    subcategory.disabled=true; subcategory.innerHTML=`<option value="" selected disabled>Najprv vyber okruh</option>`;
-    currentPage = Math.max(1, Math.ceil(load().filter(isComplete).length / PAGE_SIZE)); // skoč na poslednú stranu
-    renderList();
+
+    try{
+      await apiCreate({
+        category: category.value,
+        subcategory: subcategory.value,
+        question: question.value.trim(),
+        A: optA.value.trim(),
+        B: optB.value.trim(),
+        C: optC.value.trim(),
+        D: optD.value.trim(),
+        correct
+      });
+      form.reset(); form.classList.remove('was-validated');
+      subcategory.disabled=true; subcategory.innerHTML=`<option value="" selected disabled>Najprv vyber okruh</option>`;
+      // po uložení skoč na prvú stranu (alebo môžeš prepočítať poslednú)
+      currentPage = 1;
+      renderList();
+    } catch(err){
+      alert(err.message || 'Ukladanie zlyhalo.');
+    }
   });
 
-  // list actions
-  list.addEventListener('click',(e)=>{
+  // ---------- List actions (edit/delete) ----------
+  list.addEventListener('click', async (e)=>{
     const btn=e.target.closest('button[data-action]'); if(!btn) return;
-    const id=btn.getAttribute('data-id'); const data=load(); const idx=data.findIndex(q=>q.id===id); if(idx===-1) return;
+    const id=btn.getAttribute('data-id');
 
     if(btn.dataset.action==='del'){
       if(confirm('Zmazať otázku?')){
-        data.splice(idx,1); save(data);
-        const totalAfter = getFiltered().length;
-        const totalPages = Math.max(1, Math.ceil(totalAfter / PAGE_SIZE));
-        if (currentPage > totalPages) currentPage = totalPages;
-        renderList();
+        try{
+          await apiDelete(id);
+          renderList();
+        } catch(err){
+          alert(err.message || 'Mazanie zlyhalo.');
+        }
       }
       return;
     }
 
     if(btn.dataset.action==='edit'){
-      const q=data[idx];
-      editId.value=q.id;
-      editCategory.value=q.category;
-      fillSubcategories(editSubcategory, q.category, 'Vyber podkategóriu');
-      editSubcategory.value=q.subcategory || '';
-      editQuestion.value=q.question;
-      editA.value=q.A; editB.value=q.B; editC.value=q.C; editD.value=q.D;
-      editCorrect.value=q.correct;
-      editModal?.show();
+      // načítame detaily aby sme mali istotu
+      try{
+        const r = await fetch(`/api/questions/${id}`, {credentials:'same-origin'});
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || 'Nepodarilo sa načítať otázku.');
+        const q = j.item;
+
+        editId.value=q.id;
+        editCategory.value=q.category;
+        fillSubcategories(editSubcategory, q.category, 'Vyber podkategóriu');
+        editSubcategory.value=q.subcategory || '';
+        editQuestion.value=q.question;
+        editA.value=q.A; editB.value=q.B; editC.value=q.C; editD.value=q.D;
+        editCorrect.value=q.correct;
+        editModal?.show();
+      } catch(err){
+        alert(err.message);
+      }
     }
   });
 
-  // save edit
-  saveEditBtn.addEventListener('click',()=>{
-    const id=editId.value; const data=load(); const idx=data.findIndex(q=>q.id===id); if(idx===-1) return;
-    data[idx]={ ...data[idx],
-      category:editCategory.value,
-      subcategory:editSubcategory.value,
-      question:editQuestion.value.trim(),
-      A:editA.value.trim(), B:editB.value.trim(), C:editC.value.trim(), D:editD.value.trim(),
-      correct:editCorrect.value
-    };
-    save(data); renderList(); editModal?.hide();
+  // ---------- Save edit ----------
+  document.getElementById('saveEditBtn').addEventListener('click', async ()=>{
+    const id=editId.value;
+    try{
+      await apiUpdate(id, {
+        category: editCategory.value,
+        subcategory: editSubcategory.value,
+        question: editQuestion.value.trim(),
+        A: editA.value.trim(),
+        B: editB.value.trim(),
+        C: editC.value.trim(),
+        D: editD.value.trim(),
+        correct: editCorrect.value
+      });
+      editModal?.hide();
+      renderList();
+    } catch(err){
+      alert(err.message || 'Uloženie úprav zlyhalo.');
+    }
   });
 
   // init
