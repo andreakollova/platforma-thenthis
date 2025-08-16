@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from sqlalchemy import func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -51,6 +53,39 @@ class Exercise(db.Model):
     cover_image = db.Column(db.String(150), nullable=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     published = db.Column(db.Boolean, default=False)
+
+class QuizQuestion(db.Model):
+    __tablename__ = 'quiz_questions'
+    id = db.Column(db.Integer, primary_key=True)
+
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    category = db.Column(db.String(50), nullable=False, index=True)
+    subcategory = db.Column(db.String(100), nullable=True, index=True)
+
+    question = db.Column(db.Text, nullable=False)
+    A = db.Column(db.Text, nullable=False)
+    B = db.Column(db.Text, nullable=False)
+    C = db.Column(db.Text, nullable=False)
+    D = db.Column(db.Text, nullable=False)
+    correct = db.Column(db.String(1), nullable=False)  # 'A' | 'B' | 'C' | 'D'
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    author = db.relationship('User', backref='quiz_questions')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "author_id": self.author_id,
+            "category": self.category,
+            "subcategory": self.subcategory or "",
+            "question": self.question,
+            "A": self.A, "B": self.B, "C": self.C, "D": self.D,
+            "correct": self.correct,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
 
     @property
     def answers(self):
@@ -345,6 +380,133 @@ def kviz():
 @login_required
 def kviz_spustit():
     return render_template('kviz-spustit.html', user=current_user)
+
+def _apply_scope(query, scope):
+    # "mine" = len tvoje otázky (default), "all" = všetkých
+    if scope == 'all':
+        return query
+    return query.filter(QuizQuestion.author_id == (current_user.id if current_user.is_authenticated else -1))
+
+def _validate_question_payload(data, is_update=False):
+    required = ['category','subcategory','question','A','B','C','D','correct']
+    if not is_update:
+        for k in required:
+            if not data.get(k):
+                return f"Missing field: {k}"
+    if data.get('correct') and data['correct'] not in ['A','B','C','D']:
+        return "Field 'correct' must be one of A,B,C,D"
+    return None
+
+@app.route('/api/questions', methods=['GET', 'POST'])
+@login_required
+def api_questions():
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        err = _validate_question_payload(data)
+        if err: return jsonify({"error": err}), 400
+
+        q = QuizQuestion(
+            author_id=current_user.id,
+            category=data['category'],
+            subcategory=data.get('subcategory') or "",
+            question=data['question'].strip(),
+            A=data['A'].strip(), B=data['B'].strip(), C=data['C'].strip(), D=data['D'].strip(),
+            correct=data['correct']
+        )
+        db.session.add(q)
+        db.session.commit()
+        return jsonify({"item": q.to_dict()}), 201
+
+    # GET
+    scope = request.args.get('scope', 'mine')         # mine|all
+    category = request.args.get('category')
+    subcategory = request.args.get('subcategory')
+    search = request.args.get('search')
+    page = request.args.get('page', type=int)
+    page_size = request.args.get('page_size', type=int, default=10)
+    limit = request.args.get('limit', type=int)       # alternatíva k stránkovaniu
+    random_flag = request.args.get('random', default='0') in ['1','true','True']
+
+    q = _apply_scope(QuizQuestion.query, scope)
+
+    if category and category != '__all__':
+        q = q.filter(QuizQuestion.category == category)
+    if subcategory and subcategory != '__all__':
+        q = q.filter(QuizQuestion.subcategory == subcategory)
+    if search:
+        like = f"%{search}%"
+        q = q.filter(QuizQuestion.question.ilike(like))
+
+    if random_flag:
+        q = q.order_by(func.random())
+
+    # 3 režimy: stránkovanie | limit | všetko (capneme na 1000)
+    if page:
+        page = max(1, page)
+        page_size = max(1, min(50, page_size))
+        total = q.count()
+        items = q.order_by(QuizQuestion.id.desc()).offset((page-1)*page_size).limit(page_size).all()
+        return jsonify({
+            "items": [it.to_dict() for it in items],
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        })
+    elif limit:
+        limit = max(1, min(200, limit))
+        items = q.limit(limit).all()
+        return jsonify({"items": [it.to_dict() for it in items], "total": len(items)})
+    else:
+        items = q.order_by(QuizQuestion.id.desc()).limit(1000).all()
+        return jsonify({"items": [it.to_dict() for it in items], "total": len(items)})
+
+@app.route('/api/questions/<int:q_id>', methods=['GET','PUT','DELETE'])
+@login_required
+def api_question_detail(q_id):
+    q = QuizQuestion.query.get_or_404(q_id)
+
+    # len autor môže upravovať/mazať
+    if request.method in ['PUT','DELETE'] and q.author_id != current_user.id:
+        return jsonify({"error":"Nemáš oprávnenie upravovať alebo mazať túto otázku."}), 403
+
+    if request.method == 'GET':
+        # čítať môže autor; ak by si chcela public, prispôsob
+        if q.author_id != current_user.id:
+            return jsonify({"error":"Nedostupné."}), 403
+        return jsonify({"item": q.to_dict()})
+
+    if request.method == 'PUT':
+        data = request.get_json(silent=True) or {}
+        err = _validate_question_payload(data, is_update=True)
+        if err: return jsonify({"error": err}), 400
+
+        q.category = data.get('category', q.category)
+        q.subcategory = data.get('subcategory', q.subcategory)
+        q.question = data.get('question', q.question)
+        q.A = data.get('A', q.A)
+        q.B = data.get('B', q.B)
+        q.C = data.get('C', q.C)
+        q.D = data.get('D', q.D)
+        if data.get('correct') in ['A','B','C','D']:
+            q.correct = data['correct']
+        db.session.commit()
+        return jsonify({"item": q.to_dict()})
+
+    # DELETE
+    db.session.delete(q)
+    db.session.commit()
+    return jsonify({"status":"deleted","id":q_id})
+
+@app.route('/api/subcategories')
+@login_required
+def api_subcategories():
+    scope = request.args.get('scope','mine')
+    category = request.args.get('category')
+    q = _apply_scope(QuizQuestion.query, scope)
+    if category and category != '__all__':
+        q = q.filter(QuizQuestion.category == category)
+    subs = q.with_entities(QuizQuestion.subcategory).distinct().all()
+    return jsonify({"subcategories":[s[0] for s in subs if s[0]]})
 
 if __name__ == '__main__':
     app.run(debug=True)
