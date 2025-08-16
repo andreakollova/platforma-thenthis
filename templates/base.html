@@ -78,6 +78,13 @@
             </a>
           </li>
           <li>
+            <a href="/kviz-vsetci"
+               class="nav-link px-2 text-dark {% if request.path.startswith('/kviz-vsetci') %}fw-semibold{% endif %}"
+               {% if request.path.startswith('/kviz-vsetci') %}style="color: #6b7280;"{% endif %}>
+              Kvíz
+            </a>
+          </li>
+          <li>
             <a href="/o-platforme"
                class="nav-link px-2 text-dark {% if request.path.startswith('/o-platforme') %}fw-semibold{% endif %}"
                {% if request.path.startswith('/o-platforme') %}style="color: #6b7280;"{% endif %}>

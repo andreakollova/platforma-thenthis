@@ -508,5 +508,10 @@ def api_subcategories():
     subs = q.with_entities(QuizQuestion.subcategory).distinct().all()
     return jsonify({"subcategories":[s[0] for s in subs if s[0]]})
 
+@app.route('/kviz-vsetci')
+@login_required   # nechceš verejný prístup → ponecháme login
+def kviz_vsetci():
+    return render_template('kviz-vsetci.html', user=current_user)
+
 if __name__ == '__main__':
     app.run(debug=True)
