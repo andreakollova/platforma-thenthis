@@ -509,9 +509,12 @@ def api_subcategories():
     return jsonify({"subcategories":[s[0] for s in subs if s[0]]})
 
 @app.route('/kviz-vsetci')
-@login_required   # nechceš verejný prístup → ponecháme login
 def kviz_vsetci():
     return render_template('kviz-vsetci.html', user=current_user)
+
+@app.route('/projekty/html')
+def projekt_html():
+    return render_template('projekt-html.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
