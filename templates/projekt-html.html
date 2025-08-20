@@ -1,4 +1,4 @@
-{# templates/projekt-html.html — Blackjack (final-final) #}
+{# templates/projekt-html.html — Blackjack (FINAL) #}
 {% extends "base.html" %}
 {% block title %}Projekt HTML – Blackjack{% endblock %}
 
@@ -27,7 +27,7 @@
   .proj details { border:1px dashed #e5e7eb; background:#fafafa; border-radius:.75rem; padding:.6rem .75rem; }
   .proj summary { cursor:pointer; font-weight:700; }
 
-  .proj .card { border-radius:1rem; overflow:hidden; } /* bez bielych rohov */
+  .proj .card { border-radius:1rem; overflow:hidden; } /* clip vnútro, bez bielych rohov */
   .proj .card-header { background:#fff; }
   .proj .card-header, .proj .card-body { padding:.7rem 1rem; }
   .proj .card-body > :first-child { margin-top:0 !important; }
@@ -39,17 +39,17 @@
   /* kód + zvýraznenie prírastkov v danom kroku */
   .proj .code-shell { position:relative; }
   .proj pre.code-block {
-    position:relative; margin:0; padding:.45rem .55rem .45rem .7rem;
-    background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.82rem; overflow:auto;
+    position:relative; margin:0; padding:.38rem .48rem .38rem .6rem;
+    background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.80rem; overflow:auto;
   }
   .proj pre.code-block code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    white-space: pre; display:block; line-height:1.06;  /* veľmi tesné riadkovanie */
+    white-space: pre; display:block; line-height:1.03;  /* EŠTE menšie riadkovanie */
   }
   .proj .copy-btn {
-    position:absolute; top:.3rem; right:.3rem; z-index:2;
+    position:absolute; top:.28rem; right:.28rem; z-index:2;
     border:1px solid #1f2937; background:#111827; color:#dbeafe;
-    border-radius:.4rem; padding:.18rem .45rem; font-size:.75rem;
+    border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem;
   }
   .proj .code-line { display:block; padding-left:.5rem; border-left:3px solid transparent; }
   .proj .code-line.added { border-left-color:#22c55e; } /* len zelená “čiarka” */
@@ -178,15 +178,15 @@
             <p class="muted">Tvoje odpovede sa ukladajú iba lokálne (v prehliadači).</p>
             <div class="mb-2">
               <label class="form-label">1) Aké nové <strong>koncepty</strong> som sa naučil/a?</label>
-              <textarea id="rConcepts" rows="2" class="form-control" placeholder="Napr. práca s funkciami, while-cyklus, validácia vstupu…"></textarea>
+              <textarea id="rConcepts" rows="2" class="form-control"></textarea>
             </div>
             <div class="mb-2">
               <label class="form-label">2) Čo bola moja najväčšia <strong>výzva</strong> v tomto projekte?</label>
-              <textarea id="rChallenge" rows="2" class="form-control" placeholder="Napr. logika skóre s esom; zamieňanie 11→1…"></textarea>
+              <textarea id="rChallenge" rows="2" class="form-control"></textarea>
             </div>
             <div class="mb-3">
               <label class="form-label">Poznámky</label>
-              <textarea id="rNotes" rows="3" class="form-control" placeholder="Ďalšie nápady, odkazy, TODO…"></textarea>
+              <textarea id="rNotes" rows="3" class="form-control"></textarea>
             </div>
             <div class="text-end">
               <button id="saveReflect" class="btn btn-primary">Uložiť reflexiu</button>
@@ -198,14 +198,14 @@
   </div>
 </section>
 
-<!-- Modal: Gratulácia po dokončení (osobné s názvom projektu) -->
+<!-- Modal: Gratulácia po dokončení (všeobecný text) -->
 <div class="modal fade" id="congratsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 shadow-sm p-4">
-      <h5 class="fw-semibold mb-2">🎉 Gratulujem! Dokončil si projekt <strong>Blackjack</strong>.</h5>
+      <h5 class="fw-semibold mb-2">🎉 Gratulujem, ukončili ste tento projekt!</h5>
       <p class="mb-3 text-muted">
-        Prešiel si všetky kroky od základných funkcií až po hotovú hru. Skvelá disciplína!
-        Pokojne si projekt uprav podľa seba, pozri sa na alternatívy pravidiel alebo pokračuj ďalším projektom. Len tak ďalej!
+        Prešli ste všetky kroky, budovali ste riešenie krok za krokom a zvládli ste to. Skvelá práca!
+        Pokračujte ďalším projektom alebo si tento ďalej vylepšujte podľa seba.
       </p>
       <div class="text-end">
         <button class="btn btn-primary" data-bs-dismiss="modal">Pokračovať</button>
@@ -460,8 +460,7 @@
       codeLines: step4_lines
     },
     { title: "Opakovanie hier (Play again)",
-      explain: `
-        <p>Zabaľ spustenie do <code>while True</code> a po hre sa opýtaj, či chceš hrať znova.</p>`,
+      explain: `<p>Zabaľ spustenie do <code>while True</code> a po hre sa opýtaj, či chceš hrať znova.</p>`,
       checklist: [
         "Spustenie vo while True.",
         "Ak odpoveď != 'y', ukonči program."
@@ -470,8 +469,7 @@
       codeLines: step5_lines
     },
     { title: "Lepší vstup (validácia áno/nie)",
-      explain: `
-        <p>Vytvor <code>ask_yes_no()</code> – pýta sa, kým nedostane <code>'y'</code> alebo <code>'n'</code>. Použi ju pri Hit/Stand aj pri Play again.</p>`,
+      explain: `<p>Vytvor <code>ask_yes_no()</code> – pýta sa, kým nedostane <code>'y'</code> alebo <code>'n'</code>. Použi ju pri Hit/Stand aj pri Play again.</p>`,
       checklist: [
         "Funkcia ask_yes_no(prompt).",
         "Použitá v hre aj pri Play again."
@@ -512,7 +510,8 @@
 
     const stepContent = document.getElementById('stepContent');
     const prevStepBtn = document.getElementById('prevStep');
-    const nextStepBtn = document.getElementById('nextStep');
+    theNextBtn = document.getElementById('nextStep');
+    const nextStepBtn = theNextBtn; /* just to be safe with minifiers */
     const toggleDoneBtn = document.getElementById('toggleDone');
 
     const rConcepts = document.getElementById('rConcepts');
@@ -534,9 +533,7 @@
 
     function checkAllDoneAndCelebrate(){
       const allDone = state.done.every(Boolean);
-      const shown = localStorage.getItem(CONGRATS_KEY) === '1';
-      if(allDone && !shown){
-        localStorage.setItem(CONGRATS_KEY,'1');
+      if(allDone){
         const el = document.getElementById('congratsModal');
         if (window.bootstrap && bootstrap.Modal) {
           new bootstrap.Modal(el).show();
@@ -625,12 +622,14 @@
         updateToggleButton();
 
         if(!wasDone && state.done[i]){               // práve označené ako hotové
+          const allDoneNow = state.done.every(Boolean);
           if(i < STEPS.length - 1){
             state.step = i + 1;                      // skok na ďalší krok
             store.save(state);
             selectStep(state.step);
           }else{
-            checkAllDoneAndCelebrate();              // posledný krok
+            // posledný krok – ukáž pop-up priamo po kliknutí
+            if (allDoneNow) checkAllDoneAndCelebrate();
           }
         }
       };
