@@ -1,144 +1,177 @@
-{# templates/projekt-html.html #}
+{# templates/projekt-html.html — Blackjack (kroky vľavo, zvýraznenie prírastkov, hero s ikonou) #}
 {% extends "base.html" %}
-{% block title %}Projekt HTML – Kameň/Papier/Nožnice{% endblock %}
+{% block title %}Projekt HTML – Blackjack{% endblock %}
 
 {% block content %}
 <style>
-  /* --- Projekt: RPS (scoped) ------------------------------------------------ */
-  .rps * { box-sizing: border-box; }
-  .rps .chip {
-    border: 1px solid #e5e7eb; background:#f8fafc; padding:.45rem .65rem; border-radius:999px;
-    font-size:.85rem; color:#374151; font-weight:600;
-  }
-  .rps .pill { border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:.35rem .6rem; font-size:.8rem; color:#6b7280; }
-  .rps .progress-thin { height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #e5e7eb; }
-  .rps .progress-thin > i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); }
+  /* --- Scoped štýly pre projekt ------------------------------------------ */
+  .proj * { box-sizing: border-box; }
+  .proj .pill { border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:.3rem .6rem; font-size:.8rem; color:#6b7280; }
+  .proj .progress-thin { height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #e5e7eb; }
+  .proj .progress-thin > i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); }
 
-  .rps .steps { list-style:none; padding-left:0; margin:0; }
-  .rps .steps li {
+  .proj .steps { list-style:none; padding-left:0; margin:0; }
+  .proj .steps li {
     display:flex; align-items:center; gap:.5rem; padding:.55rem .6rem; border-radius:.75rem; cursor:pointer;
+    border:1px solid transparent;
   }
-  .rps .steps li:hover { background:#f8fafc; }
-  .rps .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
-  .rps .steps .idx {
+  .proj .steps li:hover { background:#f8fafc; }
+  .proj .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
+  .proj .steps li.done   { background:#ecfdf5; border:1px solid #86efac; }
+  .proj .steps .idx {
     width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem; border:1px solid #e5e7eb; background:#fff;
     font-weight:700; font-size:.8rem; color:#111827;
   }
-  .rps .steps .state { margin-left:auto; font-size:.8rem; color:#6b7280; }
+  .proj .steps .state { margin-left:auto; font-size:.8rem; color:#16a34a; font-weight:700; }
 
-  .rps .result { min-height:1.75rem; font-weight:600; }
-  .rps .score b { font-size:1.05rem; }
-  .rps details { border:1px dashed #e5e7eb; background:#fafafa; border-radius:.75rem; padding:.5rem .75rem; }
-  .rps summary { cursor:pointer; font-weight:700; }
-  .rps pre { margin:0; padding:.75rem; background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.9rem; }
-  .rps code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+  .proj details { border:1px dashed #e5e7eb; background:#fafafa; border-radius:.75rem; padding:.6rem .75rem; }
+  .proj summary { cursor:pointer; font-weight:700; }
 
-  .rps textarea, .rps input[type="text"] {
-    width:100%; background:#fff; color:#111827; border:1px solid #e5e7eb; border-radius:.6rem; padding:.55rem .7rem;
+  .proj .card { border-radius:1rem; }
+  .proj .card-header { background:#fff; }
+
+  /* hero card – o trochu menší vertikálny padding */
+  .proj .hero-left { padding-top:.75rem !important; padding-bottom:.75rem !important; }
+
+  /* kód + zvýraznenie prírastkov v danom kroku */
+  .proj .code-shell { position:relative; }
+  .proj .copy-btn {
+    position:absolute; top:.5rem; right:.5rem;
+    border:1px solid #e5e7eb; background:#fff; border-radius:.5rem; padding:.25rem .5rem; font-size:.8rem;
   }
-  .rps .muted { color:#6b7280; }
-  .rps .btn-soft { border:1px solid #e5e7eb; background:#f8fafc; }
-  .rps .btn-soft:hover { background:#f3f4f6; }
+  .proj pre.code-block { margin:0; padding:1rem .75rem .75rem 1rem; background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.9rem; overflow:auto; }
+  .proj pre.code-block code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; white-space: pre; display:block; }
+  .proj .code-line { display:block; padding-left:.5rem; border-left:3px solid transparent; }
+  .proj .code-line.added { background:#ecfdf5; border-left-color:#22c55e; color:#052e16; } /* zelené novinky */
+  .proj .muted { color:#6b7280; }
 
-  /* compact cards to match Then This look */
-  .rps .card { border-radius:1rem; }
-  .rps .card-header { background:#fff; }
+  /* jazykové badge */
+  .lang-badges .badge { background:#fff; border:1px solid #e5e7eb; color:#374151; }
+  .lang-badges .badge i { margin-right:.35rem; }
 </style>
 
-<section class="rps">
-  <!-- Head -->
-  <div class="d-flex align-items-start justify-content-between mb-3">
-    <div class="d-flex align-items-center gap-3">
-      <div style="width:44px;height:44px;border-radius:12px;border:1px solid #e5e7eb;background:
-          radial-gradient(circle at 30% 25%, #93c5fd, transparent 45%),
-          radial-gradient(circle at 75% 70%, #86efac, transparent 45%),
-          #fff;" aria-hidden="true"></div>
-      <div>
-        <h1 class="h4 mb-1">Projekt: <strong>Kameň · Papier · Nožnice</strong></h1>
-        <div class="d-flex flex-wrap gap-2">
-          <span class="pill">Úroveň: Začiatočník → Pokročilý</span>
-          <span class="pill">Jazyk: JavaScript (frontend)</span>
-          <span class="pill">Čas: ~30–60 min</span>
+<section class="proj">
+  <!-- HERO / HLAVIČKA S FOTKOU ---------------------------------------------->
+  <div class="card shadow-sm mb-3">
+    <div class="row g-0 align-items-center">
+      <div class="col-12 col-lg-8 hero-left p-2 ps-3 pe-3">
+        <div class="d-flex align-items-start gap-3">
+          <!-- ikonka (ponechaná) -->
+          <div style="width:44px;height:44px;border-radius:12px;border:1px solid #e5e7eb;background:
+              radial-gradient(circle at 30% 25%, #93c5fd, transparent 45%),
+              radial-gradient(circle at 75% 70%, #86efac, transparent 45%),
+              #fff;" aria-hidden="true"></div>
+          <div class="flex-grow-1">
+            <h1 class="h4 mb-1">Projekt: <strong>Blackjack</strong></h1>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="pill">Úroveň: Začiatočník → Pokročilý</span>
+              <span class="pill">Primárne: Python (CLI)</span>
+              <span class="pill">Čas: ~45–90 min</span>
+            </div>
+            <div class="lang-badges d-flex flex-wrap gap-2 mb-1">
+              <span class="badge rounded-pill px-2 py-1"><i class="fab fa-python"></i>Python</span>
+              <span class="badge rounded-pill px-2 py-1"><i class="fab fa-js"></i>JavaScript</span>
+              <span class="badge rounded-pill px-2 py-1"><i class="fab fa-html5"></i>HTML</span>
+              <span class="badge rounded-pill px-2 py-1"><i class="fab fa-css3-alt"></i>CSS</span>
+            </div>
+            <div class="small text-muted">
+              <strong>Náhľad:</strong>
+              <a href="https://blackjack.onrender.com/" target="_blank" rel="noopener">https://blackjack.onrender.com/</a>
+            </div>
+          </div>
         </div>
       </div>
+      <!-- Fotka pri názve projektu -->
+      <div class="col-12 col-lg-4">
+        <img
+          src="{{ url_for('static', filename='projects/blackjack2.png') }}"
+          class="img-fluid rounded-end"
+          alt="Blackjack – náhľad"
+          style="object-fit: cover; width: 100%; height: 100%; max-height: 220px;"
+        >
+      </div>
     </div>
-    <button id="rpsStart" class="btn btn-primary">Spustiť projekt</button>
   </div>
 
   <div class="row g-3">
-    <!-- LEFT: Steps -->
+    <!-- LEFT: kroky + progres -->
     <div class="col-12 col-lg-4">
       <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div class="fw-semibold">Kroky projektu</div>
-          <span class="text-muted small" id="rpsDoneCount">0 / 6 hotovo</span>
+          <span class="text-muted small" id="doneCount">0 / 6 hotovo</span>
         </div>
         <div class="card-body">
           <div class="progress-thin mb-3" aria-label="Priebeh">
-            <i id="rpsProgressBar"></i>
+            <i id="progressBar"></i>
           </div>
-          <ul id="rpsSteps" class="steps" role="tablist" aria-label="Kroky"></ul>
+          <ul id="steps" class="steps" role="tablist" aria-label="Kroky"></ul>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT: Panels -->
+    <!-- RIGHT: Zadanie / Krok / Introspekcia -->
     <div class="col-12 col-lg-8">
       <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
-          <div class="fw-semibold" id="rpsPanelTitle">Zadanie</div>
+          <div class="fw-semibold" id="panelTitle">Zadanie</div>
           <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-soft btn-sm" id="rpsShowAssignment">Zobraziť zadanie</button>
-            <button class="btn btn-soft btn-sm" id="rpsShowRunner">Spustiť krok</button>
-            <button class="btn btn-soft btn-sm" id="rpsShowIntrospect">Introspekcia</button>
+            <button class="btn btn-soft btn-sm" id="showAssignment">Zobraziť zadanie</button>
+            <button class="btn btn-soft btn-sm" id="showIntrospect">Introspekcia</button>
           </div>
         </div>
         <div class="card-body">
-          <!-- Assignment -->
-          <div id="rpsAssignment">
-            <p class="text-muted mb-3">
-              Vytvor interaktívnu hru <strong>Kameň–Papier–Nožnice</strong> v prehliadači. Použi čistý HTML, CSS a JavaScript.
-              Postupuj po malých krokoch: každý krok má <em>checklist</em>, <em>hinty</em> a ukážku kódu. Keď máš krok hotový,
-              označ ho a pokračuj.
+          <!-- Zadanie -->
+          <div id="assignment">
+            <p class="text-muted">
+              Postupne vytvoríš <strong>konzolovú hru Blackjack v Pythone</strong>. Každý krok obsahuje
+              <em>vysvetlenie</em>, <em>checklist</em>, <em>hinty</em> a <em>celý kód</em> pre daný stav projektu.
+              Vždy zvýrazníme <span style="background:#ecfdf5;border-left:3px solid #22c55e;padding:0 .25rem;color:#052e16;">nové riadky</span>,
+              aby si presne vedel, čo pribudlo.
             </p>
-            <details class="mb-2">
-              <summary>Tipy k projektu</summary>
+
+            <details class="mb-3" open>
+              <summary><strong>Tipy pred začatím projektu</strong></summary>
               <ul class="mt-2 mb-0">
-                <li>Použi <code>addEventListener</code> na kliky.</li>
-                <li>Náhodu vyrobíš cez <code>Math.random()</code>.</li>
-                <li>Stav hry (skóre) drž v premenných a zobrazuj v DOM.</li>
-                <li>Postup ukladaj do <code>localStorage</code> (už pripravené).</li>
+                <li>Rob <strong>po malých častiach</strong> a po každej zmene program <strong>spusť</strong>.</li>
+                <li><strong>Eso (A)=11</strong>, ale ak by si mal &gt;21, zmeníme jedno eso na <strong>1</strong>.</li>
+                <li><strong>Blackjack</strong> = 21 z <em>dvoch</em> kariet → v kóde ho označíme <code>0</code> pre ľahké porovnanie.</li>
+                <li>Ak si neistý, skopíruj „Celý kód“ – je to presná podoba súboru v danom kroku.</li>
               </ul>
             </details>
+
+            <button id="startProject" class="btn btn-primary">
+              Začať projekt
+            </button>
           </div>
 
-          <!-- Runner -->
-          <div id="rpsRunner" hidden>
-            <div id="rpsStepContent"></div>
+          <!-- Krok (detail) -->
+          <div id="stepView" hidden>
+            <div id="stepContent"></div>
             <div class="d-flex justify-content-end gap-2 mt-3">
-              <button class="btn btn-outline-secondary" id="rpsPrev">&larr; Predchádzajúci</button>
-              <button class="btn btn-success" id="rpsMarkDone">Označiť ako hotové</button>
-              <button class="btn btn-outline-secondary" id="rpsNext">Ďalší krok &rarr;</button>
+              <button class="btn btn-outline-secondary" id="prevStep">&larr; Predchádzajúci</button>
+              <button class="btn btn-success" id="markDone">Označiť ako hotové</button>
+              <button class="btn btn-outline-secondary" id="nextStep">Ďalší krok &rarr;</button>
             </div>
           </div>
 
-          <!-- Introspection -->
-          <div id="rpsIntrospect" hidden>
-            <p class="muted">Sebahodnotenie sa ukladá iba do tvojho prehliadača.</p>
+          <!-- Introspekcia -->
+          <div id="introspect" hidden>
+            <p class="muted">Tvoje poznámky sa ukladajú iba lokálne (v prehliadači).</p>
             <div class="mb-2">
-              <label class="form-label">1) Čo aktuálne vypisuje konzola / čo vidíš na stránke?</label>
-              <textarea id="rpsQOutput" rows="3" class="form-control" placeholder="Napr. Po kliknutí vidím svoju voľbu a náhodnú voľbu PC…"></textarea>
+              <label class="form-label">1) Čo ti už funguje / čo vidíš v konzole?</label>
+              <textarea id="qOutput" rows="3" class="form-control" placeholder="Napr. Po rozdání vidím skóre a viem ťahať karty..."></textarea>
             </div>
             <div class="mb-2">
-              <label class="form-label">2) Ktorý koncept je pre teba mätúci?</label>
-              <input id="rpsQConfuse" type="text" class="form-control" placeholder="Napr. generovanie náhody; porovnanie stringov; event handler">
+              <label class="form-label">2) Čo je mätúce?</label>
+              <input id="qConfuse" type="text" class="form-control" placeholder="Napr. kedy sa A zmení z 11 na 1">
             </div>
             <div class="mb-3">
-              <label class="form-label">3) Čo urobíš v ďalšom kroku?</label>
-              <input id="rpsQNext" type="text" class="form-control" placeholder="Napr. doplním počítanie skóre a reset">
+              <label class="form-label">3) Čo spravíš ďalej?</label>
+              <input id="qNext" type="text" class="form-control" placeholder="Napr. doplním cyklus 'Play again'">
             </div>
             <div class="text-end">
-              <button id="rpsSaveReflect" class="btn btn-primary">Uložiť reflexiu</button>
+              <button id="saveReflect" class="btn btn-primary">Uložiť reflexiu</button>
             </div>
           </div>
         </div>
@@ -148,297 +181,428 @@
 </section>
 
 <script>
-  // --- STEP DEFINITIONS ------------------------------------------------------
-  const RPS_STEPS = [
+  /* -------------------- Pomocné pre renderovanie kódu --------------------- */
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function codeHtml(lines, addedIdxSet){
+    return lines.map((ln, i)=>{
+      const cls = addedIdxSet.has(i) ? 'code-line added' : 'code-line';
+      return `<span class="${cls}">${escapeHtml(ln)}</span>`;
+    }).join('\n');
+  }
+  function addedIdxs(currLines, prevLines){
+    const prevSet = new Set(prevLines || []);
+    const set = new Set();
+    currLines.forEach((ln, idx)=>{ if(!prevSet.has(ln)) set.add(idx); });
+    return set;
+  }
+
+  /* -------------------- KROKOVÉ KÓDY (po riadkoch) ------------------------ */
+  const step1_lines = [
+    "import random",
+    "",
+    "print(r\"\"\"          _____",
+    "         |A .  | _____",
+    "         | /.\\ ||A ^  | _____",
+    "         |(_._)|| / \\ ||A _  | _____",
+    "         |  |  || \\ / || ( ) ||A_ _ |",
+    "         |____V||  .  ||(_'_)||( v )|",
+    "                |____V||  |  || \\ / |",
+    "                       |____V||  .  |",
+    "                              |____V|",
+    "\"\"\")",
+    "",
+    "def deal_cards():",
+    "    cards = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]",
+    "    return random.choice(cards)",
+    "",
+    "def calculate_score(cards):",
+    "    # Blackjack (21 z dvoch kariet)",
+    "    if sum(cards) == 21 and len(cards) == 2:",
+    "        return 0",
+    "    # Eso 11 -> 1 ak by súčet presiahol 21",
+    "    while 11 in cards and sum(cards) > 21:",
+    "        cards[cards.index(11)] = 1",
+    "    return sum(cards)",
+    "",
+    "def compare(user_score, computer_score):",
+    "    if user_score == computer_score:",
+    "        return \"Remíza.\"",
+    "    elif computer_score == 0:",
+    "        return \"Prehral si, dealer má Blackjack!\"",
+    "    elif user_score == 0:",
+    "        return \"Vyhral si Blackjackom! 🎉\"",
+    "    elif user_score > 21:",
+    "        return \"Prehral si, presiahol si 21.\"",
+    "    elif computer_score > 21:",
+    "        return \"Vyhral si, dealer presiahol 21!\"",
+    "    elif user_score > computer_score:",
+    "        return \"Vyhral si! 🎉\"",
+    "    else:",
+    "        return \"Prehral si.\"",
+    ""
+  ];
+
+  const step2_lines = [
+    ...step1_lines,
+    "def play_one_round():",
+    "    user_cards = []",
+    "    computer_cards = []",
+    "    is_game_over = False",
+    "",
+    "    for _ in range(2):",
+    "        user_cards.append(deal_cards())",
+    "        computer_cards.append(deal_cards())",
+    "",
+    "    while not is_game_over:",
+    "        user_score = calculate_score(user_cards)",
+    "        computer_score = calculate_score(computer_cards)",
+    "        print(f\"Your cards {user_cards} and score: {user_score}\")",
+    "        print(f\"Computer cards {computer_cards} and score: {computer_score}\")",
+    "",
+    "        if user_score == 0 or computer_score == 0 or user_score > 21:",
+    "            is_game_over = True",
+    "        else:",
+    "            user_should_deal = input(\"Type 'y' to get another card, type 'n' to pass: \").strip().lower()",
+    "            if user_should_deal == 'y':",
+    "                user_cards.append(deal_cards())",
+    "            else:",
+    "                is_game_over = True",
+    ""
+  ];
+
+  const step3_lines = [
+    ...step2_lines.slice(0, -1),
+    "    # Dealer ťahá do 17",
+    "    computer_score = calculate_score(computer_cards)",
+    "    while computer_score != 0 and computer_score < 17:",
+    "        computer_cards.append(deal_cards())",
+    "        computer_score = calculate_score(computer_cards)",
+    "",
+    "    print(f\"Your final hand: {user_cards}, final score: {user_score}\")",
+    "    print(f\"Computer's final hand: {computer_cards}, final score: {computer_score}\")",
+    "    print(compare(user_score, computer_score))",
+    ""
+  ];
+
+  const step4_lines = [
+    ...step3_lines,
+    "if __name__ == \"__main__\":",
+    "    play_one_round()",
+    ""
+  ];
+
+  const step5_lines = [
+    ...step3_lines,
+    "if __name__ == \"__main__\":",
+    "    while True:",
+    "        play_one_round()",
+    "        again = input(\"Play again? (y/n): \").strip().lower()",
+    "        if again != 'y':",
+    "            break",
+    ""
+  ];
+
+  const step6_lines = [
+    ...step1_lines,
+    "def ask_yes_no(prompt):",
+    "    while True:",
+    "        ans = input(prompt).strip().lower()",
+    "        if ans in ('y','n'):",
+    "            return ans",
+    "        print(\"Please type 'y' or 'n'.\")",
+    "",
+    "def play_one_round():",
+    "    user_cards = []",
+    "    computer_cards = []",
+    "    is_game_over = False",
+    "",
+    "    for _ in range(2):",
+    "        user_cards.append(deal_cards())",
+    "        computer_cards.append(deal_cards())",
+    "",
+    "    while not is_game_over:",
+    "        user_score = calculate_score(user_cards)",
+    "        computer_score = calculate_score(computer_cards)",
+    "        print(f\"Your cards {user_cards} and score: {user_score}\")",
+    "        print(f\"Computer cards {computer_cards} and score: {computer_score}\")",
+    "",
+    "        if user_score == 0 or computer_score == 0 or user_score > 21:",
+    "            is_game_over = True",
+    "        else:",
+    "            user_should_deal = ask_yes_no(\"Type 'y' to get another card, 'n' to pass: \")",
+    "            if user_should_deal == 'y':",
+    "                user_cards.append(deal_cards())",
+    "            else:",
+    "                is_game_over = True",
+    "",
+    "    # Dealer ťahá do 17",
+    "    computer_score = calculate_score(computer_cards)",
+    "    while computer_score != 0 and computer_score < 17:",
+    "        computer_cards.append(deal_cards())",
+    "        computer_score = calculate_score(computer_cards)",
+    "",
+    "    print(f\"Your final hand: {user_cards}, final score: {user_score}\")",
+    "    print(f\"Computer's final hand: {computer_cards}, final score: {computer_score}\")",
+    "    print(compare(user_score, computer_score))",
+    "",
+    "if __name__ == \"__main__\":",
+    "    while True:",
+    "        play_one_round()",
+    "        again = ask_yes_no(\"Play again? (y/n): \")",
+    "        if again != 'y':",
+    "            break",
+    ""
+  ];
+
+  /* -------------------- DEFINÍCIA KROKOV (s detailným návodom) ------------ */
+  const STEPS = [
     {
-      title: "HTML kostra & konzola",
+      title: "Základ: importy + tri funkcie (deal, score, compare)",
+      explain: `
+        <p><strong>Čo ideš spraviť:</strong> pripraviť stavebné bloky: náhodné karty, výpočet skóre a slovný výsledok.</p>
+        <ol>
+          <li><strong>Import</strong> <code>random</code> – potrebujeme na náhodu.</li>
+          <li><strong>ASCII hlavička</strong> – dekorácia, nech hra pôsobí zábavne.</li>
+          <li><strong><code>deal_cards()</code></strong> – vráti jednu náhodnú kartu z balíka (11=A, 10=10/J/Q/K).</li>
+          <li><strong><code>calculate_score()</code></strong> – ak sú <em>2 karty a 21</em>, vráť <code>0</code> (Blackjack). Keď je súčet &gt; 21 a máš Eso (11), zmeň <em>jedno</em> Eso na 1 a znova prepočítaj, kým netreba.</li>
+          <li><strong><code>compare()</code></strong> – porovná skóre a vráti text: remíza, výhra/prehra, špeciálne prípady (Blackjack, bust &gt;21).</li>
+        </ol>
+        <p><em>Skús spustiť súbor – zatiaľ len definuje funkcie (bez hry) a vypíše hlavičku.</em></p>
+      `,
       checklist: [
-        "Vytvor tlačidlá: Kameň, Papier, Nožnice.",
-        "Po kliknutí vypíš do konzoly zvolenú možnosť.",
-        "Zobraz miesto pre skóre a výsledok."
+        "Import random + ASCII hlavička.",
+        "deal_cards(): náhodná karta z [11,2..10].",
+        "calculate_score(): Eso 11→1, Blackjack=0.",
+        "compare(): textový výsledok podľa skóre."
       ],
-      hint: `Použi addEventListener('click', ...) a textContent na zobrazenie do <code>#rps-result</code>.`,
-      code: `// index.js (výcuc)
-const resultEl = document.getElementById('rps-result');
-["kamen","papier","noznice"].forEach(id => {
-  document.getElementById(id).addEventListener('click', () => {
-    console.log('Hráč:', id);
-    resultEl.textContent = 'Zvolil si: ' + id;
-  });
-});`
+      hint: `Blackjack (21 z dvoch kariet) označíme číslom 0 – uľahčí to porovnávanie.`,
+      codeLines: step1_lines
     },
     {
-      title: "Náhodná voľba PC",
+      title: "Hráčov ťah (play_one_round – časť 1)",
+      explain: `
+        <p><strong>Čo ideš spraviť:</strong> vytvoríš funkciu, ktorá rozdaní karty a spracuje rozhodnutie hráča (Hit/Stand).</p>
+        <ol>
+          <li>Pridaj <code>play_one_round()</code> a v ňom tri premenné: <code>user_cards</code>, <code>computer_cards</code>, <code>is_game_over</code>.</li>
+          <li>Rozdaj <strong>2 karty</strong> hráčovi aj dealerovi (for-cyklus 2×).</li>
+          <li>V slučke <code>while not is_game_over</code> vždy prepočítaj skóre oboch a vypíš ich.</li>
+          <li>Ak hráč/dealer má Blackjack <em>alebo</em> hráč presiahne 21 → ukonči ťah (<code>is_game_over=True</code>).</li>
+          <li>Inak sa spýtaj: <code>'y'</code> (Hit) → pridaj kartu hráčovi; <code>'n'</code> (Stand) → ukonči hráčov ťah.</li>
+          <li>Vstup vždy čistíme: <code>.strip().lower()</code>.</li>
+        </ol>
+        <p><em>Po tomto kroku vieš ťahať karty pre hráča. Dealer zatiaľ nehrá.</em></p>
+      `,
       checklist: [
-        "Vytvor funkciu randomChoice().",
-        "Po kliknutí porovnaj hráča vs. PC.",
-        "Vypíš obe voľby do DOM."
+        "Vytvor play_one_round().",
+        "Rozdaj dve karty hráčovi aj dealerovi.",
+        "Slučka: prepočítaj skóre, pýtaj sa na 'y'/'n'."
       ],
-      hint: `Náhodu: <code>['kameň','papier','nožnice'][Math.floor(Math.random()*3)]</code>`,
-      code: `function randomChoice(){
-  const arr = ['kameň','papier','nožnice'];
-  return arr[Math.floor(Math.random()*arr.length)];
-}
-const pc = randomChoice(); // napr. 'papier'`
+      hint: `Ak 'y' → pridaj kartu, ak nie → nastav is_game_over=True.`,
+      codeLines: step2_lines
     },
     {
-      title: "Určenie víťaza",
+      title: "Dealerov ťah + výsledok (play_one_round – časť 2)",
+      explain: `
+        <p><strong>Čo ideš spraviť:</strong> po hráčovi hrá dealer – ťahá, kým má skóre <strong>&lt; 17</strong> a nemá Blackjack.</p>
+        <ol>
+          <li>Po hráčovi <strong>prepočítaj</strong> dealerovo skóre.</li>
+          <li><code>while computer_score != 0 and computer_score &lt; 17</code> → dealer doťahuje a vždy hneď prepočítaj skóre.</li>
+          <li>Nakoniec <strong>vypíš finálne</strong> ruky a skóre, zavolaj <code>compare()</code> a vypíš výsledok.</li>
+        </ol>
+        <p><em>Po tomto kroku sa už dá dohrať celá partia.</em></p>
+      `,
       checklist: [
-        "Napíš funkciu winner(player, pc).",
-        "Vráť 'hráč', 'pc' alebo 'remíza'.",
-        "Zobraz výsledok do #rps-result."
+        "Dealer ťahá do 17 (a nie je v Blackjacku).",
+        "Vypíš finálne karty a skóre.",
+        "Vypíš výsledok z compare()."
       ],
-      hint: `Porovnanie: hráč vyhrá ak (p=='kameň'&&pc=='nožnice') atď.`,
-      code: `function winner(p, c){
-  if(p===c) return 'remíza';
-  const win = (p==='kameň'&&c==='nožnice')||(p==='papier'&&c==='kameň')||(p==='nožnice'&&c==='papier');
-  return win ? 'hráč' : 'pc';
-}`
+      hint: `Nezabudni prepočítať skóre po každej dealerovej karte.`,
+      codeLines: step3_lines
     },
     {
-      title: "Skóre & opakovanie",
+      title: "Spusť jednu hru (main blok)",
+      explain: `
+        <p><strong>Čo ideš spraviť:</strong> pridať <code>if __name__ == "__main__"</code> a spustiť <code>play_one_round()</code>.</p>
+        <p>Tento blok sa vykoná, len keď súbor spúšťaš priamo (nie pri importe).</p>
+      `,
       checklist: [
-        "Udržuj premenné scorePlayer, scorePc.",
-        "Po každom kole inkrementuj víťaza.",
-        "Zobraz priebežné skóre."
+        "Pridaj if __name__ == '__main__':",
+        "Zavolaj play_one_round()."
       ],
-      hint: `Ulož do premennej a volaj renderScore() po každom kole.`,
-      code: `let scorePlayer=0, scorePc=0;
-function applyResult(w){
-  if(w==='hráč') scorePlayer++;
-  else if(w==='pc') scorePc++;
-}`
+      hint: `Teraz po spustení prebehne presne jedna partia.`,
+      codeLines: step4_lines
     },
     {
-      title: "Best-of & reset",
+      title: "Opakovanie hier (Play again)",
+      explain: `
+        <p><strong>Čo ideš spraviť:</strong> po skončení partie sa opýtaj, či chceš hrať znova.</p>
+        <ol>
+          <li>Obaľ spúšťanie do <code>while True</code>.</li>
+          <li>Po hre sa spýtaj: <code>Play again? (y/n)</code>. Ak odpoveď nie je <code>'y'</code>, ukonči program cez <code>break</code>.</li>
+        </ol>
+        <p><em>Vieš hrať viac hier za sebou bez reštartu programu.</em></p>
+      `,
       checklist: [
-        "Pridaj výber dĺžky hry (napr. do 3).",
-        "Po dosiahnutí cieľa zablokuj voľby.",
-        "Pridaj tlačidlo Reset."
+        "Zabaľ spustenie do while True.",
+        "Opýtaj sa 'Play again?'; ak != 'y', ukonči program."
       ],
-      hint: `Porovnaj score s hranicou; ak hotovo, nastav disabled na tlačidlá.`,
-      code: `const goalSel = document.getElementById('rps-goal');
-function finished(){ return scorePlayer===goal || scorePc===goal }
-function reset(){ scorePlayer=scorePc=0; enable(true); renderScore(); }`
+      hint: `Na vstup používaj .strip().lower() – ignoruje medzery a veľké písmená.`,
+      codeLines: step5_lines
     },
     {
-      title: "Štýl & UX detaily",
+      title: "Lepší vstup (validácia áno/nie)",
+      explain: `
+        <p><strong>Čo ideš spraviť:</strong> vytvor <code>ask_yes_no()</code>, ktorá sa pýta dovtedy, kým nedostane <code>'y'</code> alebo <code>'n'</code>.</p>
+        <ol>
+          <li>V cykle čítaj vstup, čistý reťazec porovnaj – ak nie je povolený, vypíš inštrukciu a pýtaj sa znova.</li>
+          <li>V <code>play_one_round()</code> ju použi na <em>Hit/Stand</em>.</li>
+          <li>V <code>__main__</code> ju použi na <em>Play again</em>.</li>
+        </ol>
+        <p><em>Týmto je program odolnejší a prívetivejší.</em></p>
+      `,
       checklist: [
-        "Zvýrazni poslednú výhru farbou.",
-        "Daj focus ringy a aria-labels.",
-        "Uprav texty a mikrocopy."
+        "Vytvor ask_yes_no(prompt) s validáciou.",
+        "Použi ju pri ťahaní karty aj pri 'Play again?'."
       ],
-      hint: `Pridaj CSS triedy good/bad a prepínaj ich podľa víťaza.`,
-      code: `resultEl.className = w==='hráč' ? 'text-success' : w==='pc' ? 'text-danger' : ''`
+      hint: `Používateľ občas zadá aj prázdny vstup – preto validujeme v slučke.`,
+      codeLines: step6_lines
     }
   ];
 
-  // --- STORAGE ---------------------------------------------------------------
-  const rpsStore = {
-    load(){
-      try {
-        const raw = localStorage.getItem('rps_state_v1');
-        return raw ? JSON.parse(raw) : { step:0, done:Array(RPS_STEPS.length).fill(false), notes:{} };
-      } catch(e){ return { step:0, done:Array(RPS_STEPS.length).fill(false), notes:{} }; }
-    },
-    save(s){ localStorage.setItem('rps_state_v1', JSON.stringify(s)); },
-    clear(){ localStorage.removeItem('rps_state_v1'); }
-  }
-  let rpsState = rpsStore.load();
+  /* -------------------- STORAGE stavu (po definícii STEPS!) ---------------- */
+  const store = {
+    load(){ try{ const raw=localStorage.getItem('bj_step_state_v1'); return raw?JSON.parse(raw):{step:0,done:Array(STEPS.length).fill(false),notes:{}} }catch{ return {step:0,done:Array(STEPS.length).fill(false),notes:{}} },
+    save(s){ localStorage.setItem('bj_step_state_v1', JSON.stringify(s)); }
+  };
+  let state = store.load();
 
-  // --- DOM -------------------------------------------------------------------
-  const elSteps = document.getElementById('rpsSteps');
-  const elDoneCount = document.getElementById('rpsDoneCount');
-  const elProgress = document.getElementById('rpsProgressBar');
-  const elPanelTitle = document.getElementById('rpsPanelTitle');
+  /* -------------------- DOM odkazy ----------------------------------------- */
+  const stepsUL = document.getElementById('steps');
+  const doneCount = document.getElementById('doneCount');
+  const progressBar = document.getElementById('progressBar');
+  const panelTitle = document.getElementById('panelTitle');
 
-  const btnStart = document.getElementById('rpsStart');
-  const btnShowA = document.getElementById('rpsShowAssignment');
-  const btnShowR = document.getElementById('rpsShowRunner');
-  const btnShowI = document.getElementById('rpsShowIntrospect');
+  const assignmentView = document.getElementById('assignment');
+  const stepView = document.getElementById('stepView');
+  const introspectView = document.getElementById('introspect');
 
-  const viewA = document.getElementById('rpsAssignment');
-  const viewR = document.getElementById('rpsRunner');
-  const viewI = document.getElementById('rpsIntrospect');
+  const showAssignmentBtn = document.getElementById('showAssignment');
+  const showIntrospectBtn = document.getElementById('showIntrospect');
+  const startProjectBtn = document.getElementById('startProject');
 
-  const stepContent = document.getElementById('rpsStepContent');
+  const stepContent = document.getElementById('stepContent');
+  const prevStepBtn = document.getElementById('prevStep');
+  const nextStepBtn = document.getElementById('nextStep');
+  const markDoneBtn = document.getElementById('markDone');
 
-  const qOut = document.getElementById('rpsQOutput');
-  const qConf = document.getElementById('rpsQConfuse');
-  const qNext = document.getElementById('rpsQNext');
-  const btnSaveReflect = document.getElementById('rpsSaveReflect');
+  const qOutput = document.getElementById('qOutput');
+  const qConfuse = document.getElementById('qConfuse');
+  const qNext = document.getElementById('qNext');
+  const saveReflect = document.getElementById('saveReflect');
 
-  // --- Helpers ----------------------------------------------------------------
-  function renderSteps(){
-    elSteps.innerHTML = '';
-    RPS_STEPS.forEach((s,i)=>{
-      const li = document.createElement('li');
-      li.className = 'border ' + (rpsState.step===i ? 'active' : '');
-      li.setAttribute('role', 'tab');
-      li.setAttribute('aria-selected', rpsState.step===i ? 'true' : 'false');
-      li.innerHTML = `
-        <span class="idx">${i+1}</span>
-        <span class="fw-semibold">${s.title}</span>
-        <span class="state">${rpsState.done[i] ? '✓ hotovo' : '• v procese'}</span>
-      `;
-      li.addEventListener('click', ()=>{ rpsState.step=i; rpsStore.save(rpsState); selectStep(i); });
-      elSteps.appendChild(li);
-    });
-    const done = rpsState.done.filter(Boolean).length;
-    elDoneCount.textContent = done + ' / ' + RPS_STEPS.length + ' hotovo';
-    elProgress.style.width = ((done / RPS_STEPS.length) * 100) + '%';
-  }
-
+  /* -------------------- prepínanie panelov --------------------------------- */
   function setPanel(which){
-    viewA.hidden = which!=='A';
-    viewR.hidden = which!=='R';
-    viewI.hidden = which!=='I';
-    elPanelTitle.textContent = which==='A' ? 'Zadanie'
-      : which==='R' ? ('Krok ' + (rpsState.step+1) + ': ' + RPS_STEPS[rpsState.step].title)
-      : 'Introspekcia';
+    assignmentView.hidden = which!=='A';
+    stepView.hidden = which!=='S';
+    introspectView.hidden = which!=='I';
+    panelTitle.textContent = which==='A' ? 'Zadanie' : which==='S' ? `Krok ${state.step+1}: ${STEPS[state.step].title}` : 'Introspekcia';
+  }
+  showAssignmentBtn.onclick = ()=> setPanel('A');
+  showIntrospectBtn.onclick = ()=> setPanel('I');
+  startProjectBtn.onclick = ()=> { setPanel('S'); selectStep(0); };
+
+  /* -------------------- ľavý zoznam krokov --------------------------------- */
+  function renderSteps(){
+    stepsUL.innerHTML = '';
+    STEPS.forEach((s,i)=>{
+      const li = document.createElement('li');
+      const classes = ['border']; if(state.step===i) classes.push('active'); if(state.done[i]) classes.push('done');
+      li.className = classes.join(' ');
+      li.role='tab'; li.ariaSelected = state.step===i;
+      li.innerHTML = `<span class="idx">${i+1}</span><span class="fw-semibold">${s.title}</span><span class="state">${state.done[i]?'✓ hotovo':''}</span>`;
+      li.onclick = ()=>{ state.step=i; store.save(state); selectStep(i); };
+      stepsUL.appendChild(li);
+    });
+    const done = state.done.filter(Boolean).length;
+    doneCount.textContent = `${done} / ${STEPS.length} hotovo`;
+    progressBar.style.width = `${(done/STEPS.length)*100}%`;
   }
 
-  btnShowA.onclick = ()=> setPanel('A');
-  btnShowR.onclick = ()=> setPanel('R');
-  btnShowI.onclick = ()=> setPanel('I');
-  btnStart.onclick = ()=> setPanel('R');
-
+  /* -------------------- detail kroku --------------------------------------- */
   function selectStep(i){
-    renderSteps();
-    setPanel('R');
-    const S = RPS_STEPS[i];
+    renderSteps(); setPanel('S');
+
+    const S = STEPS[i];
+    const prevLines = i>0 ? STEPS[i-1].codeLines : [];
+    const addSet = addedIdxs(S.codeLines, prevLines);
 
     stepContent.innerHTML = `
       <h3 class="h6 mb-1">${S.title}</h3>
-      <p class="text-muted mb-2">Splň checklist, potom označ krok ako hotový.</p>
+      ${S.explain}
+      <h4 class="h6 mt-3">Checklist</h4>
+      <div id="checklist" class="d-grid gap-2 mb-2"></div>
 
-      <div class="mb-3">
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <button class="chip" id="kamen" aria-label="Kameň">🪨 Kameň</button>
-          <button class="chip" id="papier" aria-label="Papier">📄 Papier</button>
-          <button class="chip" id="noznice" aria-label="Nožnice">✂️ Nožnice</button>
+      <details class="mb-2">
+        <summary>Ukázať hinty</summary>
+        <div class="mt-2">${S.hint}</div>
+      </details>
 
-          <div class="ms-auto d-flex align-items-center gap-2">
-            <label for="rps-goal" class="text-muted small mb-0">Dĺžka hry</label>
-            <select id="rps-goal" class="form-select form-select-sm" style="width:auto">
-              <option value="1">Do 1</option>
-              <option value="3" selected>Do 3</option>
-              <option value="5">Do 5</option>
-            </select>
-            <button id="rps-reset" class="btn btn-sm btn-outline-secondary">Reset</button>
-          </div>
+      <details class="mb-0" open>
+        <summary>Ukázať <u>celý kód</u> (ako má vyzerať v tomto kroku)</summary>
+        <div class="code-shell mt-2">
+          <button class="copy-btn" id="copyCode">Kopírovať kód</button>
+          <pre class="code-block"><code>${codeHtml(S.codeLines, addSet)}</code></pre>
         </div>
-
-        <div id="rps-result" class="result">—</div>
-        <div class="d-flex align-items-center gap-3 mt-1 score">
-          <span>Hráč: <b id="rps-sp">0</b></span>
-          <span>PC: <b id="rps-sc">0</b></span>
-        </div>
-      </div>
-
-      <h4 class="h6">Checklist</h4>
-      <div id="rps-checklist" class="d-grid gap-2 mb-2"></div>
-
-      <details class="mb-2"><summary>Ukázať hinty</summary><div class="mt-2">${S.hint}</div></details>
-      <details class="mb-2"><summary>Ukázať ukážkový kód</summary><pre class="mt-2"><code>${S.code}</code></pre></details>
+      </details>
     `;
 
     // checklist
-    const chk = document.getElementById('rps-checklist');
+    const chk = document.getElementById('checklist');
     S.checklist.forEach((label, idx)=>{
-      const id = `rps-s${i}c${idx}`;
-      const w = document.createElement('label');
-      w.className = 'd-flex gap-2';
-      w.innerHTML = `<input type="checkbox" id="${id}" class="form-check-input mt-1"> <span>${label}</span>`;
+      const id=`s${i}c${idx}`; const w=document.createElement('label');
+      w.className='d-flex gap-2'; w.innerHTML=`<input type="checkbox" id="${id}" class="form-check-input mt-1"> <span>${label}</span>`;
       chk.appendChild(w);
     });
 
-    // game logic for this step
-    bindGame();
+    // copy
+    document.getElementById('copyCode').onclick = ()=>{
+      navigator.clipboard.writeText(S.codeLines.join('\n'));
+      const btn = document.getElementById('copyCode');
+      const old = btn.textContent; btn.textContent='Skopírované ✓'; setTimeout(()=> btn.textContent=old, 1200);
+    };
 
-    // footer controls
-    document.getElementById('rpsMarkDone').onclick = ()=>{
-      rpsState.done[i] = true; rpsStore.save(rpsState); renderSteps();
-    };
-    document.getElementById('rpsPrev').onclick = ()=>{
-      if(i>0){ rpsState.step=i-1; rpsStore.save(rpsState); selectStep(rpsState.step); }
-    };
-    document.getElementById('rpsNext').onclick = ()=>{
-      if(i<RPS_STEPS.length-1){ rpsState.step=i+1; rpsStore.save(rpsState); selectStep(rpsState.step); }
-    };
+    // footer
+    markDoneBtn.onclick = ()=>{ state.done[i]=true; store.save(state); renderSteps(); };
+    prevStepBtn.onclick = ()=>{ if(i>0){ state.step=i-1; store.save(state); selectStep(state.step);} };
+    nextStepBtn.onclick = ()=>{ if(i<STEPS.length-1){ state.step=i+1; store.save(state); selectStep(state.step);} };
   }
 
-  // --- GAME LOGIC ------------------------------------------------------------
-  let scorePlayer=0, scorePc=0, goal=3, locked=false;
-
-  function bindGame(){
-    scorePlayer=0; scorePc=0; goal = parseInt(document.getElementById('rps-goal').value,10)||3; locked=false;
-    const el = {
-      result: document.getElementById('rps-result'),
-      sp: document.getElementById('rps-sp'),
-      sc: document.getElementById('rps-sc'),
-      btns: [
-        document.getElementById('kamen'),
-        document.getElementById('papier'),
-        document.getElementById('noznice'),
-      ],
-      goalSel: document.getElementById('rps-goal'),
-      reset: document.getElementById('rps-reset'),
-    };
-    el.goalSel.onchange = ()=>{ goal = parseInt(el.goalSel.value,10)||3; };
-    el.reset.onclick = ()=>{ scorePlayer=scorePc=0; locked=false; renderScore(); say('—'); enable(true); };
-    el.btns.forEach(b=> b.onclick = ()=> play(b.id));
-    renderScore(); say('—');
-
-    function play(player){
-      if(locked) return;
-      const pc = randomChoice();
-      const w = winner(map(player), pc);
-      apply(w); renderScore();
-      say(`Ty: ${map(player)} · PC: ${pc} → ${w==='remíza'?'Remíza': w==='hráč'?'Vyhrávaš ✅':'Prehrávaš ❌'}`);
-      if(finished()){
-        locked=true; enable(false);
-        say(`Koniec hry! ${scorePlayer>scorePc? '🎉 Vyhral si!':'😿 Prehral si.'}`);
-      }
-    }
-    function randomChoice(){ const arr=['kameň','papier','nožnice']; return arr[Math.floor(Math.random()*arr.length)] }
-    function map(x){ return x==='kamen'?'kameň': x==='papier'?'papier':'nožnice' }
-    function winner(p,c){ if(p===c) return 'remíza'; const ok=(p==='kameň'&&c==='nožnice')||(p==='papier'&&c==='kameň')||(p==='nožnice'&&c==='papier'); return ok?'hráč':'pc' }
-    function apply(w){ if(w==='hráč') scorePlayer++; else if(w==='pc') scorePc++; }
-    function renderScore(){ el.sp.textContent=scorePlayer; el.sc.textContent=scorePc; }
-    function finished(){ return scorePlayer===goal || scorePc===goal }
-    function say(t){ el.result.textContent=t; }
-    function enable(flag){ el.btns.forEach(b=> b.disabled=!flag); }
-  }
-
-  // --- INTROSPECTION ---------------------------------------------------------
-  btnSaveReflect.onclick = ()=>{
-    rpsState.notes = {
-      output: qOut.value,
-      confuse: qConf.value,
-      next: qNext.value
-    };
-    rpsStore.save(rpsState);
-    // jednoduchá notifikácia
-    const toast = document.createElement('div');
-    toast.className = 'position-fixed bottom-0 end-0 p-3';
-    toast.innerHTML = '<div class="alert alert-success shadow-sm mb-0">Reflexia uložená ✔</div>';
-    document.body.appendChild(toast);
-    setTimeout(()=> toast.remove(), 1600);
+  /* -------------------- introspekcia --------------------------------------- */
+  saveReflect.onclick = ()=>{
+    state.notes = { output:qOutput.value, confuse:qConfuse.value, next:qNext.value };
+    store.save(state);
+    const t=document.createElement('div'); t.className='position-fixed bottom-0 end-0 p-3';
+    t.innerHTML='<div class="alert alert-success shadow-sm mb-0">Reflexia uložená ✔</div>';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1600);
   };
+  (function loadReflect(){
+    qOutput.value = state.notes?.output || '';
+    qConfuse.value = state.notes?.confuse || '';
+    qNext.value = state.notes?.next || '';
+  })();
 
-  function loadReflect(){
-    qOut.value = rpsState.notes?.output || '';
-    qConf.value = rpsState.notes?.confuse || '';
-    qNext.value = rpsState.notes?.next || '';
-  }
-
-  // --- INIT ------------------------------------------------------------------
+  /* -------------------- INIT ----------------------------------------------- */
   (function init(){
-    renderSteps();
-    selectStep(rpsState.step||0);
-    loadReflect();
-    setPanel('A'); // default na Zadanie
+    // istota: spusti až keď je DOM hotový
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+      return;
+    }
+    renderSteps();                 // <- kroky viditeľné hneď
+    selectStep(state.step||0);     // <- otvor aktuálny krok
+    setPanel('A');                 // default: Zadanie
   })();
 </script>
 {% endblock %}
