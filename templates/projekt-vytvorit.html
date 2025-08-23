@@ -1,4 +1,4 @@
-{# templates/projekt-vytvorit.html — Builder s inline markerom + PUBLIKUJ (FINAL) #}
+{# templates/projekt-vytvorit.html #}
 {% extends "base-dashboard.html" %}
 {% block title %}Vytvoriť projekt{% endblock %}
 
@@ -11,7 +11,6 @@
   .builder .muted { color:#6b7280; }
   .builder .small-muted { color:#9ca3af; font-size:.8rem; }
 
-  /* sidebar list */
   .builder .steps { list-style: none; padding-left: 0; margin: 0; }
   .builder .steps li {
     display:flex; align-items:center; gap:.5rem; padding:.55rem .6rem;
@@ -19,53 +18,29 @@
   }
   .builder .steps li:hover { background:#f8fafc; }
   .builder .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
-  .builder .steps .idx {
-    width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem;
-    border:1px solid #e5e7eb; background:#fff; font-weight:700; font-size:.8rem; color:#111827;
-  }
-  .builder .steps .title { flex: 1; min-width: 0; }
-  .builder .steps .title small { color:#6b7280; display:block; }
-  .builder .steps .controls button {
-    border:1px solid #e5e7eb; background:#fff; border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem;
-  }
+  .builder .steps .idx { width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem; border:1px solid #e5e7eb; background:#fff; font-weight:700; font-size:.8rem; color:#111827; }
+  .builder .steps .controls button { border:1px solid #e5e7eb; background:#fff; border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem; }
 
-  /* code styling (editor + preview) */
   .builder .code-shell { position:relative; }
   .builder pre.code-block{
     margin:0; background:#0f172a; color:#dbeafe; border-radius:.6rem; font-size:.82rem;
-    padding:1.45rem .55rem .40rem .65rem; /* top pad so 1st line never hides under button */
-    overflow:auto;
+    padding:1.45rem .55rem .40rem .65rem; overflow:auto;
   }
-  .builder pre.code-block code{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    white-space: pre; display:block; line-height:1.04; /* super tight */
-  }
-  .builder .code-line{
-    display:block; width:100%; padding-left:.52rem; border-left:3px solid transparent; cursor:pointer;
-    min-height: 1.04em;
-  }
+  .builder pre.code-block code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; white-space: pre; display:block; line-height:1.04; }
+  .builder .code-line{ display:block; width:100%; padding-left:.52rem; border-left:3px solid transparent; cursor:pointer; min-height:1.04em; }
   .builder .code-line.added{ border-left-color:#22c55e; }
-
-  .builder .copy-btn{
-    position:absolute; top:.35rem; right:.35rem; z-index:2;
-    border:1px solid #1f2937; background:#111827; color:#dbeafe;
-    border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem;
-  }
-
+  .builder .copy-btn{ position:absolute; top:.35rem; right:.35rem; z-index:2; border:1px solid #1f2937; background:#111827; color:#dbeafe; border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem; }
   .builder .file-badge{ background:#fff; border:1px solid #e5e7eb; border-radius:999px; padding:.15rem .5rem; font-size:.75rem; }
-
   .builder .progress-thin{ height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #e5e7eb; }
   .builder .progress-thin>i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); }
-
-  .builder .lang-badges .badge{
-    background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem;
-    display:inline-flex; align-items:center; gap:.35rem;
-  }
+  .builder .lang-badges .badge{ background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem; display:inline-flex; align-items:center; gap:.35rem; }
   .builder .lang-badges .badge img{ width:16px; height:16px; }
-
-  /* mini rich text */
   .hl-kw{ color:#ec4899; font-weight:800; }
   .builder code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
+
+  .uploader .thumb { width:72px; height:72px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat; }
+  .uploader .cover { width:100%; height:140px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat; }
+  .uploader small { color:#6b7280; }
 </style>
 
 <main class="builder container py-3">
@@ -164,6 +139,37 @@
                 <label class="form-label">Tipy pred začiatkom</label>
                 <textarea id="metaTips" class="form-control" rows="3" placeholder="Krátke tipy, odporúčania..."></textarea>
               </div>
+
+              <!-- IKONKA + COVER UPLOAD -->
+              <div class="col-12">
+                <div class="uploader row g-3 align-items-center">
+                  <div class="col-sm-6">
+                    <label class="form-label d-flex align-items-center justify-content-between">
+                      <span>Ikonka projektu</span>
+                      <small id="metaIconPathLabel"></small>
+                    </label>
+                    <div class="d-flex align-items-center gap-3">
+                      <div id="metaIconPreview" class="thumb"></div>
+                      <div>
+                        <input type="file" id="metaIcon" accept="image/*" class="form-control form-control-sm">
+                        <small>Štvorcový obrázok, napr. 256×256.</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <label class="form-label d-flex align-items-center justify-content-between">
+                      <span>Cover obrázok</span>
+                      <small id="metaCoverPathLabel"></small>
+                    </label>
+                    <div class="cover" id="metaCoverPreview"></div>
+                    <div class="mt-2">
+                      <input type="file" id="metaCover" accept="image/*" class="form-control form-control-sm">
+                      <small>Vodorovný obrázok ~1200×600.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /IKONKA + COVER -->
             </div>
           </form>
         </div>
@@ -212,7 +218,7 @@
             </div>
 
             <div class="mb-2">
-              <label class="form-label"<b>Hinty</b></label>
+              <label class="form-label"><b>Hinty</b></label>
               <textarea id="stepHint" class="form-control" rows="2" placeholder="Krátky tip k tomuto kroku..."></textarea>
             </div>
 
@@ -234,10 +240,7 @@
               <div class="small-muted mt-1">Kliknutím na riadok v náhľade nižšie ho označíš ako <span style="border-left:3px solid #22c55e;padding-left:4px;">nový</span>.</div>
 
               <div class="code-shell mt-2">
-                <pre class="code-block">
-                  <button class="copy-btn" id="copyInline" type="button">Kopírovať kód</button>
-                  <code id="codePreview"></code>
-                </pre>
+                <pre class="code-block"><button class="copy-btn" id="copyInline" type="button">Kopírovať kód</button><code id="codePreview"></code></pre>
                 <div class="d-flex justify-content-between mt-1">
                   <div class="small text-muted">Súbor: <code id="previewFileLabel">—</code></div>
                   <button class="btn btn-sm btn-outline-secondary" id="btnClearMarks" type="button">Vymazať označenia</button>
@@ -257,70 +260,60 @@
 
 <script>
 (function(){
-  /* ===== helpers ===== */
   const $ = (s)=>document.querySelector(s);
-  const $all = (s)=>Array.from(document.querySelectorAll(s));
   const esc = (s)=> (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function renderRich(txt){
-    let s = esc(txt||'');
-    s = s.replace(/`([^`]+)`/g, (_,m)=>`<code class="inline">${m}</code>`);
-    s = s.replace(/\*\*([^*]+)\*\*/g, (_,m)=>`<span class="hl-kw">${m}</span>`);
-    s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
-    return s.replace(/\n/g,'<br>');
-  }
-  const parseAddedCSV = (csv)=> (csv||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>+x).filter(n=>!isNaN(n));
-  function codeToClickableHtml(code, addedSet){
-    const lines = (code||'').split('\n');
-    return lines.map((ln,i)=>{
-      const cls = addedSet.has(i) ? 'code-line added' : 'code-line';
-      return `<span class="${cls}" data-line="${i}">${esc(ln)}</span>`;
-    }).join('\n');
-  }
+  const STATIC_BASE = "{{ url_for('static', filename='') }}";
 
-  /* ===== state ===== */
-  const STORE_KEY = 'project_builder_v8';
+  const STORE_KEY = 'project_builder_db_v1';
   let meta = {
     title:'', level:'Začiatočník', category:'Hra', time:'', preview:'',
     langs:{ Python:false, JavaScript:false, HTML:false, CSS:false, SQL:false },
-    assignment:'', tips:''
+    assignment:'', tips:'',
+    icon_path:null, cover_path:null
   };
   let steps = [];    // [{title,explain,bullets[],checks[],hint,file,code,added[]}]
   let current = -1;  // -1=meta
 
-  /* ===== DOM refs ===== */
+  // refs
   const stepsList = $('#stepsList'); const stepCount=$('#stepCount'); const progressBar=$('#progressBar');
   const metaView=$('#metaView'); const stepView=$('#stepView');
-
   const metaTitle=$('#metaTitle'); const metaLevel=$('#metaLevel'); const metaCategory=$('#metaCategory');
   const metaTime=$('#metaTime'); const metaPreview=$('#metaPreview'); const metaAssignment=$('#metaAssignment'); const metaTips=$('#metaTips');
   const langPython=$('#langPython'); const langJS=$('#langJS'); const langHTML=$('#langHTML'); const langCSS=$('#langCSS'); const langSQL=$('#langSQL');
 
+  // upload refs
+  const metaIcon=$('#metaIcon'); const metaCover=$('#metaCover');
+  const metaIconPreview=$('#metaIconPreview'); const metaCoverPreview=$('#metaCoverPreview');
+  const metaIconPathLabel=$('#metaIconPathLabel'); const metaCoverPathLabel=$('#metaCoverPathLabel');
+
   const stepHeaderTitle=$('#stepHeaderTitle'); const stepHeaderFile=$('#stepHeaderFile');
   const stepTitle=$('#stepTitle'); const stepExplain=$('#stepExplain'); const bulletsBox=$('#bulletsBox'); const checksBox=$('#checksBox');
   const stepHint=$('#stepHint'); const stepFile=$('#stepFile'); const stepCode=$('#stepCode'); const stepAdded=$('#stepAdded');
-
   const codePreview=$('#codePreview'); const previewFileLabel=$('#previewFileLabel');
+  const btnAddStep=$('#btnAddStep'); const btnApplyStep=$('#btnApplyStep');
   const btnClearMarks=$('#btnClearMarks'); const btnCopyInline=$('#copyInline');
-
-  const btnAddStep=$('#btnAddStep'); const btnStepUp=$('#btnStepUp'); const btnStepDown=$('#btnStepDown'); const btnStepDelete=$('#btnStepDelete');
-  const btnAddBullet=$('#btnAddBullet'); const btnAddCheck=$('#btnAddCheck'); const btnApplyStep=$('#btnApplyStep');
   const btnPublish=$('#btnPublish');
+  const btnAddBullet=$('#btnAddBullet'); const btnAddCheck=$('#btnAddCheck');
 
-  /* ===== storage ===== */
+  // storage
   const saveLocal = ()=> localStorage.setItem(STORE_KEY, JSON.stringify({meta,steps,current}));
   function loadLocal(){
-    try{
-      const raw=localStorage.getItem(STORE_KEY); if(!raw) return;
-      const p=JSON.parse(raw);
-      meta=p.meta||meta; steps=p.steps||[]; current=(typeof p.current==='number')?p.current:-1;
+    try{ const raw=localStorage.getItem(STORE_KEY); if(!raw) return;
+      const p=JSON.parse(raw); meta=p.meta||meta; steps=p.steps||[]; current=(typeof p.current==='number')?p.current:-1;
     }catch(e){}
   }
 
-  /* ===== meta ===== */
+  // meta render/update
   function renderMeta(){
     metaTitle.value=meta.title; metaLevel.value=meta.level; metaCategory.value=meta.category;
     metaTime.value=meta.time; metaPreview.value=meta.preview; metaAssignment.value=meta.assignment; metaTips.value=meta.tips;
     langPython.checked=!!meta.langs.Python; langJS.checked=!!meta.langs.JavaScript; langHTML.checked=!!meta.langs.HTML; langCSS.checked=!!meta.langs.CSS; langSQL.checked=!!meta.langs.SQL;
+
+    // previews for uploads
+    metaIconPreview.style.backgroundImage = meta.icon_path ? `url('${STATIC_BASE}${meta.icon_path}')` : 'none';
+    metaCoverPreview.style.backgroundImage = meta.cover_path ? `url('${STATIC_BASE}${meta.cover_path}')` : 'none';
+    metaIconPathLabel.textContent = meta.icon_path || '';
+    metaCoverPathLabel.textContent = meta.cover_path || '';
   }
   function updateMeta(){
     meta.title=metaTitle.value.trim(); meta.level=metaLevel.value; meta.category=metaCategory.value;
@@ -334,17 +327,30 @@
     });
   });
 
-  /* ===== sidebar ===== */
+  // image upload helper
+  async function uploadImage(file, kind){
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('kind', kind); // 'icon' | 'cover'
+    const res = await fetch("{{ url_for('api_upload_project_image') }}", {
+      method:'POST', body: fd, credentials:'same-origin'
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || data.ok === false || !data.path){
+      throw new Error(data.error || 'Upload zlyhal');
+    }
+    return data.path; // relatívne k /static
+  }
+
+  // sidebar
   function renderStepsList(){
     stepsList.innerHTML='';
-    // meta link
     const metaLi=document.createElement('li');
     metaLi.className='border meta'+(current===-1?' active':'');
     metaLi.innerHTML=`<span class="idx">🏷️</span><div class="title"><div class="fw-semibold">Projekt — základné informácie</div><small>Názov, úroveň, jazyky…</small></div>`;
     metaLi.onclick=()=> selectMeta();
     stepsList.appendChild(metaLi);
 
-    // steps
     steps.forEach((s,i)=>{
       const li=document.createElement('li');
       li.className='border'+(current===i?' active':'');
@@ -353,14 +359,8 @@
         <div class="title">
           <div class="fw-semibold text-truncate">${esc(s.title||'Bez názvu')}</div>
           <small class="text-truncate">Súbor: ${esc(s.file||'—')}</small>
-        </div>
-        <div class="controls d-flex gap-1">
-          <button type="button" data-act="up" ${i===0?'disabled':''}>↑</button>
-          <button type="button" data-act="down" ${i===steps.length-1?'disabled':''}>↓</button>
         </div>`;
-      li.onclick=(ev)=>{ if(ev.target.dataset.act) return; selectStep(i); };
-      li.querySelector('[data-act="up"]').onclick=(e)=>{ e.stopPropagation(); moveStep(i,-1); };
-      li.querySelector('[data-act="down"]').onclick=(e)=>{ e.stopPropagation(); moveStep(i,+1); };
+      li.onclick=()=> selectStep(i);
       stepsList.appendChild(li);
     });
 
@@ -368,40 +368,35 @@
     const pct = steps.length ? (steps.filter(s=> (s.title && s.code)).length/steps.length)*100 : 0;
     progressBar.style.width=pct+'%';
   }
-
-  /* ===== select views ===== */
   function selectMeta(){ current=-1; saveLocal(); metaView.hidden=false; stepView.hidden=true; renderStepsList(); }
   function selectStep(i){ current=i; saveLocal(); metaView.hidden=true; stepView.hidden=false; renderStepEditor(); renderStepsList(); }
 
-  /* ===== step editor ===== */
+  // bullets/checks helpers
   function addBulletRow(text=''){
     const el=document.createElement('div'); el.className='input-group';
     el.innerHTML=`<span class="input-group-text">•</span><input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}"><button class="btn btn-outline-secondary" type="button">×</button>`;
-    el.querySelector('button').onclick=()=> el.remove();
-    bulletsBox.appendChild(el);
+    el.querySelector('button').onclick=()=> el.remove(); bulletsBox.appendChild(el);
   }
   function addCheckRow(text=''){
     const el=document.createElement('div'); el.className='input-group';
     el.innerHTML=`<span class="input-group-text"><i class="fa-regular fa-square"></i></span><input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}"><button class="btn btn-outline-secondary" type="button">×</button>`;
-    el.querySelector('button').onclick=()=> el.remove();
-    checksBox.appendChild(el);
+    el.querySelector('button').onclick=()=> el.remove(); checksBox.appendChild(el);
   }
 
+  // code preview + toggles
   function renderCodePreview(){
-    const parseAddedCSV = (csv)=> (csv||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>+x).filter(n=>!isNaN(n));
     const lines = (stepCode.value||'').split('\n');
-    const kept = parseAddedCSV(stepAdded.value).filter(n=> n>=0 && n<lines.length);
+    const kept = (stepAdded.value||'').split(',').map(x=>+x.trim()).filter(n=>!isNaN(n) && n>=0 && n<lines.length);
     stepAdded.value = kept.join(',');
-    const addSet = new Set(kept);
-    const html = lines.map((ln,i)=>`<span class="code-line ${addSet.has(i)?'added':''}" data-line="${i}">${esc(ln)}</span>`).join('\n');
+    const set = new Set(kept);
+    const html = lines.map((ln,i)=>`<span class="code-line ${set.has(i)?'added':''}" data-line="${i}">${esc(ln)}</span>`).join('\n');
     codePreview.innerHTML = html;
     previewFileLabel.textContent = stepFile.value || '—';
 
-    // click-to-toggle
     if (codePreview._handler) codePreview.removeEventListener('click', codePreview._handler);
-    codePreview._handler = function(e){
-      const span = e.target.closest('.code-line'); if(!span) return;
-      span.classList.toggle('added');
+    codePreview._handler = (e)=>{
+      const s = e.target.closest('.code-line'); if(!s) return;
+      s.classList.toggle('added');
       const idxs = Array.from(codePreview.querySelectorAll('.code-line')).map((n,idx)=> n.classList.contains('added')?idx:null).filter(v=>v!==null);
       stepAdded.value = idxs.join(',');
       if (current>=0 && steps[current]) { steps[current].added = idxs; saveLocal(); }
@@ -430,7 +425,7 @@
   function applyStepForm(){
     const bullets = Array.from(bulletsBox.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
     const checks = Array.from(checksBox.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
-    const added = parseAddedCSV(stepAdded.value);
+    const added = (stepAdded.value||'').split(',').map(x=>+x.trim()).filter(n=>!isNaN(n));
 
     const obj = {
       title: stepTitle.value.trim(),
@@ -447,69 +442,82 @@
     saveLocal(); renderStepsList(); renderStepEditor();
     toast('Krok uložený ✔');
   }
-  function moveStep(i,dir){
-    const j=i+dir; if(j<0||j>=steps.length) return;
-    const t=steps[i]; steps[i]=steps[j]; steps[j]=t;
-    if(current===i) current=j; else if(current===j) current=i;
-    saveLocal(); renderStepsList(); if(current>=0) renderStepEditor();
-  }
-  function deleteStep(){
-    if(current<0||!steps.length) return;
-    steps.splice(current,1);
-    current = Math.min(current, steps.length-1);
-    saveLocal(); if(current===-1) selectMeta(); else { renderStepsList(); renderStepEditor(); }
-  }
 
-  /* ===== publish flow (local preview handoff) ===== */
-  function publishToPreview(){
-    // capture current editor into steps before redirect
-    if(current>=0) applyStepForm();
-    const payload = { meta, steps, savedAt: Date.now() };
-    localStorage.setItem('project_preview_v1', JSON.stringify(payload));
-    window.location.href = "{{ url_for('projekt_html') }}?preview=1";
-  }
-
-  /* ===== preview modal removed — we route to project page ===== */
-
-  /* ===== small helpers ===== */
-  function toast(msg){
-    const t=document.createElement('div'); t.className='position-fixed bottom-0 end-0 p-3';
-    t.innerHTML=`<div class="alert alert-success shadow-sm mb-0">${msg}</div>`;
-    document.body.appendChild(t); setTimeout(()=>t.remove(),1300);
-  }
-  function addBullet(){ addBulletRow(); }
-  function addCheck(){ addCheckRow(); }
   function newStep(){
     steps.push({title:'',explain:'',bullets:[],checks:[],hint:'',file:'',code:'',added:[]});
     current=steps.length-1; saveLocal(); renderStepsList(); renderStepEditor(); selectStep(current);
   }
 
-  /* ===== binds ===== */
-  btnAddStep.onclick=newStep;
-  $('#btnStepUp').onclick=()=>moveStep(current,-1);
-  $('#btnStepDown').onclick=()=>moveStep(current,+1);
-  $('#btnStepDelete').onclick=()=>{ if(confirm('Vymazať tento krok?')) deleteStep(); };
-  btnAddBullet.onclick=addBullet;
-  btnAddCheck.onclick=addCheck;
-  btnApplyStep.onclick=applyStepForm;
-  btnPublish.onclick=publishToPreview;
+  function toast(msg){
+    const t=document.createElement('div'); t.className='position-fixed bottom-0 end-0 p-3';
+    t.innerHTML=`<div class="alert alert-success shadow-sm mb-0">${msg}</div>`;
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1300);
+  }
 
-  // live code preview & markers
-  stepCode.addEventListener('input', renderCodePreview);
-  stepFile.addEventListener('input', ()=>{ $('#previewFileLabel').textContent = stepFile.value || '—'; });
+  // uploads
+  metaIcon.addEventListener('change', async (e)=>{
+    const file = e.target.files?.[0]; if(!file) return;
+    try{
+      const path = await uploadImage(file, 'icon');
+      meta.icon_path = path;
+      metaIconPreview.style.backgroundImage = `url('${STATIC_BASE}${path}')`;
+      metaIconPathLabel.textContent = path;
+      saveLocal();
+    }catch(err){ alert('Upload ikonky zlyhal: '+err.message); }
+  });
+  metaCover.addEventListener('change', async (e)=>{
+    const file = e.target.files?.[0]; if(!file) return;
+    try{
+      const path = await uploadImage(file, 'cover');
+      meta.cover_path = path;
+      metaCoverPreview.style.backgroundImage = `url('${STATIC_BASE}${path}')`;
+      metaCoverPathLabel.textContent = path;
+      saveLocal();
+    }catch(err){ alert('Upload coveru zlyhal: '+err.message); }
+  });
+
+  // binds (POZOR: žiadne dvojité const!)
+  btnAddStep.onclick = newStep;
+  btnApplyStep.onclick = applyStepForm;
   btnClearMarks.onclick = ()=>{ stepAdded.value=''; renderCodePreview(); if(current>=0&&steps[current]){ steps[current].added=[]; saveLocal(); } };
-  btnCopyInline.onclick = ()=>{
-    navigator.clipboard.writeText(stepCode.value||'');
-    const old=btnCopyInline.textContent; btnCopyInline.textContent='Skopírované ✓'; setTimeout(()=>btnCopyInline.textContent=old, 900);
-  };
+  btnCopyInline.onclick = ()=>{ navigator.clipboard.writeText(stepCode.value||''); const old=btnCopyInline.textContent; btnCopyInline.textContent='Skopírované ✓'; setTimeout(()=> btnCopyInline.textContent=old, 900); };
+  btnAddBullet.onclick = ()=> addBulletRow('');
+  btnAddCheck.onclick = ()=> addCheckRow('');
+  stepCode.addEventListener('input', renderCodePreview);
+  stepFile.addEventListener('input', ()=>{ previewFileLabel.textContent = stepFile.value || '—'; });
+  $('#btnStepUp').onclick=()=>{ if(current>0){ const t=steps[current-1]; steps[current-1]=steps[current]; steps[current]=t; current--; saveLocal(); renderStepsList(); renderStepEditor(); } };
+  $('#btnStepDown').onclick=()=>{ if(current<steps.length-1){ const t=steps[current+1]; steps[current+1]=steps[current]; steps[current]=t; current++; saveLocal(); renderStepsList(); renderStepEditor(); } };
+  $('#btnStepDelete').onclick=()=>{ if(current>=0 && confirm('Vymazať tento krok?')){ steps.splice(current,1); current=Math.min(current,steps.length-1); saveLocal(); if(current===-1){ selectMeta(); } else { renderStepsList(); renderStepEditor(); } } };
 
-  /* ===== init ===== */
-  (function init(){
-    loadLocal();
-    renderMeta();
-    if(!steps.length){ renderStepsList(); selectMeta(); }
-    else { renderStepsList(); (current===-1?selectMeta():selectStep(current)); }
-  })();
+  // publish
+  btnPublish.addEventListener('click', async () => {
+    try {
+      if (typeof updateMeta === 'function') updateMeta();
+      if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
+      const payload = { meta, steps };
+      const res = await fetch("{{ url_for('projekt_publish') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(payload)
+      });
+      const raw = await res.text();
+      let data = {}; try { data = raw ? JSON.parse(raw) : {}; } catch (_) {}
+      if (!res.ok || data.ok === false) {
+        const msg = (data && data.error) ? data.error : (raw || `HTTP ${res.status}`);
+        alert("Publikovanie zlyhalo: " + msg);
+        console.error("Publish error:", res.status, msg);
+        return;
+      }
+      window.location.href = (data && data.redirect) ? data.redirect : "{{ url_for('moje_projekty') }}";
+    } catch (err) {
+      console.error(err);
+      alert("Publikovanie zlyhalo (sieťová chyba).");
+    }
+  });
+
+  // init
+  (function init(){ loadLocal(); renderMeta(); if(!steps.length){ renderStepsList(); selectMeta(); } else { renderStepsList(); (current===-1?selectMeta():selectStep(current)); } })();
 })();
 </script>
 {% endblock %}

@@ -61,7 +61,6 @@
   {% else %}
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
       {% for p in projects %}
-        {# Derive safe paths #}
         {% set cover_path = p.cover_path or 'projects/placeholder-cover.jpg' %}
         {% set icon_path  = p.icon_path  or 'project-icons/default.png' %}
         {% set langs = (p.langs or '') | trim %}
@@ -71,7 +70,7 @@
           <div class="card h-100">
             <div class="thumb" style="background-image:url('{{ url_for('static', filename=cover_path) }}')">
               <img class="proj-icon" src="{{ url_for('static', filename=icon_path) }}" alt="ikonka">
-              <span class="badge-steps"><i class="fa-regular fa-list-check me-1"></i>{{ p.steps_count or 0 }} krokov</span>
+              <span class="badge-steps">{{ p.steps_count or 0 }} krokov</span>
               <div class="overlay"></div>
             </div>
 
@@ -95,22 +94,22 @@
                 </div>
               {% endif %}
 
-              {% if p.preview_url %}
-                <div class="small text-muted mb-2">
-                  <strong>Náhľad:</strong>
-                  <a href="{{ p.preview_url }}" target="_blank" rel="noopener">{{ p.preview_url }}</a>
-                </div>
-              {% endif %}
-
               <div class="actions d-flex justify-content-between align-items-center">
                 <a href="{{ url_for('projekt_detail', project_id=p.id) }}" class="btn btn-outline-secondary">
                   Zobraziť detail
                 </a>
-                <a href="{{ url_for('projekt_detail', project_id=p.id) }}#start"
-                   class="btn btn-primary">
-                  Začať projekt
-                </a>
+
+                <div class="d-flex gap-2">
+                  <a href="{{ url_for('projekt_detail', project_id=p.id) }}#start"
+                     class="btn btn-primary">
+                    Začať projekt
+                  </a>
+                  <form action="{{ url_for('projekt_delete', project_id=p.id) }}" method="POST" onsubmit="return confirm('Naozaj odstrániť projekt?');">
+                    <button type="submit" class="btn btn-outline-danger">Odstrániť</button>
+                  </form>
+                </div>
               </div>
+
             </div>
           </div>
         </div>

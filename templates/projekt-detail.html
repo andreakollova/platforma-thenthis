@@ -1,0 +1,349 @@
+{# templates/projekt-detail.html #}
+{% extends "base-dashboard.html" %}
+{% block title %}Projekt – {{ project.title }}{% endblock %}
+
+{% block content %}
+<style>
+  .proj * { box-sizing: border-box; }
+  .proj .pill { border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:.3rem .6rem; font-size:.8rem; color:#6b7280; }
+  .proj .progress-thin { height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #e5e7eb; }
+  .proj .progress-thin > i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); }
+
+  .proj .steps { list-style:none; padding-left:0; margin:0; }
+  .proj .steps li {
+    display:flex; align-items:center; gap:.5rem; padding:.55rem .6rem; border-radius:.75rem; cursor:pointer; border:1px solid transparent;
+  }
+  .proj .steps li:hover { background:#f8fafc; }
+  .proj .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
+  .proj .steps li.done   { background:#ecfdf5; border:1px solid #86efac; }
+  .proj .steps .idx { width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem; border:1px solid #e5e7eb; background:#fff; font-weight:700; font-size:.8rem; color:#111827; }
+  .proj .steps .state { margin-left:auto; font-size:.8rem; color:#16a34a; font-weight:700; }
+
+  .proj details { border:1px dashed #e5e7eb; background:#fafafa; border-radius:.75rem; padding:.6rem .75rem; }
+  .proj summary { cursor:pointer; font-weight:700; }
+
+  .proj .card { border-radius:1rem; overflow:hidden; }
+  .proj .card-header, .proj .card-body { padding:.7rem 1rem; }
+  .proj .hero-left { padding-top:.6rem !important; padding-bottom:.6rem !important; }
+
+  .proj .code-shell { position:relative; }
+  .proj pre.code-block { position:relative; margin:0; padding:.38rem .48rem .38rem .6rem; background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.80rem; overflow:auto; }
+  .proj pre.code-block code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; white-space: pre; display:block; line-height:1.03; }
+  .proj .copy-btn { position:absolute; top:.28rem; right:.28rem; z-index:2; border:1px solid #1f2937; background:#111827; color:#dbeafe; border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem; }
+  .proj .code-line { display:block; padding-left:.5rem; border-left:3px solid transparent; }
+  .proj .code-line.added { border-left-color:#22c55e; }
+  .hl-kw { color:#ec4899; font-weight:800; } /* **bold** -> ružové zvýraznenie */
+</style>
+
+<section class="proj">
+  <!-- HERO -->
+  <div class="card shadow-sm mb-3">
+    <div class="row g-0 align-items-center">
+      <div class="col-12 col-lg-8 hero-left p-2 ps-3 pe-3">
+        <div class="d-flex align-items-start gap-3">
+          <img src="{{ url_for('static', filename=project.icon_path or 'project-icons/default.png') }}"
+               alt="Ikona projektu" width="44" height="44"
+               style="border-radius:12px; border:1px solid #e5e7eb; object-fit:cover;">
+          <div class="flex-grow-1">
+            <h1 class="h4 mb-1">Projekt: <strong>{{ project.title }}</strong></h1>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="pill">Úroveň: {{ project.level or '-' }}</span>
+              <span class="pill">Kategória: {{ project.category or '-' }}</span>
+              {% if project.time_estimate %}<span class="pill">Čas: {{ project.time_estimate }}</span>{% endif %}
+            </div>
+            {% if project.langs_list %}
+            <div class="lang-badges d-flex flex-wrap gap-2 mb-1">
+              {% set icon_files = {'Python':'python.svg','JavaScript':'js.svg','HTML':'html.svg','CSS':'css.svg','SQL':'mysql.svg'} %}
+              {% for L in project.langs_list %}
+                <span class="badge border rounded-pill d-inline-flex align-items-center gap-2 px-2 py-1">
+                  <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(L, 'default.svg')) }}" alt="{{ L }}">
+                  {{ L }}
+                </span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% if project.preview_url %}
+              <div class="preview-link text-muted">
+                <strong>Náhľad:</strong>
+                <a href="{{ project.preview_url }}" target="_blank" rel="noopener">{{ project.preview_url }}</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <img src="{{ url_for('static', filename=project.cover_path or 'projects/placeholder-cover.jpg') }}"
+             class="img-fluid rounded-end"
+             alt="cover"
+             style="object-fit: cover; width: 100%; height: 100%; max-height: 220px;">
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- LEFT -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">Kroky projektu</div>
+          <span class="text-muted small" id="doneCount">0 / 0 hotovo</span>
+        </div>
+        <div class="card-body">
+          <div class="progress-thin mb-3"><i id="progressBar"></i></div>
+          <ul id="steps" class="steps" role="tablist" aria-label="Kroky">
+            <li class="text-muted" id="stepsLoading" style="padding:.25rem 0;">Načítavam kroky…</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm" id="start">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div class="fw-semibold" id="panelTitle">Zadanie</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-soft btn-sm" id="showAssignment">Zobraziť zadanie</button>
+            <button class="btn btn-soft btn-sm" id="showIntrospect">Introspekcia</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Zadanie -->
+          <div id="assignment">
+            {% if project.assignment %}
+              <div id="assignmentText" class="mb-3"></div>
+            {% else %}
+              <p class="text-muted">Tento projekt nemá vyplnené zadanie.</p>
+            {% endif %}
+            {% if project.tips %}
+            <details class="mb-3" open>
+              <summary><strong>Tipy pred začiatkom</strong></summary>
+              <div id="tipsText" class="mt-2"></div>
+            </details>
+            {% endif %}
+            <button id="startProject" class="btn btn-primary">Začať projekt</button>
+          </div>
+
+          <!-- KROK -->
+          <div id="stepView" hidden>
+            <div id="stepContent"></div>
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button class="btn btn-outline-secondary" id="prevStep">&larr; Predchádzajúci</button>
+              <button class="btn btn-success" id="toggleDone">Označiť ako hotové</button>
+              <button class="btn btn-outline-secondary" id="nextStep">Ďalší krok &rarr;</button>
+            </div>
+          </div>
+
+          <!-- INTROSPEKCIA -->
+          <div id="introspect" hidden>
+            <p class="text-muted">Tvoje odpovede sa ukladajú iba lokálne (v prehliadači).</p>
+            <div class="mb-2">
+              <label class="form-label">1) Aké nové <strong>koncepty</strong> som sa naučil/a?</label>
+              <textarea id="rConcepts" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">2) Čo bola moja najväčšia <strong>výzva</strong> v tomto projekte?</label>
+              <textarea id="rChallenge" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Poznámky</label>
+              <textarea id="rNotes" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="text-end">
+              <button id="saveReflect" class="btn btn-primary">Uložiť reflexiu</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal: gratulácia -->
+<div class="modal fade" id="congratsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-sm p-4">
+      <h5 class="fw-semibold mb-2">🎉 Hotovo!</h5>
+      <p class="mb-3 text-muted">Prešli ste všetky kroky. Skvelá práca!</p>
+      <div class="text-end"><button class="btn btn-primary" data-bs-dismiss="modal">Pokračovať</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // data z Flasku
+  const STEPS = {{ steps_json|tojson }};
+  const FILE_NAME = (STEPS[0]?.file || 'app.py');
+  const STORAGE_KEY = 'proj_'+ {{ project.id }} +'_state_v1';
+
+  // helpers
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function codeHtml(code, added){
+    const lines = (code||'').split('\n');
+    const addSet = new Set((added||[]).filter(n=> typeof n==='number' && n>=0 && n<lines.length));
+    return lines.map((ln,i)=>`<span class="code-line ${addSet.has(i)?'added':''}">${esc(ln)}</span>`).join('\n');
+  }
+  function renderRich(txt){
+    let s = esc(txt||'');
+    s = s.replace(/`([^`]+)`/g, (_,m)=>`<code class="inline">${m}</code>`);
+    s = s.replace(/\*\*([^*]+)\*\*/g, (_,m)=>`<span class="hl-kw">${m}</span>`);  // **bold** -> ružové zvýraznenie
+    s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+    return s.replace(/\n/g,'<br>');
+  }
+  function storeLoad(){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      const base = { step:0, done:Array(STEPS.length).fill(false), notes:{} };
+      if(!raw) return base;
+      const p=JSON.parse(raw);
+      const doneArr = Array(STEPS.length).fill(false).map((_,i)=> p.done ? !!p.done[i] : false);
+      return { step: Math.min(p.step||0, STEPS.length-1), done: doneArr, notes: p.notes||{} };
+    }catch(e){ return { step:0, done:Array(STEPS.length).fill(false), notes:{} }; }
+  }
+  function storeSave(s){ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+  // DOM
+  const stepsUL = document.getElementById('steps');
+  const doneCount = document.getElementById('doneCount');
+  const progressBar = document.getElementById('progressBar');
+  const panelTitle = document.getElementById('panelTitle');
+
+  const assignmentView = document.getElementById('assignment');
+  const stepView = document.getElementById('stepView');
+  const introspectView = document.getElementById('introspect');
+  const showAssignmentBtn = document.getElementById('showAssignment');
+  const showIntrospectBtn = document.getElementById('showIntrospect');
+  const startProjectBtn = document.getElementById('startProject');
+
+  const stepContent = document.getElementById('stepContent');
+  const prevStepBtn = document.getElementById('prevStep');
+  const nextStepBtn = document.getElementById('nextStep');
+  const toggleDoneBtn = document.getElementById('toggleDone');
+
+  const rConcepts = document.getElementById('rConcepts');
+  const rChallenge = document.getElementById('rChallenge');
+  const rNotes = document.getElementById('rNotes');
+  const saveReflect = document.getElementById('saveReflect');
+
+  let state = storeLoad();
+
+  // render assignment / tips rich
+  {% if project.assignment %}
+    document.getElementById('assignmentText').innerHTML = renderRich({{ project.assignment|tojson }});
+  {% endif %}
+  {% if project.tips %}
+    document.getElementById('tipsText').innerHTML = renderRich({{ project.tips|tojson }});
+  {% endif %}
+
+  function setPanel(which){
+    assignmentView.hidden = which!=='A';
+    stepView.hidden = which!=='S';
+    introspectView.hidden = which!=='I';
+    panelTitle.textContent = which==='A' ? 'Zadanie' : which==='S' ? `Krok ${state.step+1}: ${STEPS[state.step]?.title||''}` : 'Introspekcia';
+  }
+  showAssignmentBtn.onclick = ()=> setPanel('A');
+  showIntrospectBtn.onclick = ()=> setPanel('I');
+  startProjectBtn.onclick = ()=> { setPanel('S'); selectStep(0); };
+
+  function renderSteps(){
+    stepsUL.innerHTML = '';
+    STEPS.forEach((s,i)=>{
+      const li = document.createElement('li');
+      const classes = ['border']; if(state.step===i) classes.push('active'); if(state.done[i]) classes.push('done');
+      li.className = classes.join(' ');
+      li.role='tab'; li.ariaSelected = state.step===i;
+      li.innerHTML = `<span class="idx">${i+1}</span><span class="fw-semibold text-truncate">${esc(s.title||('Krok '+(i+1)))}</span><span class="state">${state.done[i]?'✓ hotovo':''}</span>`;
+      li.onclick = ()=>{ state.step=i; storeSave(state); selectStep(i); };
+      stepsUL.appendChild(li);
+    });
+    const done = state.done.filter(Boolean).length;
+    doneCount.textContent = `${done} / ${STEPS.length} hotovo`;
+    progressBar.style.width = `${(done/Math.max(1,STEPS.length))*100}%`;
+  }
+
+  function updateToggleButton(){
+    const isDone = state.done[state.step];
+    if(isDone){
+      toggleDoneBtn.className = 'btn btn-warning';
+      toggleDoneBtn.textContent = 'Označiť ako nedokončené';
+    }else{
+      toggleDoneBtn.className = 'btn btn-success';
+      toggleDoneBtn.textContent = 'Označiť ako hotové';
+    }
+  }
+
+  function selectStep(i){
+    renderSteps(); setPanel('S'); updateToggleButton();
+    const S = STEPS[i];
+
+    // bullety / checks rich text
+    const bullets = (S.bullets||[]).map(b=>`<li>${renderRich(b)}</li>`).join('');
+    const checks = (S.checks||[]).map(b=>`<li>${renderRich(b)}</li>`).join('');
+
+    stepContent.innerHTML = `
+      <h3 class="h6 mb-1">${esc(S.title||('Krok '+(i+1)))}</h3>
+      ${S.explain?`<div class="mb-2">${renderRich(S.explain)}</div>`:''}
+      ${(S.bullets&&S.bullets.length)?`<h4 class="h6 mt-2">Body</h4><ul>${bullets}</ul>`:''}
+      ${(S.checks&&S.checks.length)?`<h4 class="h6 mt-2">Checklist</h4><ul>${checks}</ul>`:''}
+      ${S.hint?`<details class="mb-2"><summary>Hinty</summary><div class="mt-1">${renderRich(S.hint)}</div></details>`:''}
+      ${S.code?`
+        <details class="mb-0">
+          <summary>Ukázať <u>celý kód</u> (ako má vyzerať v tomto kroku)</summary>
+          <div class="code-shell mt-2"><pre class="code-block">
+            <button class="copy-btn" id="copyCode">Kopírovať kód</button>
+            <code>${codeHtml(S.code, S.added)}</code>
+          </pre>
+          <div class="small text-muted mt-1">Súbor: <code>${esc(S.file||FILE_NAME)}</code></div>
+        </div>
+      </details>`:''}
+    `;
+
+    // copy
+    const copyBtn = document.getElementById('copyCode');
+    if (copyBtn){
+      copyBtn.onclick = ()=>{
+        navigator.clipboard.writeText(S.code||'');
+        const old=copyBtn.textContent; copyBtn.textContent='Skopírované ✓'; setTimeout(()=> copyBtn.textContent=old, 1000);
+      };
+    }
+
+    // footer
+    toggleDoneBtn.onclick = ()=>{
+      const was = !!state.done[i];
+      state.done[i] = !state.done[i]; storeSave(state);
+      renderSteps(); updateToggleButton();
+      const all = state.done.every(Boolean);
+      if(!was && state.done[i] && i<STEPS.length-1){
+        state.step = i+1; storeSave(state); selectStep(state.step);
+      }else if(all){
+        if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal(document.getElementById('congratsModal')).show();
+      }
+    };
+    prevStepBtn.onclick = ()=>{ if(i>0){ state.step=i-1; storeSave(state); selectStep(state.step);} };
+    nextStepBtn.onclick = ()=>{ if(i<STEPS.length-1){ state.step=i+1; storeSave(state); selectStep(state.step);} };
+  }
+
+  // introspekcia
+  saveReflect.onclick = ()=>{
+    state.notes = { concepts: rConcepts.value, challenge: rChallenge.value, notes: rNotes.value };
+    storeSave(state);
+    const t=document.createElement('div'); t.className='position-fixed bottom-0 end-0 p-3';
+    t.innerHTML='<div class="alert alert-success shadow-sm mb-0">Reflexia uložená ✔</div>'; document.body.appendChild(t);
+    setTimeout(()=>t.remove(),1500);
+  };
+  (function restoreNotes(){ rConcepts.value = state.notes?.concepts || ''; rChallenge.value = state.notes?.challenge || ''; rNotes.value = state.notes?.notes || ''; })();
+
+  // init
+  function onReady(){
+    renderSteps();
+    selectStep(state.step||0);
+    setPanel('A');
+    document.getElementById('doneCount').textContent = `${state.done.filter(Boolean).length} / ${STEPS.length} hotovo`;
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady, { once:true });
+  else onReady();
+})();
+</script>
+{% endblock %}
