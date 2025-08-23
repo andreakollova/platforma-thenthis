@@ -516,5 +516,18 @@ def kviz_vsetci():
 def projekt_html():
     return render_template('projekt-html.html')
 
+@app.route('/projekt/vytvorit')
+@login_required
+def projekt_vytvorit():
+    return render_template('projekt-vytvorit.html')
+
+# Add this alias so url_for('projekty_vytvorit') also works:
+app.add_url_rule(
+    '/projekty/vytvorit',
+    endpoint='projekty_vytvorit',
+    view_func=projekt_vytvorit
+)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

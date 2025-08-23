@@ -1,10 +1,9 @@
-{# templates/projekt-html.html — Blackjack (FINAL) #}
+{# templates/projekt-html.html — Dynamický projekt + náhľad/publikácia (FINAL) #}
 {% extends "base.html" %}
-{% block title %}Projekt HTML – Blackjack{% endblock %}
+{% block title %}Projekt{% endblock %}
 
 {% block content %}
 <style>
-  /* --- Scoped štýly -------------------------------------------------------- */
   .proj * { box-sizing: border-box; }
   .proj .pill { border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:.3rem .6rem; font-size:.8rem; color:#6b7280; }
   .proj .progress-thin { height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #e5e7eb; }
@@ -27,24 +26,23 @@
   .proj details { border:1px dashed #e5e7eb; background:#fafafa; border-radius:.75rem; padding:.6rem .75rem; }
   .proj summary { cursor:pointer; font-weight:700; }
 
-  .proj .card { border-radius:1rem; overflow:hidden; } /* clip vnútro, bez bielych rohov */
+  .proj .card { border-radius:1rem; overflow:hidden; }
   .proj .card-header { background:#fff; }
   .proj .card-header, .proj .card-body { padding:.7rem 1rem; }
   .proj .card-body > :first-child { margin-top:0 !important; }
   .proj .card-body > :last-child  { margin-bottom:0 !important; }
 
-  /* hero card – menší vertikálny padding */
   .proj .hero-left { padding-top:.6rem !important; padding-bottom:.6rem !important; }
 
-  /* kód + zvýraznenie prírastkov v danom kroku */
+  /* code block */
   .proj .code-shell { position:relative; }
   .proj pre.code-block {
-    position:relative; margin:0; padding:.38rem .48rem .38rem .6rem;
+    margin:0; padding:1.2rem .48rem .38rem .6rem;
     background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.80rem; overflow:auto;
   }
   .proj pre.code-block code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    white-space: pre; display:block; line-height:1.03;  /* EŠTE menšie riadkovanie */
+    white-space: pre; display:block; line-height:1.03;
   }
   .proj .copy-btn {
     position:absolute; top:.28rem; right:.28rem; z-index:2;
@@ -52,59 +50,62 @@
     border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem;
   }
   .proj .code-line { display:block; padding-left:.5rem; border-left:3px solid transparent; }
-  .proj .code-line.added { border-left-color:#22c55e; } /* len zelená “čiarka” */
+  .proj .code-line.added { border-left-color:#22c55e; }
 
   .proj .muted { color:#6b7280; }
 
-  /* jazykové badge (SVG) + náhľad link (menší) */
   .lang-badges .badge {
     background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem; display:inline-flex; align-items:center; gap:.4rem;
   }
   .lang-badges .badge img { height:16px; width:auto; }
   .proj .preview-link { font-size:.8rem; }
+
+  .hl-kw{ color:#ec4899; font-weight:800; }
+  .proj code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
 </style>
 
 <section class="proj">
+  <!-- Info bar for PREVIEW -->
+  <div id="previewBar" class="alert alert-info d-flex justify-content-between align-items-center d-none">
+    <span>Toto je <strong>náhľad</strong> tvojho projektu. Môžeš ho publikovať alebo sa vrátiť a upraviť.</span>
+    <span class="d-flex gap-2">
+      <button id="btnDoPublish" class="btn btn-success btn-sm">Publikovať</button>
+      <a id="btnEditBack" href="{{ url_for('projekty_vytvorit') }}" class="btn btn-outline-secondary btn-sm">Upraviť</a>
+    </span>
+  </div>
+
   <!-- HERO ------------------------------------------------------------------->
   <div class="card shadow-sm mb-3">
     <div class="row g-0 align-items-center">
       <div class="col-12 col-lg-8 hero-left p-2 ps-3 pe-3">
         <div class="d-flex align-items-start gap-3">
           <!-- ikonka projektu -->
-          <img
+          <img id="heroIcon"
             src="{{ url_for('static', filename='project-icons/blackjackicon.png') }}"
-            alt="Blackjack ikona"
+            alt="Ikona projektu"
             width="44" height="44"
             style="border-radius:12px; border:1px solid #e5e7eb; object-fit:cover;"
           >
           <div class="flex-grow-1">
-            <h1 class="h4 mb-1">Projekt: <strong>Blackjack</strong></h1>
+            <h1 class="h4 mb-1">Projekt: <strong id="heroTitle">Názov</strong></h1>
             <div class="d-flex flex-wrap gap-2 mb-2">
-              <span class="pill">Úroveň: Začiatočník</span>
-              <span class="pill">Kategória: Hra</span>
-              <span class="pill">Čas: ~45–90 min</span>
+              <span class="pill" id="heroLevel">Úroveň: –</span>
+              <span class="pill" id="heroCategory">Kategória: –</span>
+              <span class="pill" id="heroTime" hidden>Čas: –</span>
             </div>
-            <div class="lang-badges d-flex flex-wrap gap-2 mb-1">
-              <span class="badge"><img src="{{ url_for('static', filename='icons/python.svg') }}" alt="Python">Python</span>
-              <span class="badge"><img src="{{ url_for('static', filename='icons/js.svg') }}" alt="JavaScript">JavaScript</span>
-              <span class="badge"><img src="{{ url_for('static', filename='icons/html.svg') }}" alt="HTML">HTML</span>
-              <span class="badge"><img src="{{ url_for('static', filename='icons/css.svg') }}" alt="CSS">CSS</span>
-            </div>
-            <div class="preview-link text-muted">
+            <div class="lang-badges d-flex flex-wrap gap-2 mb-1" id="heroLangs"></div>
+            <div class="preview-link text-muted" id="heroPreview" hidden>
               <strong>Náhľad:</strong>
-              <a href="https://blackjack.onrender.com/" target="_blank" rel="noopener">https://blackjack.onrender.com/</a>
+              <a id="heroPreviewLink" href="#" target="_blank" rel="noopener"></a>
             </div>
           </div>
         </div>
       </div>
       <!-- Fotka pri názve projektu -->
       <div class="col-12 col-lg-4">
-        <img
-          src="{{ url_for('static', filename='projects/blackjack2.png') }}"
-          class="img-fluid rounded-end"
-          alt="Blackjack – náhľad"
-          style="object-fit: cover; width: 100%; height: 100%; max-height: 220px;"
-        >
+        <div class="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center">
+          <span class="text-muted small">Náhľadový obrázok</span>
+        </div>
       </div>
     </div>
   </div>
@@ -115,7 +116,7 @@
       <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div class="fw-semibold">Kroky projektu</div>
-          <span class="text-muted small" id="doneCount">0 / 6 hotovo</span>
+          <span class="text-muted small" id="doneCount">0 / 0 hotovo</span>
         </div>
         <div class="card-body">
           <div class="progress-thin mb-3" aria-label="Priebeh">
@@ -141,26 +142,12 @@
         <div class="card-body">
           <!-- Zadanie -->
           <div id="assignment">
-            <p class="text-muted">
-              Postupne vytvoríš <strong>konzolovú hru Blackjack v Pythone</strong>. Každý krok obsahuje
-              <em>vysvetlenie</em>, <em>checklist</em>, <em>hinty</em> a <em>celý kód</em> pre daný stav projektu.
-              Vždy zvýrazníme <span style="border-left:3px solid #22c55e;padding:0 .25rem;color:#052e16;">nové riadky</span>,
-              aby si presne vedel, čo pribudlo.
-            </p>
-
-            <details class="mb-3" open>
+            <p class="text-muted" id="assignmentText">—</p>
+            <details class="mb-3" id="tipsBox" hidden>
               <summary><strong>Tipy pred začatím projektu</strong></summary>
-              <ul class="mt-2 mb-0">
-                <li>Rob <strong>po malých častiach</strong> a po každej zmene program <strong>spusť</strong>.</li>
-                <li><strong>Eso (A)=11</strong>, ale ak by si mal &gt;21, zmeníme jedno eso na <strong>1</strong>.</li>
-                <li><strong>Blackjack</strong> = 21 z <em>dvoch</em> kariet → v kóde ho označíme <code>0</code> pre ľahké porovnanie.</li>
-                <li>Ak si neistý, skopíruj „Celý kód“ – je to presná podoba súboru v danom kroku.</li>
-              </ul>
+              <div class="mt-2" id="tipsText"></div>
             </details>
-
-            <button id="startProject" class="btn btn-primary">
-              Začať projekt
-            </button>
+            <button id="startProject" class="btn btn-primary">Začať projekt</button>
           </div>
 
           <!-- Krok (detail) -->
@@ -173,7 +160,7 @@
             </div>
           </div>
 
-          <!-- Introspekcia (univerzálne otázky) -->
+          <!-- Introspekcia -->
           <div id="introspect" hidden>
             <p class="muted">Tvoje odpovede sa ukladajú iba lokálne (v prehliadači).</p>
             <div class="mb-2">
@@ -198,7 +185,7 @@
   </div>
 </section>
 
-<!-- Modal: Gratulácia po dokončení (všeobecný text) -->
+<!-- Modal: Gratulácia po dokončení -->
 <div class="modal fade" id="congratsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 shadow-sm p-4">
@@ -215,456 +202,218 @@
 </div>
 
 <script>
-/* Everything wrapped in a tiny namespace to avoid clashes */
 (function(){
-  const FILE_NAME = 'app.py';
-  const CONGRATS_KEY = 'bj_congrats_shown_v1';
-
-  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function codeHtml(lines, addedIdxSet){
-    return lines.map((ln, i)=>{
-      const cls = addedIdxSet.has(i) ? 'code-line added' : 'code-line';
-      return `<span class="${cls}">${escapeHtml(ln)}</span>`;
+  /* ---------- helpers ---------- */
+  const $ = (s)=>document.querySelector(s);
+  const esc = (s)=> (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function renderRich(txt){
+    let s = esc(txt||'');
+    s = s.replace(/`([^`]+)`/g, (_,m)=>`<code class="inline">${m}</code>`);
+    s = s.replace(/\*\*([^*]+)\*\*/g, (_,m)=>`<span class="hl-kw">${m}</span>`);
+    s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+    return s.replace(/\n/g,'<br>');
+  }
+  function codeHtmlFromString(code, addedSet){
+    const lines = (code||'').split('\n');
+    return lines.map((ln,i)=>{
+      const cls = addedSet.has(i) ? 'code-line added' : 'code-line';
+      return `<span class="${cls}">${esc(ln)}</span>`;
     }).join('\n');
   }
-  function addedIdxs(currLines, prevLines){
-    const prevSet = new Set(prevLines || []);
-    const set = new Set();
-    currLines.forEach((ln, idx)=>{ if(!prevSet.has(ln)) set.add(idx); });
-    return set;
+
+  /* ---------- load payload ---------- */
+  const url = new URL(location.href);
+  const isPreview = url.searchParams.get('preview') === '1';
+  let DATA = null;
+
+  if(isPreview){
+    try { DATA = JSON.parse(localStorage.getItem('project_preview_v1')||'null'); } catch(e){ DATA=null; }
+  } else {
+    try { DATA = JSON.parse(localStorage.getItem('project_published_v1')||'null'); } catch(e){ DATA=null; }
   }
 
-  /* -------------------- KROKOVÉ KÓDY (po riadkoch) ------------------------ */
-  const step1_lines = [
-    "import random",
-    "",
-    "print(r\"\"\"          _____",
-    "         |A .  | _____",
-    "         | /.\\ ||A ^  | _____",
-    "         |(_._)|| / \\ ||A _  | _____",
-    "         |  |  || \\ / || ( ) ||A_ _ |",
-    "         |____V||  .  ||(_'_)||( v )|",
-    "                |____V||  |  || \\ / |",
-    "                       |____V||  .  |",
-    "                              |____V|",
-    "\"\"\")",
-    "",
-    "def deal_cards():",
-    "    cards = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]",
-    "    return random.choice(cards)",
-    "",
-    "def calculate_score(cards):",
-    "    # Blackjack (21 z dvoch kariet)",
-    "    if sum(cards) == 21 and len(cards) == 2:",
-    "        return 0",
-    "    # Eso 11 -> 1 ak by súčet presiahol 21",
-    "    while 11 in cards and sum(cards) > 21:",
-    "        cards[cards.index(11)] = 1",
-    "    return sum(cards)",
-    "",
-    "def compare(user_score, computer_score):",
-    "    if user_score == computer_score:",
-    "        return \"Remíza.\"",
-    "    elif computer_score == 0:",
-    "        return \"Prehral si, dealer má Blackjack!\"",
-    "    elif user_score == 0:",
-    "        return \"Vyhral si Blackjackom! 🎉\"",
-    "    elif user_score > 21:",
-    "        return \"Prehral si, presiahol si 21.\"",
-    "    elif computer_score > 21:",
-    "        return \"Vyhral si, dealer presiahol 21!\"",
-    "    elif user_score > computer_score:",
-    "        return \"Vyhral si! 🎉\"",
-    "    else:",
-    "        return \"Prehral si.\"",
-    ""
-  ];
+  // Fallback minimal data if nothing stored
+  if(!DATA){
+    DATA = {
+      meta:{
+        title:'Blackjack', level:'Začiatočník', category:'Hra', time:'~45–90 min',
+        langs:{Python:true, JavaScript:true, HTML:true, CSS:true, SQL:false},
+        preview:'https://blackjack.onrender.com', assignment:'Postupne vytvoríš konzolovú hru Blackjack v Pythone.',
+        tips:'Rob po malých častiach a často spúšťaj program.'
+      },
+      steps:[]
+    };
+  }
 
-  const step2_lines = [
-    ...step1_lines,
-    "def play_one_round():",
-    "    user_cards = []",
-    "    computer_cards = []",
-    "    is_game_over = False",
-    "",
-    "    for _ in range(2):",
-    "        user_cards.append(deal_cards())",
-    "        computer_cards.append(deal_cards())",
-    "",
-    "    while not is_game_over:",
-    "        user_score = calculate_score(user_cards)",
-    "        computer_score = calculate_score(computer_cards)",
-    "        print(f\"Your cards {user_cards} and score: {user_score}\")",
-    "        print(f\"Computer cards {computer_cards} and score: {computer_score}\")",
-    "",
-    "        if user_score == 0 or computer_score == 0 or user_score > 21:",
-    "            is_game_over = True",
-    "        else:",
-    "            user_should_deal = input(\"Type 'y' to get another card, type 'n' to pass: \").strip().lower()",
-    "            if user_should_deal == 'y':",
-    "                user_cards.append(deal_cards())",
-    "            else:",
-    "                is_game_over = True",
-    ""
-  ];
-
-  const step3_lines = [
-    ...step2_lines.slice(0, -1),
-    "    # Dealer ťahá do 17",
-    "    computer_score = calculate_score(computer_cards)",
-    "    while computer_score != 0 and computer_score < 17:",
-    "        computer_cards.append(deal_cards())",
-    "        computer_score = calculate_score(computer_cards)",
-    "",
-    "    print(f\"Your final hand: {user_cards}, final score: {user_score}\")",
-    "    print(f\"Computer's final hand: {computer_cards}, final score: {computer_score}\")",
-    "    print(compare(user_score, computer_score))",
-    ""
-  ];
-
-  const step4_lines = [
-    ...step3_lines,
-    "if __name__ == \"__main__\":",
-    "    play_one_round()",
-    ""
-  ];
-
-  const step5_lines = [
-    ...step3_lines,
-    "if __name__ == \"__main__\":",
-    "    while True:",
-    "        play_one_round()",
-    "        again = input(\"Play again? (y/n): \").strip().lower()",
-    "        if again != 'y':",
-    "            break",
-    ""
-  ];
-
-  const step6_lines = [
-    ...step1_lines,
-    "def ask_yes_no(prompt):",
-    "    while True:",
-    "        ans = input(prompt).strip().lower()",
-    "        if ans in ('y','n'):",
-    "            return ans",
-    "        print(\"Please type 'y' or 'n'.\")",
-    "",
-    "def play_one_round():",
-    "    user_cards = []",
-    "    computer_cards = []",
-    "    is_game_over = False",
-    "",
-    "    for _ in range(2):",
-    "        user_cards.append(deal_cards())",
-    "        computer_cards.append(deal_cards())",
-    "",
-    "    while not is_game_over:",
-    "        user_score = calculate_score(user_cards)",
-    "        computer_score = calculate_score(computer_cards)",
-    "        print(f\"Your cards {user_cards} and score: {user_score}\")",
-    "        print(f\"Computer cards {computer_cards} and score: {computer_score}\")",
-    "",
-    "        if user_score == 0 or computer_score == 0 or user_score > 21:",
-    "            is_game_over = True",
-    "        else:",
-    "            user_should_deal = ask_yes_no(\"Type 'y' to get another card, 'n' to pass: \")",
-    "            if user_should_deal == 'y':",
-    "                user_cards.append(deal_cards())",
-    "            else:",
-    "                is_game_over = True",
-    "",
-    "    # Dealer ťahá do 17",
-    "    computer_score = calculate_score(computer_cards)",
-    "    while computer_score != 0 and computer_score < 17:",
-    "        computer_cards.append(deal_cards())",
-    "        computer_score = calculate_score(computer_cards)",
-    "",
-    "    print(f\"Your final hand: {user_cards}, final score: {user_score}\")",
-    "    print(f\"Computer's final hand: {computer_cards}, final score: {computer_score}\")",
-    "    print(compare(user_score, computer_score))",
-    "",
-    "if __name__ == \"__main__\":",
-    "    while True:",
-    "        play_one_round()",
-    "        again = ask_yes_no(\"Play again? (y/n): \")",
-    "        if again != 'y':",
-    "            break",
-    ""
-  ];
-
-  /* -------------------- DEFINÍCIA KROKOV + UI ------------------------------ */
-  const STEPS = [
-    { title: "Základ: importy + tri funkcie (deal, score, compare)",
-      explain: `
-        <p><strong>Čo ideš spraviť:</strong> pripraviť stavebné bloky: náhodné karty, výpočet skóre a slovný výsledok.</p>
-        <ol>
-          <li><strong>Import</strong> <code>random</code> – potrebujeme na náhodu.</li>
-          <li><strong>ASCII hlavička</strong> – dekorácia, nech hra pôsobí zábavne.</li>
-          <li><strong><code>deal_cards()</code></strong> – vráti jednu náhodnú kartu z balíka (11=A, 10=10/J/Q/K).</li>
-          <li><strong><code>calculate_score()</code></strong> – ak sú <em>2 karty a 21</em>, vráť <code>0</code> (Blackjack). Keď je súčet &gt; 21 a máš Eso (11), zmeň <em>jedno</em> Eso na 1 a znova prepočítaj, kým netreba.</li>
-          <li><strong><code>compare()</code></strong> – porovná skóre a vráti text: remíza, výhra/prehra, špeciálne prípady (Blackjack, bust &gt;21).</li>
-        </ol>
-        <p><em>Skús spustiť súbor – zatiaľ len definuje funkcie (bez hry) a vypíše hlavičku.</em></p>
-      `,
-      checklist: [
-        "Import random + ASCII hlavička.",
-        "deal_cards(): náhodná karta z [11,2..10].",
-        "calculate_score(): Eso 11→1, Blackjack=0.",
-        "compare(): textový výsledok podľa skóre."
-      ],
-      hint: `Blackjack (21 z dvoch kariet) označíme číslom 0 – uľahčí to porovnávanie.`,
-      codeLines: step1_lines
-    },
-    { title: "Hráčov ťah (play_one_round – časť 1)",
-      explain: `
-        <p><strong>Čo ideš spraviť:</strong> vytvoríš funkciu, ktorá rozdaní karty a spracuje rozhodnutie hráča (Hit/Stand).</p>
-        <ol>
-          <li>Pridaj <code>play_one_round()</code> a v ňom tri premenné: <code>user_cards</code>, <code>computer_cards</code>, <code>is_game_over</code>.</li>
-          <li>Rozdaj <strong>2 karty</strong> hráčovi aj dealerovi (for-cyklus 2×).</li>
-          <li>V slučke <code>while not is_game_over</code> vždy prepočítaj skóre oboch a vypíš ich.</li>
-          <li>Ak hráč/dealer má Blackjack <em>alebo</em> hráč presiahne 21 → ukonči ťah.</li>
-          <li>Inak sa spýtaj: <code>'y'</code> (Hit) → karta hráčovi; <code>'n'</code> (Stand) → ukonči hráčov ťah.</li>
-          <li>Vstup čistíme: <code>.strip().lower()</code>.</li>
-        </ol>`,
-      checklist: [
-        "Vytvor play_one_round().",
-        "Rozdaj dve karty hráčovi aj dealerovi.",
-        "Slučka: prepočítaj skóre, pýtaj sa na 'y'/'n'."
-      ],
-      hint: `Ak 'y' → pridaj kartu, ak nie → nastav is_game_over=True.`,
-      codeLines: step2_lines
-    },
-    { title: "Dealerov ťah + výsledok (play_one_round – časť 2)",
-      explain: `
-        <p><strong>Čo ideš spraviť:</strong> po hráčovi hrá dealer – ťahá, kým má skóre <strong>&lt; 17</strong> a nemá Blackjack.</p>
-        <ol>
-          <li>Po hráčovi prepočítaj dealerovo skóre.</li>
-          <li><code>while computer_score != 0 && computer_score &lt; 17</code> → dealer doťahuje.</li>
-          <li>Vypíš finálne ruky, skóre a výsledok z <code>compare()</code>.</li>
-        </ol>`,
-      checklist: [
-        "Dealer ťahá do 17 (a nie je v Blackjacku).",
-        "Vypíš finálne karty a skóre.",
-        "Vypíš výsledok z compare()."
-      ],
-      hint: `Prepočítaj skóre po každej karte dealera.`,
-      codeLines: step3_lines
-    },
-    { title: "Spusť jednu hru (main blok)",
-      explain: `<p>Pridaj <code>if __name__ == "__main__"</code> a zavolaj <code>play_one_round()</code>. Tento blok beží iba pri priamom spustení súboru.</p>`,
-      checklist: [
-        "Pridaj if __name__ == '__main__':",
-        "Zavolaj play_one_round()."
-      ],
-      hint: `Po spustení prebehne jedna partia.`,
-      codeLines: step4_lines
-    },
-    { title: "Opakovanie hier (Play again)",
-      explain: `<p>Zabaľ spustenie do <code>while True</code> a po hre sa opýtaj, či chceš hrať znova.</p>`,
-      checklist: [
-        "Spustenie vo while True.",
-        "Ak odpoveď != 'y', ukonči program."
-      ],
-      hint: `Použi .strip().lower() pri vstupe.`,
-      codeLines: step5_lines
-    },
-    { title: "Lepší vstup (validácia áno/nie)",
-      explain: `<p>Vytvor <code>ask_yes_no()</code> – pýta sa, kým nedostane <code>'y'</code> alebo <code>'n'</code>. Použi ju pri Hit/Stand aj pri Play again.</p>`,
-      checklist: [
-        "Funkcia ask_yes_no(prompt).",
-        "Použitá v hre aj pri Play again."
-      ],
-      hint: `Používateľ niekedy zadá prázdny/nesprávny vstup – preto validujeme.`,
-      codeLines: step6_lines
+  /* ---------- wire hero/meta ---------- */
+  (function fillHero(){
+    $('#heroTitle').textContent = DATA.meta.title || 'Bez názvu';
+    $('#heroLevel').textContent = 'Úroveň: ' + (DATA.meta.level || '–');
+    $('#heroCategory').textContent = 'Kategória: ' + (DATA.meta.category || '–');
+    if (DATA.meta.time){ const t=$('#heroTime'); t.hidden=false; t.textContent='Čas: '+DATA.meta.time; }
+    if (DATA.meta.preview){
+      $('#heroPreview').hidden=false;
+      const a=$('#heroPreviewLink'); a.href=DATA.meta.preview; a.textContent=DATA.meta.preview;
     }
-  ];
+    const badgeMap = { Python:'python.svg', JavaScript:'js.svg', HTML:'html.svg', CSS:'css.svg', SQL:'mysql.svg' };
+    const box = $('#heroLangs'); box.innerHTML='';
+    Object.entries(DATA.meta.langs||{}).forEach(([k,v])=>{
+      if(!v) return;
+      const span=document.createElement('span');
+      span.className='badge';
+      span.innerHTML = `<img src="{{ url_for('static', filename='icons') }}/${badgeMap[k]||'default.svg'}" alt="">${k}`;
+      box.appendChild(span);
+    });
 
-  /* -------------------- STORAGE stavu -------------------------------------- */
+    // assignment/tips
+    $('#assignmentText').innerHTML = renderRich(DATA.meta.assignment||'—');
+    if (DATA.meta.tips){ $('#tipsBox').hidden=false; $('#tipsText').innerHTML=renderRich(DATA.meta.tips); }
+
+    // preview bar
+    if(isPreview) document.getElementById('previewBar').classList.remove('d-none');
+  })();
+
+  /* ---------- steps render (dynamic) ---------- */
+  const stepsUL = $('#steps');
+  const doneCount = $('#doneCount');
+  const progressBar = $('#progressBar');
+  const panelTitle = $('#panelTitle');
+
+  const assignmentView = document.getElementById('assignment');
+  const stepView = document.getElementById('stepView');
+  const introspectView = document.getElementById('introspect');
+
+  const showAssignmentBtn = document.getElementById('showAssignment');
+  const showIntrospectBtn = document.getElementById('showIntrospect');
+  const startProjectBtn = document.getElementById('startProject');
+
+  const stepContent = document.getElementById('stepContent');
+  const prevStepBtn = document.getElementById('prevStep');
+  const nextStepBtn = document.getElementById('nextStep');
+  const toggleDoneBtn = document.getElementById('toggleDone');
+
+  // state in this page
+  const FILE_NAME_PLACE = '—';
   const store = {
     load(){
       try{
-        const raw = localStorage.getItem('bj_step_state_v1');
-        const base = { step:0, done:Array(STEPS.length).fill(false), notes:{} };
+        const raw = localStorage.getItem('proj_runtime_state_v1_'+(DATA.meta.title||''));
+        const base = { step:0, done:Array(DATA.steps.length).fill(false), notes:{} };
         if(!raw) return base;
         const parsed = JSON.parse(raw);
-        const doneArr = Array(STEPS.length).fill(false).map((_,i)=> parsed.done ? !!parsed.done[i] : false);
-        return { step: Math.min(parsed.step||0, STEPS.length-1), done: doneArr, notes: parsed.notes||{} };
-      }catch(e){ return { step:0, done:Array(STEPS.length).fill(false), notes:{} }; }
+        const doneArr = Array(DATA.steps.length).fill(false).map((_,i)=> parsed.done ? !!parsed.done[i] : false);
+        return { step: Math.min(parsed.step||0, DATA.steps.length-1), done: doneArr, notes: parsed.notes||{} };
+      }catch(e){ return { step:0, done:Array(DATA.steps.length).fill(false), notes:{} }; }
     },
-    save(s){ localStorage.setItem('bj_step_state_v1', JSON.stringify(s)); }
+    save(s){ localStorage.setItem('proj_runtime_state_v1_'+(DATA.meta.title||''), JSON.stringify(s)); }
   };
+  let state = store.load();
 
-  function onReady(){
-    const stepsUL = document.getElementById('steps');
-    const doneCount = document.getElementById('doneCount');
-    const progressBar = document.getElementById('progressBar');
-    const panelTitle = document.getElementById('panelTitle');
+  function setPanel(which){
+    assignmentView.hidden = which!=='A';
+    stepView.hidden = which!=='S';
+    introspectView.hidden = which!=='I';
+    panelTitle.textContent = which==='A' ? 'Zadanie' : which==='S' ? `Krok ${state.step+1}: ${(DATA.steps[state.step]?.title)||''}` : 'Introspekcia';
+  }
+  showAssignmentBtn.onclick = ()=> setPanel('A');
+  showIntrospectBtn.onclick = ()=> setPanel('I');
+  startProjectBtn.onclick = ()=> { if(DATA.steps.length){ setPanel('S'); selectStep(0);} };
 
-    const assignmentView = document.getElementById('assignment');
-    const stepView = document.getElementById('stepView');
-    const introspectView = document.getElementById('introspect');
+  function renderStepsSidebar(){
+    stepsUL.innerHTML='';
+    DATA.steps.forEach((s,i)=>{
+      const li=document.createElement('li');
+      const classes = ['border']; if(state.step===i) classes.push('active'); if(state.done[i]) classes.push('done');
+      li.className = classes.join(' ');
+      li.innerHTML = `<span class="idx">${i+1}</span><span class="fw-semibold">${esc(s.title||'Bez názvu')}</span><span class="state">${state.done[i]?'✓ hotovo':''}</span>`;
+      li.onclick = ()=>{ state.step=i; store.save(state); selectStep(i); };
+      stepsUL.appendChild(li);
+    });
+    const done = state.done.filter(Boolean).length;
+    doneCount.textContent = `${done} / ${DATA.steps.length} hotovo`;
+    progressBar.style.width = `${(DATA.steps.length? (done/DATA.steps.length)*100 : 0)}%`;
+  }
 
-    const showAssignmentBtn = document.getElementById('showAssignment');
-    const showIntrospectBtn = document.getElementById('showIntrospect');
-    const startProjectBtn = document.getElementById('startProject');
+  function renderStepBody(i){
+    const S = DATA.steps[i] || {};
+    const added = new Set((S.added||[]).filter(n=>typeof n==='number'));
+    const hasCode = !!(S.code && S.code.length);
 
-    const stepContent = document.getElementById('stepContent');
-    const prevStepBtn = document.getElementById('prevStep');
-    theNextBtn = document.getElementById('nextStep');
-    const nextStepBtn = theNextBtn; /* just to be safe with minifiers */
-    const toggleDoneBtn = document.getElementById('toggleDone');
-
-    const rConcepts = document.getElementById('rConcepts');
-    const rChallenge = document.getElementById('rChallenge');
-    const rNotes = document.getElementById('rNotes');
-    const saveReflect = document.getElementById('saveReflect');
-
-    let state = store.load();
-
-    function setPanel(which){
-      assignmentView.hidden = which!=='A';
-      stepView.hidden = which!=='S';
-      introspectView.hidden = which!=='I';
-      panelTitle.textContent = which==='A' ? 'Zadanie' : which==='S' ? `Krok ${state.step+1}: ${STEPS[state.step].title}` : 'Introspekcia';
-    }
-    showAssignmentBtn.onclick = ()=> setPanel('A');
-    showIntrospectBtn.onclick = ()=> setPanel('I');
-    startProjectBtn.onclick = ()=> { setPanel('S'); selectStep(0); };
-
-    function checkAllDoneAndCelebrate(){
-      const allDone = state.done.every(Boolean);
-      if(allDone){
-        const el = document.getElementById('congratsModal');
-        if (window.bootstrap && bootstrap.Modal) {
-          new bootstrap.Modal(el).show();
-        } else {
-          el.style.display='block';
-        }
-      }
-    }
-
-    function renderSteps(){
-      stepsUL.innerHTML = '';
-      STEPS.forEach((s,i)=>{
-        const li = document.createElement('li');
-        const classes = ['border']; if(state.step===i) classes.push('active'); if(state.done[i]) classes.push('done');
-        li.className = classes.join(' ');
-        li.role='tab'; li.ariaSelected = state.step===i;
-        li.innerHTML = `<span class="idx">${i+1}</span><span class="fw-semibold">${s.title}</span><span class="state">${state.done[i]?'✓ hotovo':''}</span>`;
-        li.onclick = ()=>{ state.step=i; store.save(state); selectStep(i); };
-        stepsUL.appendChild(li);
-      });
-      const done = state.done.filter(Boolean).length;
-      doneCount.textContent = `${done} / ${STEPS.length} hotovo`;
-      progressBar.style.width = `${(done/STEPS.length)*100}%`;
-    }
-
-    function updateToggleButton(){
-      const isDone = state.done[state.step];
-      if(isDone){
-        toggleDoneBtn.className = 'btn btn-warning';       // žltá pre "nedokončené"
-        toggleDoneBtn.textContent = 'Označiť ako nedokončené';
-      }else{
-        toggleDoneBtn.className = 'btn btn-success';
-        toggleDoneBtn.textContent = 'Označiť ako hotové';
-      }
-    }
-
-    function selectStep(i){
-      renderSteps(); setPanel('S');
-      updateToggleButton();
-
-      const S = STEPS[i];
-      const prevLines = i>0 ? STEPS[i-1].codeLines : [];
-      const addSet = addedIdxs(S.codeLines, prevLines);
-
-      stepContent.innerHTML = `
-        <h3 class="h6 mb-1">${S.title}</h3>
-        ${S.explain}
-        <h4 class="h6 mt-3">Checklist</h4>
-        <div id="checklist" class="d-grid gap-2 mb-2"></div>
-
-        <details class="mb-2">
-          <summary>Ukázať hinty</summary>
-          <div class="mt-2">${S.hint}</div>
-        </details>
-
+    stepContent.innerHTML = `
+      <h3 class="h6 mb-1">${esc(S.title||'Bez názvu')}</h3>
+      ${S.explain? `<p>${renderRich(S.explain||'')}</p>`:''}
+      ${(S.bullets&&S.bullets.length)?`<h4 class="h6 mt-3">Body</h4><ul>${S.bullets.map(b=>`<li>${renderRich(b)}</li>`).join('')}</ul>`:''}
+      ${(S.checks&&S.checks.length)?`<h4 class="h6 mt-3">Checklist</h4><ul>${S.checks.map(b=>`<li>${renderRich(b)}</li>`).join('')}</ul>`:''}
+      ${S.hint?`<details class="mb-2"><summary>Ukázať hinty</summary><div class="mt-2">${renderRich(S.hint||'')}</div></details>`:''}
+      ${hasCode?`
         <details class="mb-0">
           <summary>Ukázať <u>celý kód</u> (ako má vyzerať v tomto kroku)</summary>
           <div class="code-shell mt-2">
-            <pre class="code-block"><button class="copy-btn" id="copyCode">Kopírovať kód</button><code>${codeHtml(S.codeLines, addSet)}</code></pre>
-            <div class="small text-muted mt-1">Súbor: <code>${FILE_NAME}</code></div>
+            <pre class="code-block"><button class="copy-btn" id="copyCode">Kopírovať kód</button><code>${codeHtmlFromString(S.code||'', added)}</code></pre>
+            <div class="small text-muted mt-1">Súbor: <code>${esc(S.file||FILE_NAME_PLACE)}</code></div>
           </div>
-        </details>
-      `;
+        </details>`:''
+      }
+    `;
 
-      // checklist
-      const chk = document.getElementById('checklist');
-      S.checklist.forEach((label, idx)=>{
-        const id=`s${i}c${idx}`; const w=document.createElement('label');
-        w.className='d-flex gap-2'; w.innerHTML=`<input type="checkbox" id="${id}" class="form-check-input mt-1"> <span>${label}</span>`;
-        chk.appendChild(w);
-      });
-
-      // copy
+    if (hasCode){
       const copyBtn = document.getElementById('copyCode');
       copyBtn.onclick = ()=>{
-        navigator.clipboard.writeText(S.codeLines.join('\n'));
-        const old = copyBtn.textContent; copyBtn.textContent='Skopírované ✓'; setTimeout(()=> copyBtn.textContent=old, 1200);
+        navigator.clipboard.writeText(S.code||'');
+        const old = copyBtn.textContent; copyBtn.textContent='Skopírované ✓'; setTimeout(()=> copyBtn.textContent=old, 1100);
       };
-
-      // footer buttons
-      toggleDoneBtn.onclick = ()=>{
-        const wasDone = !!state.done[i];
-        state.done[i] = !state.done[i];
-        store.save(state);
-        renderSteps();
-        updateToggleButton();
-
-        if(!wasDone && state.done[i]){               // práve označené ako hotové
-          const allDoneNow = state.done.every(Boolean);
-          if(i < STEPS.length - 1){
-            state.step = i + 1;                      // skok na ďalší krok
-            store.save(state);
-            selectStep(state.step);
-          }else{
-            // posledný krok – ukáž pop-up priamo po kliknutí
-            if (allDoneNow) checkAllDoneAndCelebrate();
-          }
-        }
-      };
-      prevStepBtn.onclick = ()=>{ if(i>0){ state.step=i-1; store.save(state); selectStep(state.step);} };
-      nextStepBtn.onclick = ()=>{ if(i<STEPS.length-1){ state.step=i+1; store.save(state); selectStep(state.step);} };
     }
-
-    // introspekcia (2 Q + poznámky)
-    saveReflect.onclick = ()=>{
-      state.notes = {
-        concepts: rConcepts.value,
-        challenge: rChallenge.value,
-        notes: rNotes.value
-      };
-      store.save(state);
-      const t=document.createElement('div'); t.className='position-fixed bottom-0 end-0 p-3';
-      t.innerHTML='<div class="alert alert-success shadow-sm mb-0">Reflexia uložená ✔</div>';
-      document.body.appendChild(t); setTimeout(()=>t.remove(),1600);
-    };
-    (function(){
-      rConcepts.value = state.notes?.concepts || '';
-      rChallenge.value = state.notes?.challenge || '';
-      rNotes.value = state.notes?.notes || '';
-    })();
-
-    // init
-    renderSteps();
-    selectStep(state.step||0);
-    setPanel('A');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady, { once:true });
-  } else {
-    onReady();
+  function updateToggleButton(){
+    const isDone = state.done[state.step];
+    if(isDone){
+      toggleDoneBtn.className = 'btn btn-warning';
+      toggleDoneBtn.textContent = 'Označiť ako nedokončené';
+    }else{
+      toggleDoneBtn.className = 'btn btn-success';
+      toggleDoneBtn.textContent = 'Označiť ako hotové';
+    }
+  }
+
+  function selectStep(i){
+    setPanel('S'); renderStepsSidebar(); updateToggleButton(); renderStepBody(i);
+
+    toggleDoneBtn.onclick = ()=>{
+      const wasDone = !!state.done[i];
+      state.done[i] = !state.done[i];
+      store.save(state);
+      renderStepsSidebar(); updateToggleButton();
+
+      if(!wasDone && state.done[i]){ // just completed
+        if(i < DATA.steps.length - 1){
+          state.step = i + 1; store.save(state); selectStep(state.step);
+        }else{
+          if (state.done.every(Boolean)){
+            const el = document.getElementById('congratsModal');
+            new bootstrap.Modal(el).show();
+          }
+        }
+      }
+    };
+    prevStepBtn.onclick = ()=>{ if(i>0){ state.step=i-1; store.save(state); selectStep(state.step);} };
+    nextStepBtn.onclick = ()=>{ if(i<DATA.steps.length-1){ state.step=i+1; store.save(state); selectStep(state.step);} };
+  }
+
+  // initial render
+  renderStepsSidebar();
+  setPanel('A');
+
+  /* ---------- preview publish handlers ---------- */
+  const previewBar = document.getElementById('previewBar');
+  if(isPreview && previewBar){
+    document.getElementById('btnDoPublish').onclick = ()=>{
+      const payload = localStorage.getItem('project_preview_v1');
+      if (payload) localStorage.setItem('project_published_v1', payload);
+      // clear preview flag and reload as published
+      const u = new URL(location.href); u.searchParams.delete('preview');
+      window.location.replace(u.toString());
+    };
   }
 })();
 </script>

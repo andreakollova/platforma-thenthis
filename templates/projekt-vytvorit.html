@@ -1,0 +1,515 @@
+{# templates/projekt-vytvorit.html — Builder s inline markerom + PUBLIKUJ (FINAL) #}
+{% extends "base-dashboard.html" %}
+{% block title %}Vytvoriť projekt{% endblock %}
+
+{% block content %}
+<style>
+  .builder * { box-sizing: border-box; }
+  .builder .card { border-radius: 1rem; overflow: hidden; }
+  .builder .card-header, .builder .card-body { padding: .8rem 1rem; }
+  .builder .pill { border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:.25rem .55rem; font-size:.8rem; color:#6b7280; }
+  .builder .muted { color:#6b7280; }
+  .builder .small-muted { color:#9ca3af; font-size:.8rem; }
+
+  /* sidebar list */
+  .builder .steps { list-style: none; padding-left: 0; margin: 0; }
+  .builder .steps li {
+    display:flex; align-items:center; gap:.5rem; padding:.55rem .6rem;
+    border-radius:.75rem; cursor:pointer; border:1px solid transparent;
+  }
+  .builder .steps li:hover { background:#f8fafc; }
+  .builder .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
+  .builder .steps .idx {
+    width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem;
+    border:1px solid #e5e7eb; background:#fff; font-weight:700; font-size:.8rem; color:#111827;
+  }
+  .builder .steps .title { flex: 1; min-width: 0; }
+  .builder .steps .title small { color:#6b7280; display:block; }
+  .builder .steps .controls button {
+    border:1px solid #e5e7eb; background:#fff; border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem;
+  }
+
+  /* code styling (editor + preview) */
+  .builder .code-shell { position:relative; }
+  .builder pre.code-block{
+    margin:0; background:#0f172a; color:#dbeafe; border-radius:.6rem; font-size:.82rem;
+    padding:1.45rem .55rem .40rem .65rem; /* top pad so 1st line never hides under button */
+    overflow:auto;
+  }
+  .builder pre.code-block code{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    white-space: pre; display:block; line-height:1.04; /* super tight */
+  }
+  .builder .code-line{
+    display:block; width:100%; padding-left:.52rem; border-left:3px solid transparent; cursor:pointer;
+    min-height: 1.04em;
+  }
+  .builder .code-line.added{ border-left-color:#22c55e; }
+
+  .builder .copy-btn{
+    position:absolute; top:.35rem; right:.35rem; z-index:2;
+    border:1px solid #1f2937; background:#111827; color:#dbeafe;
+    border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem;
+  }
+
+  .builder .file-badge{ background:#fff; border:1px solid #e5e7eb; border-radius:999px; padding:.15rem .5rem; font-size:.75rem; }
+
+  .builder .progress-thin{ height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #e5e7eb; }
+  .builder .progress-thin>i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); }
+
+  .builder .lang-badges .badge{
+    background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem;
+    display:inline-flex; align-items:center; gap:.35rem;
+  }
+  .builder .lang-badges .badge img{ width:16px; height:16px; }
+
+  /* mini rich text */
+  .hl-kw{ color:#ec4899; font-weight:800; }
+  .builder code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
+</style>
+
+<main class="builder container py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <h1 class="h4 mb-0">Vytvoriť projekt</h1>
+      <span class="pill">nový</span>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-success btn-sm" id="btnPublish"><i class="fa-regular fa-paper-plane me-1"></i>Publikovať</button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- SIDEBAR -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">Menu</div>
+          <div class="small text-muted"><span id="stepCount">0</span> krokov</div>
+        </div>
+        <div class="card-body">
+          <ul id="stepsList" class="steps" role="tablist" aria-label="Kroky"></ul>
+          <div class="d-grid mt-2">
+            <button class="btn btn-outline-primary btn-sm" id="btnAddStep">
+              <i class="fa-solid fa-plus me-1"></i>Pridať krok
+            </button>
+          </div>
+          <hr>
+          <div class="progress-thin" aria-label="Priebeh">
+            <i id="progressBar"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: META / STEP -->
+    <div class="col-12 col-lg-8">
+      <!-- META -->
+      <div id="metaView" class="card shadow-sm mb-3">
+        <div class="card-header"><div class="fw-semibold">Projekt — základné informácie</div></div>
+        <div class="card-body">
+          <form id="metaForm" onsubmit="return false;">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Názov projektu</label>
+                <input type="text" class="form-control" id="metaTitle" placeholder="Napr. Blackjack">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Úroveň</label>
+                <select id="metaLevel" class="form-select">
+                  <option>Začiatočník</option><option>Stredne pokročilý</option><option>Pokročilý</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Kategória</label>
+                <select id="metaCategory" class="form-select">
+                  <option>Hra</option><option>Appka</option><option>E-shop</option><option>Mini nástroj</option><option>Iné</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Čas (odhad)</label>
+                <input type="text" class="form-control" id="metaTime" placeholder="napr. ~45–90 min">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Náhľad URL</label>
+                <input type="url" class="form-control" id="metaPreview" placeholder="https://...">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label d-block">Použité jazyky (globálne)</label>
+                <div class="lang-badges d-flex flex-wrap gap-2">
+                  <label class="badge"><img src="{{ url_for('static', filename='icons/python.svg') }}" alt="">Python
+                    <input class="form-check-input ms-2" type="checkbox" value="Python" id="langPython">
+                  </label>
+                  <label class="badge"><img src="{{ url_for('static', filename='icons/js.svg') }}" alt="">JavaScript
+                    <input class="form-check-input ms-2" type="checkbox" value="JavaScript" id="langJS">
+                  </label>
+                  <label class="badge"><img src="{{ url_for('static', filename='icons/html.svg') }}" alt="">HTML
+                    <input class="form-check-input ms-2" type="checkbox" value="HTML" id="langHTML">
+                  </label>
+                  <label class="badge"><img src="{{ url_for('static', filename='icons/css.svg') }}" alt="">CSS
+                    <input class="form-check-input ms-2" type="checkbox" value="CSS" id="langCSS">
+                  </label>
+                  <label class="badge"><img src="{{ url_for('static', filename='icons/mysql.svg') }}" alt="">SQL
+                    <input class="form-check-input ms-2" type="checkbox" value="SQL" id="langSQL">
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Zadanie</label>
+                <textarea id="metaAssignment" class="form-control" rows="3" placeholder="Stručný popis čo ideme stavať..."></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Tipy pred začiatkom</label>
+                <textarea id="metaTips" class="form-control" rows="3" placeholder="Krátke tipy, odporúčania..."></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- STEP -->
+      <div id="stepView" class="card shadow-sm" hidden>
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <div class="fw-semibold" id="stepHeaderTitle">Krok — nový</div>
+            <div class="small text-muted" id="stepHeaderFile">Súbor: (zatím nevyplnené)</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" id="btnStepUp" title="Posunúť vyššie">↑</button>
+            <button class="btn btn-outline-secondary btn-sm" id="btnStepDown" title="Posunúť nižšie">↓</button>
+            <button class="btn btn-outline-danger btn-sm" id="btnStepDelete" title="Vymazať krok"><i class="fa-regular fa-trash-can"></i></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <form id="stepForm" onsubmit="return false;">
+            <div class="mb-2">
+              <label class="form-label"><b>Názov kroku</b></label>
+              <input type="text" class="form-control" id="stepTitle" placeholder="Napr. Základ: importy + funkcie">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label"><b>Popis (čo ideš spraviť)</b></label>
+              <textarea id="stepExplain" class="form-control" rows="3" placeholder="Veľmi stručne a zrozumiteľne..."></textarea>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label d-flex align-items-center justify-content-between">
+                  <span><b>Body</b></span>
+                  <button class="btn btn-sm btn-outline-secondary" id="btnAddBullet" type="button">+ pridať</button>
+                </label>
+                <div id="bulletsBox" class="d-grid gap-2"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label d-flex align-items-center justify-content-between">
+                  <span><b>Checklist</b></span>
+                  <button class="btn btn-sm btn-outline-secondary" id="btnAddCheck" type="button">+ pridať</button>
+                </label>
+                <div id="checksBox" class="d-grid gap-2"></div>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label"<b>Hinty</b></label>
+              <textarea id="stepHint" class="form-control" rows="2" placeholder="Krátky tip k tomuto kroku..."></textarea>
+            </div>
+
+            <hr>
+
+            <div class="row g-2">
+              <div class="col-md-12">
+                <label class="form-label"><b>Súbor (názov s príponou)</b></label>
+                <input type="text" class="form-control" id="stepFile" placeholder="napr. app.py, main.js, index.html">
+              </div>
+            </div>
+
+            <!-- CODE EDITOR + INLINE MARKER -->
+            <div class="mt-2">
+              <label class="form-label"><b>Kód</b></label>
+              <textarea id="stepCode" class="form-control font-monospace" rows="10"
+                placeholder="# sem vlož KÓD kroku – HTML sa zobrazí iba ako text (nie ako stránka)"></textarea>
+              <input type="hidden" id="stepAdded" value="">
+              <div class="small-muted mt-1">Kliknutím na riadok v náhľade nižšie ho označíš ako <span style="border-left:3px solid #22c55e;padding-left:4px;">nový</span>.</div>
+
+              <div class="code-shell mt-2">
+                <pre class="code-block">
+                  <button class="copy-btn" id="copyInline" type="button">Kopírovať kód</button>
+                  <code id="codePreview"></code>
+                </pre>
+                <div class="d-flex justify-content-between mt-1">
+                  <div class="small text-muted">Súbor: <code id="previewFileLabel">—</code></div>
+                  <button class="btn btn-sm btn-outline-secondary" id="btnClearMarks" type="button">Vymazať označenia</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div class="text-end mt-3">
+            <button class="btn btn-primary" id="btnApplyStep">Uložiť krok</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  /* ===== helpers ===== */
+  const $ = (s)=>document.querySelector(s);
+  const $all = (s)=>Array.from(document.querySelectorAll(s));
+  const esc = (s)=> (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function renderRich(txt){
+    let s = esc(txt||'');
+    s = s.replace(/`([^`]+)`/g, (_,m)=>`<code class="inline">${m}</code>`);
+    s = s.replace(/\*\*([^*]+)\*\*/g, (_,m)=>`<span class="hl-kw">${m}</span>`);
+    s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+    return s.replace(/\n/g,'<br>');
+  }
+  const parseAddedCSV = (csv)=> (csv||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>+x).filter(n=>!isNaN(n));
+  function codeToClickableHtml(code, addedSet){
+    const lines = (code||'').split('\n');
+    return lines.map((ln,i)=>{
+      const cls = addedSet.has(i) ? 'code-line added' : 'code-line';
+      return `<span class="${cls}" data-line="${i}">${esc(ln)}</span>`;
+    }).join('\n');
+  }
+
+  /* ===== state ===== */
+  const STORE_KEY = 'project_builder_v8';
+  let meta = {
+    title:'', level:'Začiatočník', category:'Hra', time:'', preview:'',
+    langs:{ Python:false, JavaScript:false, HTML:false, CSS:false, SQL:false },
+    assignment:'', tips:''
+  };
+  let steps = [];    // [{title,explain,bullets[],checks[],hint,file,code,added[]}]
+  let current = -1;  // -1=meta
+
+  /* ===== DOM refs ===== */
+  const stepsList = $('#stepsList'); const stepCount=$('#stepCount'); const progressBar=$('#progressBar');
+  const metaView=$('#metaView'); const stepView=$('#stepView');
+
+  const metaTitle=$('#metaTitle'); const metaLevel=$('#metaLevel'); const metaCategory=$('#metaCategory');
+  const metaTime=$('#metaTime'); const metaPreview=$('#metaPreview'); const metaAssignment=$('#metaAssignment'); const metaTips=$('#metaTips');
+  const langPython=$('#langPython'); const langJS=$('#langJS'); const langHTML=$('#langHTML'); const langCSS=$('#langCSS'); const langSQL=$('#langSQL');
+
+  const stepHeaderTitle=$('#stepHeaderTitle'); const stepHeaderFile=$('#stepHeaderFile');
+  const stepTitle=$('#stepTitle'); const stepExplain=$('#stepExplain'); const bulletsBox=$('#bulletsBox'); const checksBox=$('#checksBox');
+  const stepHint=$('#stepHint'); const stepFile=$('#stepFile'); const stepCode=$('#stepCode'); const stepAdded=$('#stepAdded');
+
+  const codePreview=$('#codePreview'); const previewFileLabel=$('#previewFileLabel');
+  const btnClearMarks=$('#btnClearMarks'); const btnCopyInline=$('#copyInline');
+
+  const btnAddStep=$('#btnAddStep'); const btnStepUp=$('#btnStepUp'); const btnStepDown=$('#btnStepDown'); const btnStepDelete=$('#btnStepDelete');
+  const btnAddBullet=$('#btnAddBullet'); const btnAddCheck=$('#btnAddCheck'); const btnApplyStep=$('#btnApplyStep');
+  const btnPublish=$('#btnPublish');
+
+  /* ===== storage ===== */
+  const saveLocal = ()=> localStorage.setItem(STORE_KEY, JSON.stringify({meta,steps,current}));
+  function loadLocal(){
+    try{
+      const raw=localStorage.getItem(STORE_KEY); if(!raw) return;
+      const p=JSON.parse(raw);
+      meta=p.meta||meta; steps=p.steps||[]; current=(typeof p.current==='number')?p.current:-1;
+    }catch(e){}
+  }
+
+  /* ===== meta ===== */
+  function renderMeta(){
+    metaTitle.value=meta.title; metaLevel.value=meta.level; metaCategory.value=meta.category;
+    metaTime.value=meta.time; metaPreview.value=meta.preview; metaAssignment.value=meta.assignment; metaTips.value=meta.tips;
+    langPython.checked=!!meta.langs.Python; langJS.checked=!!meta.langs.JavaScript; langHTML.checked=!!meta.langs.HTML; langCSS.checked=!!meta.langs.CSS; langSQL.checked=!!meta.langs.SQL;
+  }
+  function updateMeta(){
+    meta.title=metaTitle.value.trim(); meta.level=metaLevel.value; meta.category=metaCategory.value;
+    meta.time=metaTime.value.trim(); meta.preview=metaPreview.value.trim(); meta.assignment=metaAssignment.value; meta.tips=metaTips.value;
+    meta.langs={ Python:langPython.checked, JavaScript:langJS.checked, HTML:langHTML.checked, CSS:langCSS.checked, SQL:langSQL.checked };
+    saveLocal();
+  }
+  ;['input','change'].forEach(evt=>{
+    [metaTitle,metaLevel,metaCategory,metaTime,metaPreview,metaAssignment,metaTips,langPython,langJS,langHTML,langCSS,langSQL].forEach(el=>{
+      el.addEventListener(evt, updateMeta);
+    });
+  });
+
+  /* ===== sidebar ===== */
+  function renderStepsList(){
+    stepsList.innerHTML='';
+    // meta link
+    const metaLi=document.createElement('li');
+    metaLi.className='border meta'+(current===-1?' active':'');
+    metaLi.innerHTML=`<span class="idx">🏷️</span><div class="title"><div class="fw-semibold">Projekt — základné informácie</div><small>Názov, úroveň, jazyky…</small></div>`;
+    metaLi.onclick=()=> selectMeta();
+    stepsList.appendChild(metaLi);
+
+    // steps
+    steps.forEach((s,i)=>{
+      const li=document.createElement('li');
+      li.className='border'+(current===i?' active':'');
+      li.innerHTML=`
+        <span class="idx">${i+1}</span>
+        <div class="title">
+          <div class="fw-semibold text-truncate">${esc(s.title||'Bez názvu')}</div>
+          <small class="text-truncate">Súbor: ${esc(s.file||'—')}</small>
+        </div>
+        <div class="controls d-flex gap-1">
+          <button type="button" data-act="up" ${i===0?'disabled':''}>↑</button>
+          <button type="button" data-act="down" ${i===steps.length-1?'disabled':''}>↓</button>
+        </div>`;
+      li.onclick=(ev)=>{ if(ev.target.dataset.act) return; selectStep(i); };
+      li.querySelector('[data-act="up"]').onclick=(e)=>{ e.stopPropagation(); moveStep(i,-1); };
+      li.querySelector('[data-act="down"]').onclick=(e)=>{ e.stopPropagation(); moveStep(i,+1); };
+      stepsList.appendChild(li);
+    });
+
+    stepCount.textContent=String(steps.length);
+    const pct = steps.length ? (steps.filter(s=> (s.title && s.code)).length/steps.length)*100 : 0;
+    progressBar.style.width=pct+'%';
+  }
+
+  /* ===== select views ===== */
+  function selectMeta(){ current=-1; saveLocal(); metaView.hidden=false; stepView.hidden=true; renderStepsList(); }
+  function selectStep(i){ current=i; saveLocal(); metaView.hidden=true; stepView.hidden=false; renderStepEditor(); renderStepsList(); }
+
+  /* ===== step editor ===== */
+  function addBulletRow(text=''){
+    const el=document.createElement('div'); el.className='input-group';
+    el.innerHTML=`<span class="input-group-text">•</span><input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}"><button class="btn btn-outline-secondary" type="button">×</button>`;
+    el.querySelector('button').onclick=()=> el.remove();
+    bulletsBox.appendChild(el);
+  }
+  function addCheckRow(text=''){
+    const el=document.createElement('div'); el.className='input-group';
+    el.innerHTML=`<span class="input-group-text"><i class="fa-regular fa-square"></i></span><input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}"><button class="btn btn-outline-secondary" type="button">×</button>`;
+    el.querySelector('button').onclick=()=> el.remove();
+    checksBox.appendChild(el);
+  }
+
+  function renderCodePreview(){
+    const parseAddedCSV = (csv)=> (csv||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>+x).filter(n=>!isNaN(n));
+    const lines = (stepCode.value||'').split('\n');
+    const kept = parseAddedCSV(stepAdded.value).filter(n=> n>=0 && n<lines.length);
+    stepAdded.value = kept.join(',');
+    const addSet = new Set(kept);
+    const html = lines.map((ln,i)=>`<span class="code-line ${addSet.has(i)?'added':''}" data-line="${i}">${esc(ln)}</span>`).join('\n');
+    codePreview.innerHTML = html;
+    previewFileLabel.textContent = stepFile.value || '—';
+
+    // click-to-toggle
+    if (codePreview._handler) codePreview.removeEventListener('click', codePreview._handler);
+    codePreview._handler = function(e){
+      const span = e.target.closest('.code-line'); if(!span) return;
+      span.classList.toggle('added');
+      const idxs = Array.from(codePreview.querySelectorAll('.code-line')).map((n,idx)=> n.classList.contains('added')?idx:null).filter(v=>v!==null);
+      stepAdded.value = idxs.join(',');
+      if (current>=0 && steps[current]) { steps[current].added = idxs; saveLocal(); }
+    };
+    codePreview.addEventListener('click', codePreview._handler);
+  }
+
+  function renderStepEditor(){
+    const s = steps[current] || {};
+    stepHeaderTitle.textContent = s.title ? `Krok — ${s.title}` : 'Krok — nový';
+    stepHeaderFile.innerHTML = `Súbor: <code>${esc(s.file||'—')}</code>`;
+    stepTitle.value = s.title || '';
+    stepExplain.value = s.explain || '';
+    stepHint.value = s.hint || '';
+    stepFile.value = s.file || '';
+    stepCode.value = s.code || '';
+    bulletsBox.innerHTML=''; (s.bullets||[]).forEach(t=>addBulletRow(t));
+    checksBox.innerHTML=''; (s.checks||[]).forEach(t=>addCheckRow(t));
+
+    const linesLen = (stepCode.value||'').split('\n').length;
+    const safeAdded = (s.added||[]).filter(n=> typeof n==='number' && n>=0 && n<linesLen);
+    stepAdded.value = safeAdded.join(',');
+    renderCodePreview();
+  }
+
+  function applyStepForm(){
+    const bullets = Array.from(bulletsBox.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
+    const checks = Array.from(checksBox.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
+    const added = parseAddedCSV(stepAdded.value);
+
+    const obj = {
+      title: stepTitle.value.trim(),
+      explain: stepExplain.value,
+      bullets, checks,
+      hint: stepHint.value,
+      file: stepFile.value.trim(),
+      code: stepCode.value,
+      added
+    };
+    if(!steps.length || current===-1){ steps.push(obj); current = steps.length-1; }
+    else { steps[current] = obj; }
+
+    saveLocal(); renderStepsList(); renderStepEditor();
+    toast('Krok uložený ✔');
+  }
+  function moveStep(i,dir){
+    const j=i+dir; if(j<0||j>=steps.length) return;
+    const t=steps[i]; steps[i]=steps[j]; steps[j]=t;
+    if(current===i) current=j; else if(current===j) current=i;
+    saveLocal(); renderStepsList(); if(current>=0) renderStepEditor();
+  }
+  function deleteStep(){
+    if(current<0||!steps.length) return;
+    steps.splice(current,1);
+    current = Math.min(current, steps.length-1);
+    saveLocal(); if(current===-1) selectMeta(); else { renderStepsList(); renderStepEditor(); }
+  }
+
+  /* ===== publish flow (local preview handoff) ===== */
+  function publishToPreview(){
+    // capture current editor into steps before redirect
+    if(current>=0) applyStepForm();
+    const payload = { meta, steps, savedAt: Date.now() };
+    localStorage.setItem('project_preview_v1', JSON.stringify(payload));
+    window.location.href = "{{ url_for('projekt_html') }}?preview=1";
+  }
+
+  /* ===== preview modal removed — we route to project page ===== */
+
+  /* ===== small helpers ===== */
+  function toast(msg){
+    const t=document.createElement('div'); t.className='position-fixed bottom-0 end-0 p-3';
+    t.innerHTML=`<div class="alert alert-success shadow-sm mb-0">${msg}</div>`;
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1300);
+  }
+  function addBullet(){ addBulletRow(); }
+  function addCheck(){ addCheckRow(); }
+  function newStep(){
+    steps.push({title:'',explain:'',bullets:[],checks:[],hint:'',file:'',code:'',added:[]});
+    current=steps.length-1; saveLocal(); renderStepsList(); renderStepEditor(); selectStep(current);
+  }
+
+  /* ===== binds ===== */
+  btnAddStep.onclick=newStep;
+  $('#btnStepUp').onclick=()=>moveStep(current,-1);
+  $('#btnStepDown').onclick=()=>moveStep(current,+1);
+  $('#btnStepDelete').onclick=()=>{ if(confirm('Vymazať tento krok?')) deleteStep(); };
+  btnAddBullet.onclick=addBullet;
+  btnAddCheck.onclick=addCheck;
+  btnApplyStep.onclick=applyStepForm;
+  btnPublish.onclick=publishToPreview;
+
+  // live code preview & markers
+  stepCode.addEventListener('input', renderCodePreview);
+  stepFile.addEventListener('input', ()=>{ $('#previewFileLabel').textContent = stepFile.value || '—'; });
+  btnClearMarks.onclick = ()=>{ stepAdded.value=''; renderCodePreview(); if(current>=0&&steps[current]){ steps[current].added=[]; saveLocal(); } };
+  btnCopyInline.onclick = ()=>{
+    navigator.clipboard.writeText(stepCode.value||'');
+    const old=btnCopyInline.textContent; btnCopyInline.textContent='Skopírované ✓'; setTimeout(()=>btnCopyInline.textContent=old, 900);
+  };
+
+  /* ===== init ===== */
+  (function init(){
+    loadLocal();
+    renderMeta();
+    if(!steps.length){ renderStepsList(); selectMeta(); }
+    else { renderStepsList(); (current===-1?selectMeta():selectStep(current)); }
+  })();
+})();
+</script>
+{% endblock %}
