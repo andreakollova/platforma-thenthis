@@ -1,5 +1,4 @@
-# app.py
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.pool import NullPool
 from datetime import datetime
@@ -710,26 +709,35 @@ def projekt_publish():
         # pošli zrozumiteľnú chybu klientovi
         return jsonify({"ok": False, "error": str(e)}), 400
 
-# Zoznam mojich projektov
-@app.route('/moje-projekty')
+# --- PREVIEW: uloží payload do session a pošle na náhľad ---------------------
+@app.route('/projekt/preview', methods=['POST'], endpoint='projekt_preview')
 @login_required
-def moje_projekty():
-    projects = Project.query.filter_by(author_id=current_user.id).order_by(Project.id.desc()).all()
-    return render_template('moje-projekty.html', projects=projects)
+def projekt_preview():
+    data = request.get_json(silent=True) or {}
+    session['project_preview'] = data
+    return jsonify({"ok": True, "redirect": url_for('projekt_nahlad')})
 
-# Detail projektu (dynamický)
+# --- NÁHĽAD: rovnaký layout ako finál, iba s hornou modrou lištou -----------
+@app.route('/projekt/nahlad', endpoint='projekt_nahlad')
+@login_required
+def projekt_nahlad():
+    payload = session.get('project_preview')
+    if not payload:
+        flash("Chýba náhľad – skús to znova z buildera.")
+        return redirect(url_for('projekt_vytvorit'))
+    return render_template('projekt-html.html', is_preview=True, payload=payload)
+
+# --- DETAIL: poskladaj rovnaký payload z DB a renderuj tú istú šablónu ------
 @app.route('/projekt/<int:project_id>')
 @login_required
 def projekt_detail(project_id):
     p = Project.query.get_or_404(project_id)
-    # Ak chceš zatiaľ len súkromné projekty autora:
     if p.author_id != current_user.id:
         flash("Projekt nie je dostupný.")
         return redirect(url_for('moje_projekty'))
 
     steps = ProjectStep.query.filter_by(project_id=p.id).order_by(ProjectStep.order.asc()).all()
 
-    # JSON payload pre šablónu (kód + zvýraznené riadky)
     steps_payload = []
     for s in steps:
         added = []
@@ -742,15 +750,40 @@ def projekt_detail(project_id):
             "title": s.title or "",
             "explain": s.explain or "",
             "bullets": (s.bullets or "").splitlines() if s.bullets else [],
-            "checks": (s.checks or "").splitlines() if s.checks else [],
+            "checks": (s.checks  or "").splitlines() if s.checks  else [],
             "hint": s.hint or "",
             "file": s.file_name or "",
             "code": s.code or "",
             "added": added
         })
 
-    # Pozn.: v šablóne 'projekt-detail.html' očakávaj premenne `project` a `steps_json`
-    return render_template('projekt-detail.html', project=p, steps_json=steps_payload)
+    langs_flags = {L: True for L in (p.langs_list or [])}
+
+    payload = {
+        "meta": {
+            "title": p.title,
+            "level": p.level,
+            "category": p.category,
+            "time": p.time_estimate or "",
+            "preview": p.preview_url or "",
+            "langs": langs_flags,
+            "assignment": p.assignment or "",
+            "tips": p.tips or "",
+            "icon_path": p.icon_path or None,
+            "cover_path": p.cover_path or None,
+        },
+        "steps": steps_payload
+    }
+    return render_template('projekt-html.html', is_preview=False, payload=payload)
+
+
+# Zoznam mojich projektov
+@app.route('/moje-projekty')
+@login_required
+def moje_projekty():
+    projects = Project.query.filter_by(author_id=current_user.id).order_by(Project.id.desc()).all()
+    return render_template('moje-projekty.html', projects=projects)
+
 
 @app.route('/projekt/<int:project_id>/delete', methods=['POST'])
 @login_required
