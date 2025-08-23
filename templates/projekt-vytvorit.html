@@ -476,7 +476,7 @@
     }catch(err){ alert('Upload coveru zlyhal: '+err.message); }
   });
 
-  // binds (POZOR: žiadne dvojité const!)
+  // binds
   btnAddStep.onclick = newStep;
   btnApplyStep.onclick = applyStepForm;
   btnClearMarks.onclick = ()=>{ stepAdded.value=''; renderCodePreview(); if(current>=0&&steps[current]){ steps[current].added=[]; saveLocal(); } };
@@ -489,38 +489,16 @@
   $('#btnStepDown').onclick=()=>{ if(current<steps.length-1){ const t=steps[current+1]; steps[current+1]=steps[current]; steps[current]=t; current++; saveLocal(); renderStepsList(); renderStepEditor(); } };
   $('#btnStepDelete').onclick=()=>{ if(current>=0 && confirm('Vymazať tento krok?')){ steps.splice(current,1); current=Math.min(current,steps.length-1); saveLocal(); if(current===-1){ selectMeta(); } else { renderStepsList(); renderStepEditor(); } } };
 
-  // publish -> NAJPRV NÁHĽAD (bez zápisu do DB)
-  btnPublish.addEventListener('click', async () => {
-    try {
-      if (typeof updateMeta === 'function') updateMeta();
-      if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
+  // ================== PREVIEW FLOW (bez DB) ==================
+  // uložíme payload do localStorage a presmerujeme na projekt-html s ?preview=1
+  btnPublish.addEventListener('click', () => {
+    if (typeof updateMeta === 'function') updateMeta();
+    if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
 
-      const payload = { meta, steps };
-      const res = await fetch("{{ url_for('projekt_preview') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify(payload)
-      });
-
-      const raw = await res.text();
-      let data = {}; try { data = raw ? JSON.parse(raw) : {}; } catch (_) {}
-
-      if (!res.ok || data.ok === false) {
-        const msg = (data && data.error) ? data.error : (raw || `HTTP ${res.status}`);
-        alert("Náhľad sa nepodarilo pripraviť: " + msg);
-        console.error("Preview error:", res.status, msg);
-        return;
-      }
-
-      // Presmeruj na stránku náhľadu
-      window.location.href = data.redirect || "{{ url_for('projekt_nahlad') }}";
-    } catch (err) {
-      console.error(err);
-      alert("Náhľad zlyhal (sieťová chyba).");
-    }
+    const payload = { meta, steps };
+    localStorage.setItem('project_preview_v1', JSON.stringify(payload));
+    window.location.href = "{{ url_for('projekt_html') }}?preview=1";
   });
-
 
   // init
   (function init(){ loadLocal(); renderMeta(); if(!steps.length){ renderStepsList(); selectMeta(); } else { renderStepsList(); (current===-1?selectMeta():selectStep(current)); } })();

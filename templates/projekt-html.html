@@ -81,7 +81,7 @@
         <div class="d-flex align-items-start gap-3">
           <!-- ikonka projektu -->
           <img id="heroIcon"
-            src="{{ url_for('static', filename='project-icons/blackjackicon.png') }}"
+            src="{{ url_for('static', filename='project-icons/default.png') }}"
             alt="Ikona projektu"
             width="44" height="44"
             style="border-radius:12px; border:1px solid #e5e7eb; object-fit:cover;"
@@ -101,11 +101,13 @@
           </div>
         </div>
       </div>
-      <!-- Fotka pri názve projektu -->
+      <!-- cover vpravo -->
       <div class="col-12 col-lg-4">
-        <div class="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center">
-          <span class="text-muted small">Náhľadový obrázok</span>
-        </div>
+        <img id="heroCover"
+             src="{{ url_for('static', filename='projects/placeholder-cover.jpg') }}"
+             class="img-fluid rounded-end"
+             alt="cover"
+             style="object-fit: cover; width: 100%; height: 100%; max-height: 220px;">
       </div>
     </div>
   </div>
@@ -206,6 +208,8 @@
   /* ---------- helpers ---------- */
   const $ = (s)=>document.querySelector(s);
   const esc = (s)=> (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const STATIC_BASE = "{{ url_for('static', filename='') }}";
+
   function renderRich(txt){
     let s = esc(txt||'');
     s = s.replace(/`([^`]+)`/g, (_,m)=>`<code class="inline">${m}</code>`);
@@ -238,8 +242,7 @@
       meta:{
         title:'Blackjack', level:'Začiatočník', category:'Hra', time:'~45–90 min',
         langs:{Python:true, JavaScript:true, HTML:true, CSS:true, SQL:false},
-        preview:'https://blackjack.onrender.com', assignment:'Postupne vytvoríš konzolovú hru Blackjack v Pythone.',
-        tips:'Rob po malých častiach a často spúšťaj program.'
+        preview:'', assignment:'—', tips:''
       },
       steps:[]
     };
@@ -255,6 +258,11 @@
       $('#heroPreview').hidden=false;
       const a=$('#heroPreviewLink'); a.href=DATA.meta.preview; a.textContent=DATA.meta.preview;
     }
+    // ikonka
+    if (DATA.meta.icon_path) $('#heroIcon').src = STATIC_BASE + DATA.meta.icon_path;
+    // cover
+    if (DATA.meta.cover_path) $('#heroCover').src = STATIC_BASE + DATA.meta.cover_path;
+
     const badgeMap = { Python:'python.svg', JavaScript:'js.svg', HTML:'html.svg', CSS:'css.svg', SQL:'mysql.svg' };
     const box = $('#heroLangs'); box.innerHTML='';
     Object.entries(DATA.meta.langs||{}).forEach(([k,v])=>{
@@ -385,13 +393,13 @@
       store.save(state);
       renderStepsSidebar(); updateToggleButton();
 
-      if(!wasDone && state.done[i]){ // just completed
+      if(!wasDone && state.done[i]){ // práve dokončené
         if(i < DATA.steps.length - 1){
           state.step = i + 1; store.save(state); selectStep(state.step);
         }else{
           if (state.done.every(Boolean)){
             const el = document.getElementById('congratsModal');
-            new bootstrap.Modal(el).show();
+            if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal(el).show();
           }
         }
       }
@@ -404,15 +412,43 @@
   renderStepsSidebar();
   setPanel('A');
 
-  /* ---------- preview publish handlers ---------- */
+  /* ---------- PREVIEW -> PUBLISH (uloženie do DB) ---------- */
   const previewBar = document.getElementById('previewBar');
-  if(isPreview && previewBar){
-    document.getElementById('btnDoPublish').onclick = ()=>{
-      const payload = localStorage.getItem('project_preview_v1');
-      if (payload) localStorage.setItem('project_published_v1', payload);
-      // clear preview flag and reload as published
-      const u = new URL(location.href); u.searchParams.delete('preview');
-      window.location.replace(u.toString());
+  if (isPreview && previewBar){
+    document.getElementById('btnDoPublish').onclick = async ()=>{
+      try{
+        const btn = document.getElementById('btnDoPublish');
+        btn.disabled = true; btn.textContent = 'Publikujem…';
+
+        const raw = localStorage.getItem('project_preview_v1');
+        const payload = raw ? JSON.parse(raw) : DATA;
+
+        const res = await fetch("{{ url_for('projekt_publish') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        let data = {}; try { data = text ? JSON.parse(text) : {}; } catch(_){}
+
+        if (!res.ok || data.ok === false){
+          const msg = (data && data.error) ? data.error : (text || `HTTP ${res.status}`);
+          alert("Publikovanie zlyhalo: " + msg);
+          btn.disabled = false; btn.textContent = 'Publikovať';
+          return;
+        }
+        // úspech -> vyprázdniť preview a presunúť sa do „Moje projekty“
+        localStorage.removeItem('project_preview_v1');
+        localStorage.setItem('project_published_v1', JSON.stringify(payload));
+        window.location.href = data.redirect || "{{ url_for('moje_projekty') }}";
+      }catch(err){
+        console.error(err);
+        alert("Publikovanie zlyhalo (sieťová chyba).");
+        const btn = document.getElementById('btnDoPublish');
+        btn.disabled = false; btn.textContent = 'Publikovať';
+      }
     };
   }
 })();
