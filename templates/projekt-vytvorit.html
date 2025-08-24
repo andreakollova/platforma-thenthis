@@ -11,6 +11,15 @@
   .builder .muted { color:#6b7280; }
   .builder .small-muted { color:#9ca3af; font-size:.8rem; }
 
+  /* focus bez modrého orámovania */
+  .builder .form-control:focus,
+  .builder .form-select:focus {
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  /* sidebar kroky */
   .builder .steps { list-style: none; padding-left: 0; margin: 0; }
   .builder .steps li {
     display:flex; align-items:center; gap:.5rem; padding:.55rem .6rem;
@@ -21,16 +30,23 @@
   .builder .steps .idx {
     width:28px; height:28px; display:grid; place-items:center;
     border-radius:.6rem; border:1px solid #e5e7eb; background:#fff;
-    font-weight:700; font-size:.8rem; color:#111827;
+    font-weight:700; font-size:.8rem; color:#111827; flex:0 0 28px;
   }
-  .builder .steps .controls button { border:1px solid #e5e7eb; background:#fff; border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem; }
+  /* náhľad ikonky projektu v menu – vždy štvorec */
+  .builder .steps .idx-img{
+    width:28px; height:28px; border-radius:.6rem;
+    border:1px solid #e5e7eb; object-fit:cover; background:#fff; flex:0 0 28px;
+  }
 
   .builder .code-shell { position:relative; }
   .builder pre.code-block{
     margin:0; background:#0f172a; color:#dbeafe; border-radius:.6rem; font-size:.82rem;
     padding:1.45rem .55rem .40rem .65rem; overflow:auto;
   }
-  .builder pre.code-block code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; white-space: pre; display:block; line-height:1.04; }
+  .builder pre.code-block code{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    white-space: pre; display:block; line-height:1.04;
+  }
   .builder .code-line{ display:block; width:100%; padding-left:.52rem; border-left:3px solid transparent; cursor:pointer; min-height:1.04em; }
   .builder .code-line.added{ border-left-color:#22c55e; }
   .builder .copy-btn{ position:absolute; top:.35rem; right:.35rem; z-index:2; border:1px solid #1f2937; background:#111827; color:#dbeafe; border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem; }
@@ -40,7 +56,7 @@
   .builder .lang-badges .badge{ background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem; display:inline-flex; align-items:center; gap:.35rem; }
   .builder .lang-badges .badge img{ width:16px; height:16px; }
 
-  /* výstupné zvýraznenie (zobrazuje sa na detaile aj v malých náhľadoch tu) */
+  /* ružové zvýraznenie – zobrazí sa na detaile */
   .hl-kw{
     color:#ec4899;
     font-weight:800;
@@ -48,19 +64,32 @@
   }
   .builder code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
 
-  .uploader .thumb { width:72px; height:72px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat; }
-  .uploader .cover { width:100%; height:140px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat; }
+  /* uploader náhľady – presne štvorec + pevná šírka (nech sa nezúži vo flexe) */
+  .uploader .thumb {
+    width:84px; height:84px; aspect-ratio:1/1;
+    border-radius:14px; border:1px solid #e5e7eb;
+    background:#f8fafc center/cover no-repeat;
+    flex:0 0 84px;
+  }
+  .uploader .cover {
+    width:100%; height:140px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat;
+  }
   .uploader small { color:#6b7280; }
 
-  /* malé ružové ikon-tlačidlá na označenie */
+  /* malé, svetlosivé highlighter ikonky – bez rámčeka, jemne vyššie */
   .hl-btn{
-    padding:.2rem .4rem;
-    border:1px solid #f5c2de !important;
-    color:#ec4899 !important;
+    padding:.1rem .25rem;
+    border:none !important;
+    background:transparent !important;
+    color:#c7cfd8 !important;   /* svetlá sivá */
     line-height:1;
+    transform: translateY(-2px);
   }
-  .hl-btn:hover{ background:#fff0f6; }
-  .hl-btn i{ font-size:.9rem; }
+  .hl-btn:hover{ color:#6b7280 !important; background:transparent !important; }
+  .hl-btn i{ font-size:.82rem; }
+
+  /* čierne „+“ pri krokoch/checkliste */
+  #btnAddBullet i, #btnAddCheck i { color:#111827; }
 </style>
 
 <main class="builder container py-3">
@@ -106,32 +135,32 @@
           <form id="metaForm" onsubmit="return false;">
             <div class="row g-3">
               <div class="col-12">
-                <label class="form-label">Názov projektu</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Názov projektu</label>
                 <input type="text" class="form-control" id="metaTitle">
               </div>
               <div class="col-6">
-                <label class="form-label">Úroveň</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Úroveň</label>
                 <select id="metaLevel" class="form-select">
                   <option>Začiatočník</option><option>Stredne pokročilý</option><option>Pokročilý</option>
                 </select>
               </div>
               <div class="col-6">
-                <label class="form-label">Kategória</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Kategória</label>
                 <select id="metaCategory" class="form-select">
                   <option>Hra</option><option>Appka</option><option>E-shop</option><option>Mini nástroj</option><option>Iné</option>
                 </select>
               </div>
               <div class="col-6">
-                <label class="form-label">Čas (odhad)</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Čas (odhad)</label>
                 <input type="text" class="form-control" id="metaTime" placeholder="napr. ~45–90 min">
               </div>
               <div class="col-6">
-                <label class="form-label">Náhľad URL</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Náhľad URL</label>
                 <input type="url" class="form-control" id="metaPreview" placeholder="https://...">
               </div>
 
               <div class="col-12">
-                <label class="form-label d-block">Použité jazyky (globálne)</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted d-block">Použité jazyky (globálne)</label>
                 <div class="lang-badges d-flex flex-wrap gap-2">
                   <label class="badge"><img src="{{ url_for('static', filename='icons/python.svg') }}" alt="">Python
                     <input class="form-check-input ms-2" type="checkbox" value="Python" id="langPython">
@@ -153,16 +182,16 @@
 
               <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
-                  <label class="form-label mb-0">Zadanie</label>
-                  <button type="button" class="btn btn-outline-secondary btn-sm hl-btn" id="hlAssignment" title="Zvýrazniť">
+                  <label class="form-label fw-semibold small text-uppercase text-muted mb-0">Zadanie</label>
+                  <button type="button" class="hl-btn" id="hlAssignment" title="Zvýrazniť">
                     <i class="fa-solid fa-highlighter"></i>
                   </button>
                 </div>
                 <textarea id="metaAssignment" class="form-control" rows="3" placeholder="Stručný popis čo ideme stavať..."></textarea>
-                <div class="small-muted mt-1">Vyber text a klikni na ružovú ikonu. Na stránke sa zobrazí <span class="hl-kw">ružovo (monospace)</span>.</div>
+                <div class="small-muted mt-1">Vyber text a klikni na ikonu. Na detaile sa zobrazí <span class="hl-kw">ružovo (monospace)</span>.</div>
               </div>
               <div class="col-12">
-                <label class="form-label">Tipy pred začiatkom</label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Tipy pred začiatkom</label>
                 <textarea id="metaTips" class="form-control" rows="3" placeholder="Krátke tipy, odporúčania..."></textarea>
               </div>
 
@@ -172,7 +201,7 @@
                   <div class="col-sm-6">
                     <label class="form-label d-flex align-items-center justify-content-between">
                       <span>Ikonka projektu</span>
-                      <small id="metaIconPathLabel"></small>
+                      <small id="metaIconPathLabel" class="text-muted"></small>
                     </label>
                     <div class="d-flex align-items-center gap-3">
                       <div id="metaIconPreview" class="thumb"></div>
@@ -185,7 +214,7 @@
                   <div class="col-sm-6">
                     <label class="form-label d-flex align-items-center justify-content-between">
                       <span>Cover obrázok</span>
-                      <small id="metaCoverPathLabel"></small>
+                      <small id="metaCoverPathLabel" class="text-muted"></small>
                     </label>
                     <div class="cover" id="metaCoverPreview"></div>
                     <div class="mt-2">
@@ -217,14 +246,14 @@
         <div class="card-body">
           <form id="stepForm" onsubmit="return false;">
             <div class="mb-2">
-              <label class="form-label"><b>Názov kroku</b></label>
+              <label class="form-label fw-semibold small text-uppercase text-muted">Názov kroku</label>
               <input type="text" class="form-control" id="stepTitle">
             </div>
 
             <div class="mb-2">
               <div class="d-flex justify-content-between align-items-center">
-                <label class="form-label mb-0"><b>Popis (čo ideš spraviť)</b></label>
-                <button type="button" class="btn btn-outline-secondary btn-sm hl-btn" id="hlExplain" title="Zvýrazniť">
+                <label class="form-label fw-semibold small text-uppercase text-muted mb-0">Popis (čo ideš spraviť)</label>
+                <button type="button" class="hl-btn" id="hlExplain" title="Zvýrazniť">
                   <i class="fa-solid fa-highlighter"></i>
                 </button>
               </div>
@@ -234,8 +263,8 @@
             <div class="row g-2">
               <div class="col-md-6">
                 <label class="form-label d-flex align-items-center justify-content-between">
-                  <span><b>Body</b></span>
-                  <button class="btn btn-sm btn-outline-secondary hl-btn" id="btnAddBullet" type="button" title="Pridať">
+                  <span class="fw-semibold">Kroky</span>
+                  <button class="btn btn-sm btn-outline-secondary" id="btnAddBullet" type="button" title="Pridať">
                     <i class="fa-solid fa-plus"></i>
                   </button>
                 </label>
@@ -243,8 +272,8 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label d-flex align-items-center justify-content-between">
-                  <span><b>Checklist</b></span>
-                  <button class="btn btn-sm btn-outline-secondary hl-btn" id="btnAddCheck" type="button" title="Pridať">
+                  <span class="fw-semibold">Checklist</span>
+                  <button class="btn btn-sm btn-outline-secondary" id="btnAddCheck" type="button" title="Pridať">
                     <i class="fa-solid fa-plus"></i>
                   </button>
                 </label>
@@ -254,8 +283,8 @@
 
             <div class="mb-2">
               <div class="d-flex justify-content-between align-items-center">
-                <label class="form-label mb-0"><b>Hinty</b></label>
-                <button type="button" class="btn btn-outline-secondary btn-sm hl-btn" id="hlHint" title="Zvýrazniť">
+                <label class="form-label fw-semibold small text-uppercase text-muted mb-0">Hinty</label>
+                <button type="button" class="hl-btn" id="hlHint" title="Zvýrazniť">
                   <i class="fa-solid fa-highlighter"></i>
                 </button>
               </div>
@@ -266,14 +295,14 @@
 
             <div class="row g-2">
               <div class="col-md-12">
-                <label class="form-label"><b>Súbor (názov s príponou)</b></label>
+                <label class="form-label fw-semibold small text-uppercase text-muted">Súbor (názov s príponou)</label>
                 <input type="text" class="form-control" id="stepFile" placeholder="napr. app.py, main.js, index.html">
               </div>
             </div>
 
             <!-- CODE EDITOR + INLINE MARKER -->
             <div class="mt-2">
-              <label class="form-label"><b>Kód</b></label>
+              <label class="form-label fw-semibold small text-uppercase text-muted">Kód</label>
               <textarea id="stepCode" class="form-control font-monospace" rows="10"
                 placeholder="# sem vlož KÓD kroku – HTML sa zobrazí iba ako text (nie ako stránka)"></textarea>
               <input type="hidden" id="stepAdded" value="">
@@ -392,10 +421,11 @@
     metaTime.value=meta.time; metaPreview.value=meta.preview; metaAssignment.value=meta.assignment; metaTips.value=meta.tips;
     langPython.checked=!!meta.langs.Python; langJS.checked=!!meta.langs.JavaScript; langHTML.checked=!!meta.langs.HTML; langCSS.checked=!!meta.langs.CSS; langSQL.checked=!!meta.langs.SQL;
 
+    // previews
     metaIconPreview.style.backgroundImage = meta.icon_path ? `url('${STATIC_BASE}${meta.icon_path}')` : 'none';
     metaCoverPreview.style.backgroundImage = meta.cover_path ? `url('${STATIC_BASE}${meta.cover_path}')` : 'none';
-    metaIconPathLabel.textContent = meta.icon_path || '';
-    metaCoverPathLabel.textContent = meta.cover_path || '';
+    metaIconPathLabel.textContent = meta.icon_path ? ('project-icon') : '';
+    metaCoverPathLabel.textContent = meta.cover_path ? ('cover') : '';
   }
   function updateMeta(){
     meta.title=metaTitle.value.trim(); meta.level=metaLevel.value; meta.category=metaCategory.value;
@@ -427,10 +457,14 @@
   // sidebar
   function renderStepsList(){
     stepsList.innerHTML='';
+
     const metaLi=document.createElement('li');
     metaLi.className='border meta'+(current===-1?' active':'');
+    const iconHTML = meta.icon_path
+      ? `<img class="idx-img" src="${STATIC_BASE}${meta.icon_path}" alt="ikonka">`
+      : `<span class="idx" aria-hidden="true"></span>`;
     metaLi.innerHTML=`
-      <span class="idx" aria-hidden="true"></span>
+      ${iconHTML}
       <div class="title">
         <div class="fw-semibold">Projekt — základné informácie</div>
         <small>Názov, úroveň, jazyky…</small>
@@ -464,9 +498,7 @@
     el.innerHTML=`
       <span class="input-group-text">•</span>
       <input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}">
-      <button class="btn btn-outline-secondary hl-btn" type="button" data-role="hl" title="Zvýrazniť">
-        <i class="fa-solid fa-highlighter"></i>
-      </button>
+      <button class="hl-btn" type="button" data-role="hl" title="Zvýrazniť"><i class="fa-solid fa-highlighter"></i></button>
       <button class="btn btn-outline-secondary" type="button" data-role="del">×</button>`;
     const input = el.querySelector('input');
     el.querySelector('[data-role="hl"]').onclick = ()=> toggleHighlight(input);
@@ -478,9 +510,7 @@
     el.innerHTML=`
       <span class="input-group-text"><i class="fa-regular fa-square"></i></span>
       <input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}">
-      <button class="btn btn-outline-secondary hl-btn" type="button" data-role="hl" title="Zvýrazniť">
-        <i class="fa-solid fa-highlighter"></i>
-      </button>
+      <button class="hl-btn" type="button" data-role="hl" title="Zvýrazniť"><i class="fa-solid fa-highlighter"></i></button>
       <button class="btn btn-outline-secondary" type="button" data-role="del">×</button>`;
     const input = el.querySelector('input');
     el.querySelector('[data-role="hl"]').onclick = ()=> toggleHighlight(input);
@@ -575,9 +605,9 @@
       const path = await uploadImage(file, 'icon');
       meta.icon_path = path;
       metaIconPreview.style.backgroundImage = `url('${STATIC_BASE}${path}')`;
-      metaIconPathLabel.textContent = path;
+      metaIconPathLabel.textContent = 'project-ikonka';
       saveLocal();
-      renderStepsList();
+      renderStepsList(); // aby sa ikonka ukázala aj v menu vľavo
     }catch(err){ alert('Upload ikonky zlyhal: '+err.message); }
   });
   metaCover.addEventListener('change', async (e)=>{
@@ -586,7 +616,7 @@
       const path = await uploadImage(file, 'cover');
       meta.cover_path = path;
       metaCoverPreview.style.backgroundImage = `url('${STATIC_BASE}${path}')`;
-      metaCoverPathLabel.textContent = path;
+      metaCoverPathLabel.textContent = 'cover';
       saveLocal();
     }catch(err){ alert('Upload coveru zlyhal: '+err.message); }
   });
@@ -614,6 +644,7 @@
   btnPublish.addEventListener('click', () => {
     if (typeof updateMeta === 'function') updateMeta();
     if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
+
     const payload = { meta, steps };
     localStorage.setItem('project_preview_v1', JSON.stringify(payload));
     window.location.href = "{{ url_for('projekt_html') }}?preview=1";
