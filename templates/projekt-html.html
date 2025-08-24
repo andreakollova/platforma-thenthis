@@ -37,8 +37,21 @@
   .lang-badges .badge { background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem; display:inline-flex; align-items:center; gap:.4rem; }
   .lang-badges .badge img { height:16px; width:auto; }
   .proj .preview-link { font-size:.8rem; }
-  .hl-kw{ color:#ec4899; font-weight:800; }
+  .proj .hl-kw{
+  color:#ec4899;
+  font-weight:800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace !important;
+  }
   .proj code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
+  /* ružové zvýraznenie v monospace BEZ tmavého pozadia */
+  .proj code.inline.hl-kw{
+    background: transparent !important;
+    color: #ec4899 !important;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    padding: 0;
+    border-radius: 0;
+  }
 </style>
 
 <section class="proj">
@@ -186,7 +199,7 @@
   function renderRich(txt){
     let s = esc(txt||'');
     s = s.replace(/`([^`]+)`/g, (_,m)=>`<code class="inline">${m}</code>`);
-    s = s.replace(/\*\*([^*]+)\*\*/g, (_,m)=>`<span class="hl-kw">${m}</span>`);
+    s = s.replace(/\*\*([^*]+)\*\*/g, (_,m)=>`<code class="inline hl-kw">${m}</code>`);
     s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
     return s.replace(/\n/g,'<br>');
   }

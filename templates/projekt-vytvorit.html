@@ -23,11 +23,6 @@
     border-radius:.6rem; border:1px solid #e5e7eb; background:#fff;
     font-weight:700; font-size:.8rem; color:#111827;
   }
-  /* malá miniatúra ikonky v menu pri meta položke */
-  .builder .steps .idx-img{
-    width:28px; height:28px; border-radius:.6rem;
-    border:1px solid #e5e7eb; object-fit:cover; background:#fff;
-  }
   .builder .steps .controls button { border:1px solid #e5e7eb; background:#fff; border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem; }
 
   .builder .code-shell { position:relative; }
@@ -44,12 +39,28 @@
   .builder .progress-thin>i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); }
   .builder .lang-badges .badge{ background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem; display:inline-flex; align-items:center; gap:.35rem; }
   .builder .lang-badges .badge img{ width:16px; height:16px; }
-  .hl-kw{ color:#ec4899; font-weight:800; }
+
+  /* výstupné zvýraznenie (zobrazuje sa na detaile aj v malých náhľadoch tu) */
+  .hl-kw{
+    color:#ec4899;
+    font-weight:800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+  }
   .builder code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
 
   .uploader .thumb { width:72px; height:72px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat; }
   .uploader .cover { width:100%; height:140px; border-radius:14px; border:1px solid #e5e7eb; background:#f8fafc center/cover no-repeat; }
   .uploader small { color:#6b7280; }
+
+  /* malé ružové ikon-tlačidlá na označenie */
+  .hl-btn{
+    padding:.2rem .4rem;
+    border:1px solid #f5c2de !important;
+    color:#ec4899 !important;
+    line-height:1;
+  }
+  .hl-btn:hover{ background:#fff0f6; }
+  .hl-btn i{ font-size:.9rem; }
 </style>
 
 <main class="builder container py-3">
@@ -141,8 +152,14 @@
               </div>
 
               <div class="col-12">
-                <label class="form-label">Zadanie</label>
+                <div class="d-flex justify-content-between align-items-center">
+                  <label class="form-label mb-0">Zadanie</label>
+                  <button type="button" class="btn btn-outline-secondary btn-sm hl-btn" id="hlAssignment" title="Zvýrazniť">
+                    <i class="fa-solid fa-highlighter"></i>
+                  </button>
+                </div>
                 <textarea id="metaAssignment" class="form-control" rows="3" placeholder="Stručný popis čo ideme stavať..."></textarea>
+                <div class="small-muted mt-1">Vyber text a klikni na ružovú ikonu. Na stránke sa zobrazí <span class="hl-kw">ružovo (monospace)</span>.</div>
               </div>
               <div class="col-12">
                 <label class="form-label">Tipy pred začiatkom</label>
@@ -205,7 +222,12 @@
             </div>
 
             <div class="mb-2">
-              <label class="form-label"><b>Popis (čo ideš spraviť)</b></label>
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label mb-0"><b>Popis (čo ideš spraviť)</b></label>
+                <button type="button" class="btn btn-outline-secondary btn-sm hl-btn" id="hlExplain" title="Zvýrazniť">
+                  <i class="fa-solid fa-highlighter"></i>
+                </button>
+              </div>
               <textarea id="stepExplain" class="form-control" rows="3"></textarea>
             </div>
 
@@ -213,21 +235,30 @@
               <div class="col-md-6">
                 <label class="form-label d-flex align-items-center justify-content-between">
                   <span><b>Body</b></span>
-                  <button class="btn btn-sm btn-outline-secondary" id="btnAddBullet" type="button">+ pridať</button>
+                  <button class="btn btn-sm btn-outline-secondary hl-btn" id="btnAddBullet" type="button" title="Pridať">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
                 </label>
                 <div id="bulletsBox" class="d-grid gap-2"></div>
               </div>
               <div class="col-md-6">
                 <label class="form-label d-flex align-items-center justify-content-between">
                   <span><b>Checklist</b></span>
-                  <button class="btn btn-sm btn-outline-secondary" id="btnAddCheck" type="button">+ pridať</button>
+                  <button class="btn btn-sm btn-outline-secondary hl-btn" id="btnAddCheck" type="button" title="Pridať">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
                 </label>
                 <div id="checksBox" class="d-grid gap-2"></div>
               </div>
             </div>
 
             <div class="mb-2">
-              <label class="form-label"><b>Hinty</b></label>
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label mb-0"><b>Hinty</b></label>
+                <button type="button" class="btn btn-outline-secondary btn-sm hl-btn" id="hlHint" title="Zvýrazniť">
+                  <i class="fa-solid fa-highlighter"></i>
+                </button>
+              </div>
               <textarea id="stepHint" class="form-control" rows="2"></textarea>
             </div>
 
@@ -273,6 +304,42 @@
   const esc = (s)=> (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const STATIC_BASE = "{{ url_for('static', filename='') }}";
 
+  // === zvýraznenie: vkladáme **…** (na detaile sa z toho stane <span class="hl-kw">…</span>)
+  function toggleHighlight(el){
+    const prefix = '**', suffix = '**';
+    const start = el.selectionStart ?? 0;
+    const end   = el.selectionEnd   ?? 0;
+    const v = el.value || '';
+
+    if (start === end) {
+      el.value = v.slice(0,start) + prefix + suffix + v.slice(end);
+      const pos = start + prefix.length;
+      el.focus(); el.selectionStart = el.selectionEnd = pos;
+      el.dispatchEvent(new Event('input', {bubbles:true}));
+      return;
+    }
+
+    const sel = v.slice(start, end);
+    const before = v.slice(0, start);
+    const after = v.slice(end);
+
+    if (sel.startsWith(prefix) && sel.endsWith(suffix)) {
+      const inner = sel.slice(prefix.length, sel.length - suffix.length);
+      el.value = before + inner + after;
+      el.focus(); el.selectionStart = start; el.selectionEnd = start + inner.length;
+    } else if (v.slice(Math.max(0,start-prefix.length), start) === prefix &&
+               v.slice(end, end+suffix.length) === suffix) {
+      const realStart = start - prefix.length, realEnd = end + suffix.length;
+      el.value = v.slice(0, realStart) + sel + v.slice(realEnd);
+      el.focus(); el.selectionStart = realStart; el.selectionEnd = realStart + sel.length;
+    } else {
+      el.value = before + prefix + sel + suffix + after;
+      const s2 = start + prefix.length, e2 = s2 + sel.length;
+      el.focus(); el.selectionStart = s2; el.selectionEnd = e2;
+    }
+    el.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+
   const STORE_KEY = 'project_builder_db_v1';
   let meta = {
     title:'', level:'Začiatočník', category:'Hra', time:'', preview:'',
@@ -283,7 +350,7 @@
   let steps = [];    // [{title,explain,bullets[],checks[],hint,file,code,added[]}]
   let current = -1;  // -1=meta
 
-  // --- vždy začni s čistým formulárom (ak nepoužiješ ?resume=1) ---
+  // čistý štart (iba ak nie je ?resume=1)
   const url = new URL(location.href);
   const resume = url.searchParams.get('resume') === '1';
   if (!resume) localStorage.removeItem(STORE_KEY);
@@ -295,7 +362,6 @@
   const metaTime=$('#metaTime'); const metaPreview=$('#metaPreview'); const metaAssignment=$('#metaAssignment'); const metaTips=$('#metaTips');
   const langPython=$('#langPython'); const langJS=$('#langJS'); const langHTML=$('#langHTML'); const langCSS=$('#langCSS'); const langSQL=$('#langSQL');
 
-  // upload refs
   const metaIcon=$('#metaIcon'); const metaCover=$('#metaCover');
   const metaIconPreview=$('#metaIconPreview'); const metaCoverPreview=$('#metaCoverPreview');
   const metaIconPathLabel=$('#metaIconPathLabel'); const metaCoverPathLabel=$('#metaCoverPathLabel');
@@ -326,7 +392,6 @@
     metaTime.value=meta.time; metaPreview.value=meta.preview; metaAssignment.value=meta.assignment; metaTips.value=meta.tips;
     langPython.checked=!!meta.langs.Python; langJS.checked=!!meta.langs.JavaScript; langHTML.checked=!!meta.langs.HTML; langCSS.checked=!!meta.langs.CSS; langSQL.checked=!!meta.langs.SQL;
 
-    // previews for uploads
     metaIconPreview.style.backgroundImage = meta.icon_path ? `url('${STATIC_BASE}${meta.icon_path}')` : 'none';
     metaCoverPreview.style.backgroundImage = meta.cover_path ? `url('${STATIC_BASE}${meta.cover_path}')` : 'none';
     metaIconPathLabel.textContent = meta.icon_path || '';
@@ -344,11 +409,11 @@
     });
   });
 
-  // image upload helper
+  // upload helper
   async function uploadImage(file, kind){
     const fd = new FormData();
     fd.append('file', file);
-    fd.append('kind', kind); // 'icon' | 'cover'
+    fd.append('kind', kind);
     const res = await fetch("{{ url_for('api_upload_project_image') }}", {
       method:'POST', body: fd, credentials:'same-origin'
     });
@@ -356,7 +421,7 @@
     if(!res.ok || data.ok === false || !data.path){
       throw new Error(data.error || 'Upload zlyhal');
     }
-    return data.path; // relatívne k /static
+    return data.path;
   }
 
   // sidebar
@@ -364,11 +429,8 @@
     stepsList.innerHTML='';
     const metaLi=document.createElement('li');
     metaLi.className='border meta'+(current===-1?' active':'');
-    const iconHTML = meta.icon_path
-      ? `<img class="idx-img" src="${STATIC_BASE}${meta.icon_path}" alt="ikonka">`
-      : `<span class="idx">🏷️</span>`;
     metaLi.innerHTML=`
-      ${iconHTML}
+      <span class="idx" aria-hidden="true"></span>
       <div class="title">
         <div class="fw-semibold">Projekt — základné informácie</div>
         <small>Názov, úroveň, jazyky…</small>
@@ -399,19 +461,43 @@
   // bullets/checks helpers
   function addBulletRow(text=''){
     const el=document.createElement('div'); el.className='input-group';
-    el.innerHTML=`<span class="input-group-text">•</span><input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}"><button class="btn btn-outline-secondary" type="button">×</button>`;
-    el.querySelector('button').onclick=()=> el.remove(); bulletsBox.appendChild(el);
+    el.innerHTML=`
+      <span class="input-group-text">•</span>
+      <input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}">
+      <button class="btn btn-outline-secondary hl-btn" type="button" data-role="hl" title="Zvýrazniť">
+        <i class="fa-solid fa-highlighter"></i>
+      </button>
+      <button class="btn btn-outline-secondary" type="button" data-role="del">×</button>`;
+    const input = el.querySelector('input');
+    el.querySelector('[data-role="hl"]').onclick = ()=> toggleHighlight(input);
+    el.querySelector('[data-role="del"]').onclick = ()=> el.remove();
+    bulletsBox.appendChild(el);
   }
   function addCheckRow(text=''){
     const el=document.createElement('div'); el.className='input-group';
-    el.innerHTML=`<span class="input-group-text"><i class="fa-regular fa-square"></i></span><input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}"><button class="btn btn-outline-secondary" type="button">×</button>`;
-    el.querySelector('button').onclick=()=> el.remove(); checksBox.appendChild(el);
+    el.innerHTML=`
+      <span class="input-group-text"><i class="fa-regular fa-square"></i></span>
+      <input type="text" class="form-control step-md-input" value="${text.replace(/"/g,'&quot;')}">
+      <button class="btn btn-outline-secondary hl-btn" type="button" data-role="hl" title="Zvýrazniť">
+        <i class="fa-solid fa-highlighter"></i>
+      </button>
+      <button class="btn btn-outline-secondary" type="button" data-role="del">×</button>`;
+    const input = el.querySelector('input');
+    el.querySelector('[data-role="hl"]').onclick = ()=> toggleHighlight(input);
+    el.querySelector('[data-role="del"]').onclick = ()=> el.remove();
+    checksBox.appendChild(el);
   }
 
   // code preview + toggles
   function renderCodePreview(){
     const lines = (stepCode.value||'').split('\n');
-    const kept = (stepAdded.value||'').split(',').map(x=>+x.trim()).filter(n=>!isNaN(n) && n>=0 && n<lines.length);
+    const kept = (stepAdded.value||'')
+      .split(',')
+      .map(x=>x.trim())
+      .filter(Boolean)
+      .map(x=>+x)
+      .filter(n=>!isNaN(n) && n>=0 && n<lines.length);
+
     stepAdded.value = kept.join(',');
     const set = new Set(kept);
     const html = lines.map((ln,i)=>`<span class="code-line ${set.has(i)?'added':''}" data-line="${i}">${esc(ln)}</span>`).join('\n');
@@ -422,7 +508,9 @@
     codePreview._handler = (e)=>{
       const s = e.target.closest('.code-line'); if(!s) return;
       s.classList.toggle('added');
-      const idxs = Array.from(codePreview.querySelectorAll('.code-line')).map((n,idx)=> n.classList.contains('added')?idx:null).filter(v=>v!==null);
+      const idxs = Array.from(codePreview.querySelectorAll('.code-line'))
+        .map((n,idx)=> n.classList.contains('added')?idx:null)
+        .filter(v=>v!==null);
       stepAdded.value = idxs.join(',');
       if (current>=0 && steps[current]) { steps[current].added = idxs; saveLocal(); }
     };
@@ -441,6 +529,7 @@
     bulletsBox.innerHTML=''; (s.bullets||[]).forEach(t=>addBulletRow(t));
     checksBox.innerHTML=''; (s.checks||[]).forEach(t=>addCheckRow(t));
 
+    // nič defaultne neoznačuj (alebo z DB)
     const linesLen = (stepCode.value||'').split('\n').length;
     const safeAdded = (s.added||[]).filter(n=> typeof n==='number' && n>=0 && n<linesLen);
     stepAdded.value = safeAdded.join(',');
@@ -488,7 +577,7 @@
       metaIconPreview.style.backgroundImage = `url('${STATIC_BASE}${path}')`;
       metaIconPathLabel.textContent = path;
       saveLocal();
-      renderStepsList(); // refresh bočného menu s ikonou
+      renderStepsList();
     }catch(err){ alert('Upload ikonky zlyhal: '+err.message); }
   });
   metaCover.addEventListener('change', async (e)=>{
@@ -511,16 +600,20 @@
   btnAddCheck.onclick = ()=> addCheckRow('');
   stepCode.addEventListener('input', renderCodePreview);
   stepFile.addEventListener('input', ()=>{ previewFileLabel.textContent = stepFile.value || '—'; });
+
+  // highlight ikonky
+  document.getElementById('hlAssignment').onclick = ()=> toggleHighlight(metaAssignment);
+  document.getElementById('hlExplain').onclick    = ()=> toggleHighlight(stepExplain);
+  document.getElementById('hlHint').onclick       = ()=> toggleHighlight(stepHint);
+
   $('#btnStepUp').onclick=()=>{ if(current>0){ const t=steps[current-1]; steps[current-1]=steps[current]; steps[current]=t; current--; saveLocal(); renderStepsList(); renderStepEditor(); } };
   $('#btnStepDown').onclick=()=>{ if(current<steps.length-1){ const t=steps[current+1]; steps[current+1]=steps[current]; steps[current]=t; current++; saveLocal(); renderStepsList(); renderStepEditor(); } };
   $('#btnStepDelete').onclick=()=>{ if(current>=0 && confirm('Vymazať tento krok?')){ steps.splice(current,1); current=Math.min(current,steps.length-1); saveLocal(); if(current===-1){ selectMeta(); } else { renderStepsList(); renderStepEditor(); } } };
 
-  // ================== PREVIEW FLOW (bez DB) ==================
-  // uloží payload do localStorage a presmeruje na projekt-html s ?preview=1
+  // PREVIEW (bez DB)
   btnPublish.addEventListener('click', () => {
     if (typeof updateMeta === 'function') updateMeta();
     if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
-
     const payload = { meta, steps };
     localStorage.setItem('project_preview_v1', JSON.stringify(payload));
     window.location.href = "{{ url_for('projekt_html') }}?preview=1";
