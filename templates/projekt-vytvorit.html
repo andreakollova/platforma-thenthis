@@ -18,7 +18,16 @@
   }
   .builder .steps li:hover { background:#f8fafc; }
   .builder .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
-  .builder .steps .idx { width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem; border:1px solid #e5e7eb; background:#fff; font-weight:700; font-size:.8rem; color:#111827; }
+  .builder .steps .idx {
+    width:28px; height:28px; display:grid; place-items:center;
+    border-radius:.6rem; border:1px solid #e5e7eb; background:#fff;
+    font-weight:700; font-size:.8rem; color:#111827;
+  }
+  /* malá miniatúra ikonky v menu pri meta položke */
+  .builder .steps .idx-img{
+    width:28px; height:28px; border-radius:.6rem;
+    border:1px solid #e5e7eb; object-fit:cover; background:#fff;
+  }
   .builder .steps .controls button { border:1px solid #e5e7eb; background:#fff; border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem; }
 
   .builder .code-shell { position:relative; }
@@ -87,7 +96,7 @@
             <div class="row g-3">
               <div class="col-12">
                 <label class="form-label">Názov projektu</label>
-                <input type="text" class="form-control" id="metaTitle" placeholder="Napr. Blackjack">
+                <input type="text" class="form-control" id="metaTitle">
               </div>
               <div class="col-6">
                 <label class="form-label">Úroveň</label>
@@ -192,12 +201,12 @@
           <form id="stepForm" onsubmit="return false;">
             <div class="mb-2">
               <label class="form-label"><b>Názov kroku</b></label>
-              <input type="text" class="form-control" id="stepTitle" placeholder="Napr. Základ: importy + funkcie">
+              <input type="text" class="form-control" id="stepTitle">
             </div>
 
             <div class="mb-2">
               <label class="form-label"><b>Popis (čo ideš spraviť)</b></label>
-              <textarea id="stepExplain" class="form-control" rows="3" placeholder="Veľmi stručne a zrozumiteľne..."></textarea>
+              <textarea id="stepExplain" class="form-control" rows="3"></textarea>
             </div>
 
             <div class="row g-2">
@@ -219,7 +228,7 @@
 
             <div class="mb-2">
               <label class="form-label"><b>Hinty</b></label>
-              <textarea id="stepHint" class="form-control" rows="2" placeholder="Krátky tip k tomuto kroku..."></textarea>
+              <textarea id="stepHint" class="form-control" rows="2"></textarea>
             </div>
 
             <hr>
@@ -274,6 +283,11 @@
   let steps = [];    // [{title,explain,bullets[],checks[],hint,file,code,added[]}]
   let current = -1;  // -1=meta
 
+  // --- vždy začni s čistým formulárom (ak nepoužiješ ?resume=1) ---
+  const url = new URL(location.href);
+  const resume = url.searchParams.get('resume') === '1';
+  if (!resume) localStorage.removeItem(STORE_KEY);
+
   // refs
   const stepsList = $('#stepsList'); const stepCount=$('#stepCount'); const progressBar=$('#progressBar');
   const metaView=$('#metaView'); const stepView=$('#stepView');
@@ -298,8 +312,11 @@
   // storage
   const saveLocal = ()=> localStorage.setItem(STORE_KEY, JSON.stringify({meta,steps,current}));
   function loadLocal(){
-    try{ const raw=localStorage.getItem(STORE_KEY); if(!raw) return;
-      const p=JSON.parse(raw); meta=p.meta||meta; steps=p.steps||[]; current=(typeof p.current==='number')?p.current:-1;
+    try{
+      const raw=localStorage.getItem(STORE_KEY);
+      if(!raw) return;
+      const p=JSON.parse(raw);
+      meta=p.meta||meta; steps=p.steps||[]; current=(typeof p.current==='number')?p.current:-1;
     }catch(e){}
   }
 
@@ -347,7 +364,15 @@
     stepsList.innerHTML='';
     const metaLi=document.createElement('li');
     metaLi.className='border meta'+(current===-1?' active':'');
-    metaLi.innerHTML=`<span class="idx">🏷️</span><div class="title"><div class="fw-semibold">Projekt — základné informácie</div><small>Názov, úroveň, jazyky…</small></div>`;
+    const iconHTML = meta.icon_path
+      ? `<img class="idx-img" src="${STATIC_BASE}${meta.icon_path}" alt="ikonka">`
+      : `<span class="idx">🏷️</span>`;
+    metaLi.innerHTML=`
+      ${iconHTML}
+      <div class="title">
+        <div class="fw-semibold">Projekt — základné informácie</div>
+        <small>Názov, úroveň, jazyky…</small>
+      </div>`;
     metaLi.onclick=()=> selectMeta();
     stepsList.appendChild(metaLi);
 
@@ -463,6 +488,7 @@
       metaIconPreview.style.backgroundImage = `url('${STATIC_BASE}${path}')`;
       metaIconPathLabel.textContent = path;
       saveLocal();
+      renderStepsList(); // refresh bočného menu s ikonou
     }catch(err){ alert('Upload ikonky zlyhal: '+err.message); }
   });
   metaCover.addEventListener('change', async (e)=>{
@@ -490,7 +516,7 @@
   $('#btnStepDelete').onclick=()=>{ if(current>=0 && confirm('Vymazať tento krok?')){ steps.splice(current,1); current=Math.min(current,steps.length-1); saveLocal(); if(current===-1){ selectMeta(); } else { renderStepsList(); renderStepEditor(); } } };
 
   // ================== PREVIEW FLOW (bez DB) ==================
-  // uložíme payload do localStorage a presmerujeme na projekt-html s ?preview=1
+  // uloží payload do localStorage a presmeruje na projekt-html s ?preview=1
   btnPublish.addEventListener('click', () => {
     if (typeof updateMeta === 'function') updateMeta();
     if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
@@ -501,7 +527,12 @@
   });
 
   // init
-  (function init(){ loadLocal(); renderMeta(); if(!steps.length){ renderStepsList(); selectMeta(); } else { renderStepsList(); (current===-1?selectMeta():selectStep(current)); } })();
+  (function init(){
+    loadLocal();
+    renderMeta();
+    if(!steps.length){ renderStepsList(); selectMeta(); }
+    else { renderStepsList(); (current===-1?selectMeta():selectStep(current)); }
+  })();
 })();
 </script>
 {% endblock %}
