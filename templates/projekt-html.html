@@ -8,7 +8,6 @@
   window.__PROJECT_DATA__ = {{ (project_payload if project_payload is defined else none)|tojson }};
 </script>
 
-
 <style>
   .proj * { box-sizing: border-box; }
   .proj .pill { border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:.3rem .6rem; font-size:.8rem; color:#6b7280; }
@@ -21,29 +20,35 @@
   .proj .steps li.done   { background:#ecfdf5; border:1px solid #86efac; }
   .proj .steps .idx { width:28px; height:28px; display:grid; place-items:center; border-radius:.6rem; border:1px solid #e5e7eb; background:#fff; font-weight:700; font-size:.8rem; color:#111827; }
   .proj .steps .state { margin-left:auto; font-size:.8rem; color:#16a34a; font-weight:700; }
+
   .proj details { border:1px dashed #e5e7eb; background:#fafafa; border-radius:.75rem; padding:.6rem .75rem; }
-  .proj summary { cursor:pointer; font-weight:700; }
+  /* menší a mierne tučný summary – platí pre “Tipy…”, “Ukázať hinty”, aj “Ukázať celý kód” */
+  .proj summary { cursor:pointer; font-weight:600; font-size:.95rem; }
+
   .proj .card { border-radius:1rem; overflow:hidden; }
   .proj .card-header { background:#fff; }
   .proj .card-header, .proj .card-body { padding:.7rem 1rem; }
   .proj .hero-left { padding-top:.6rem !important; padding-bottom:.6rem !important; }
+
   .proj .code-shell { position:relative; }
   .proj pre.code-block { margin:0; padding:1.2rem .48rem .38rem .6rem; background:#0f172a; color:#dbeafe; border-radius:.75rem; font-size:.80rem; overflow:auto; }
   .proj pre.code-block code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; white-space: pre; display:block; line-height:1.03; }
   .proj .copy-btn { position:absolute; top:.28rem; right:.28rem; z-index:2; border:1px solid #1f2937; background:#111827; color:#dbeafe; border-radius:.4rem; padding:.16rem .42rem; font-size:.72rem; }
   .proj .code-line { display:block; padding-left:.5rem; border-left:3px solid transparent; }
   .proj .code-line.added { border-left-color:#22c55e; }
+
   .proj .muted { color:#6b7280; }
   .lang-badges .badge { background:#fff; border:1px solid #e5e7eb; color:#374151; border-radius:999px; padding:.2rem .5rem; display:inline-flex; align-items:center; gap:.4rem; }
   .lang-badges .badge img { height:16px; width:auto; }
   .proj .preview-link { font-size:.8rem; }
+
+  /* ružové zvýraznenie v monospace (na **text** z buildera) */
   .proj .hl-kw{
-  color:#ec4899;
-  font-weight:800;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace !important;
+    color:#ec4899;
+    font-weight:800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace !important;
   }
   .proj code.inline{ background:#111827; color:#dbeafe; padding:.05rem .3rem; border-radius:.35rem; }
-  /* ružové zvýraznenie v monospace BEZ tmavého pozadia */
   .proj code.inline.hl-kw{
     background: transparent !important;
     color: #ec4899 !important;
@@ -51,6 +56,13 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
     padding: 0;
     border-radius: 0;
+  }
+
+  /* menšie nadpisy sekcií “Body” a “Checklist”, mierne bold */
+  .proj .section-title{
+    font-size:.95rem;
+    font-weight:600;
+    margin: .75rem 0 .25rem 0;
   }
 </style>
 
@@ -121,7 +133,7 @@
           <div id="assignment">
             <p class="text-muted" id="assignmentText">—</p>
             <details class="mb-3" id="tipsBox" hidden>
-              <summary><strong>Tipy pred začatím projektu</strong></summary>
+              <summary>Tipy pred začatím projektu</summary>
               <div class="mt-2" id="tipsText"></div>
             </details>
             <button id="startProject" class="btn btn-primary">Začať projekt</button>
@@ -188,7 +200,6 @@
     // DETAIL: priamo JS objekt zo servera (bez JSON.parse)
     DATA = (typeof window.__PROJECT_DATA__ !== 'undefined') ? window.__PROJECT_DATA__ : null;
   }
-
 
   // 3) Fallback (len keby fakt nič neprišlo)
   if(!DATA){
@@ -270,6 +281,7 @@
   const showIntrospectBtn = document.getElementById('showIntrospect');
   const startProjectBtn = document.getElementById('startProject');
   const stepContent = document.getElementById('stepContent');
+
   const prevStepBtn = document.getElementById('prevStep');
   const nextStepBtn = document.getElementById('nextStep');
   const toggleDoneBtn = document.getElementById('toggleDone');
@@ -327,8 +339,8 @@
     stepContent.innerHTML = `
       <h3 class="h6 mb-1">${esc(S.title||'Bez názvu')}</h3>
       ${S.explain? `<p>${renderRich(S.explain||'')}</p>`:''}
-      ${(S.bullets&&S.bullets.length)?`<h4 class="h6 mt-3">Body</h4><ul>${S.bullets.map(b=>`<li>${renderRich(b)}</li>`).join('')}</ul>`:''}
-      ${(S.checks&&S.checks.length)?`<h4 class="h6 mt-3">Checklist</h4><ul>${S.checks.map(b=>`<li>${renderRich(b)}</li>`).join('')}</ul>`:''}
+      ${(S.bullets&&S.bullets.length)?`<h4 class="section-title">Body</h4><ul>${S.bullets.map(b=>`<li>${renderRich(b)}</li>`).join('')}</ul>`:''}
+      ${(S.checks&&S.checks.length)?`<h4 class="section-title">Checklist</h4><ul>${S.checks.map(b=>`<li>${renderRich(b)}</li>`).join('')}</ul>`:''}
       ${S.hint?`<details class="mb-2"><summary>Ukázať hinty</summary><div class="mt-2">${renderRich(S.hint||'')}</div></details>`:''}
       ${hasCode?`
         <details class="mb-0">
@@ -379,7 +391,7 @@
   setPanel('A');
 
   if (location.hash === '#start' && DATA.steps.length) {
-  selectStep(0);
+    selectStep(0);
   }
 
   // PREVIEW publish
