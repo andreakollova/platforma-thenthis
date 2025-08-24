@@ -13,27 +13,65 @@
 
 <style>
   .projects * { box-sizing: border-box; }
-  .projects .card { border: 0; border-radius: 1rem; overflow: hidden; box-shadow: 0 6px 18px rgba(16,24,40,.06); }
+  .projects .card {
+    border: 0;
+    border-radius: 1rem;               /* zaoblenie hore aj dole */
+    overflow: visible;                  /* kvôli prečnievaniu ikonky */
+    box-shadow: 0 6px 18px rgba(16,24,40,.06);
+  }
   .projects .thumb {
-    position: relative; height: 180px; background: #eee center/cover no-repeat;
+    position: relative;
+    height: 180px;
+    background: #eee center/cover no-repeat;
+    border-top-left-radius: 1rem;       /* top rohy, aj keď parent má overflow:visible */
+    border-top-right-radius: 1rem;
+    overflow: hidden;                   /* overlay a obsah pekne orezané */
+    display: block;
+    text-decoration: none;
+    cursor: pointer;
   }
   .projects .thumb .overlay {
     position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.0) 20%, rgba(0,0,0,.45) 100%);
   }
+
+  /* väčšia ikonka v ľavom dolnom rohu náhľadu */
   .projects .proj-icon {
-    position:absolute; left:12px; top:12px; width:40px; height:40px; border-radius:12px; border:1px solid rgba(255,255,255,.6); background:#fff; object-fit:cover;
+    position:absolute; left:16px; bottom:-22px;
+    width:72px; height:72px; border-radius:16px;
+    border:1px solid rgba(255,255,255,.8);
+    background:#fff; object-fit:cover;
+    box-shadow: 0 6px 18px rgba(16,24,40,.15);
+    z-index: 2;
   }
+
+  /* odznak krokov – modrý ako btn-primary */
   .projects .badge-steps {
-    position:absolute; right:12px; top:12px; background:#0ea5e9; color:#fff; border-radius:999px; font-weight:600; padding:.25rem .55rem; font-size:.75rem;
+    position:absolute; right:12px; top:12px;
+    background: var(--bs-primary, #0d6efd); color:#fff;
+    border-radius:999px; font-weight:600; padding:.25rem .55rem; font-size:.75rem;
   }
+
   .projects .meta-chip { border:1px solid #e5e7eb; border-radius:999px; padding:.2rem .55rem; font-size:.75rem; color:#667085; background:#fff; }
   .projects .langs img { width:16px; height:16px; }
   .projects .langs .badge { background:#fff; border:1px solid #e5e7eb; border-radius:999px; gap:.35rem; padding:.2rem .5rem; font-size:.75rem; color:#374151; }
   .projects .title { font-weight:700; font-size:1rem; }
   .projects .actions .btn { font-size:.85rem; }
-  .projects .empty {
-    border:1px dashed #e5e7eb; border-radius:1rem; padding:2rem; text-align:center; color:#667085;
-  }
+  .projects .empty { border:1px dashed #e5e7eb; border-radius:1rem; padding:2rem; text-align:center; color:#667085; }
+
+  /* nech je pod ikonou miesto pre nadpis */
+  .projects .card-body { padding-top: 2.1rem; }
+
+  /* mini menu (ako pri cvičeniach) */
+  .projects .settings-icon { cursor:pointer; color:#6b7280; }
+  .projects .settings-dropdown { display:none; position:absolute; right:0; top:100%; z-index:1055; }
+  .projects .settings-dropdown .dropdown-item { padding:.4rem .75rem; display:block; white-space:nowrap; }
+
+  /* modal prehľadu – jednoduchý */
+  .proj-preview h5 { margin-bottom:.25rem; }
+  .proj-preview .icon { width:36px; height:36px; border-radius:10px; border:1px solid #e5e7eb; object-fit:cover; }
+  .proj-preview .muted { color:#6b7280; }
+  .proj-preview ul { margin:0; padding-left:1.1rem; }
+  .proj-preview ul li strong { color: var(--bs-primary, #0d6efd); }
 </style>
 
 <main class="projects container py-3">
@@ -44,12 +82,42 @@
     {% endif %}
   {% endwith %}
 
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">Moje projekty</h1>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">Moje projekty</h2>
     <a href="{{ url_for('projekt_vytvorit') }}" class="btn btn-primary btn-sm">
       <i class="fa-solid fa-plus me-1"></i> Vytvoriť projekt
     </a>
   </div>
+
+  {# Filtre (klient-side) #}
+  <form class="row g-3 mb-3" id="projectFilters" onsubmit="return false;">
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label small text-muted">Kategória</label>
+      <select id="filterCategory" class="form-select form-select-sm">
+        <option value="">-- Všetky kategórie --</option>
+        <option value="Hra">Hra</option>
+        <option value="Appka">Appka</option>
+        <option value="E-shop">E-shop</option>
+        <option value="Mini nástroj">Mini nástroj</option>
+        <option value="Iné">Iné</option>
+      </select>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label small text-muted">Programovací jazyk</label>
+      <select id="filterLang" class="form-select form-select-sm">
+        <option value="">-- Všetky jazyky --</option>
+        <option>Python</option>
+        <option>JavaScript</option>
+        <option>HTML</option>
+        <option>CSS</option>
+        <option>SQL</option>
+      </select>
+    </div>
+    <div class="col-12 col-lg-6 d-flex align-items-end gap-2">
+      <button type="button" id="btnClearFilters" class="btn btn-outline-secondary btn-sm">Vymazať filtre</button>
+      <div id="resultCount" class="small text-muted ms-auto"></div>
+    </div>
+  </form>
 
   {% if not projects %}
     <div class="empty">
@@ -59,20 +127,28 @@
       </div>
     </div>
   {% else %}
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+    <div id="projectsGrid" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
       {% for p in projects %}
         {% set cover_path = p.cover_path or 'projects/placeholder-cover.jpg' %}
         {% set icon_path  = p.icon_path  or 'project-icons/default.png' %}
-        {% set langs = (p.langs or '') | trim %}
-        {% set langs_list = langs and langs.split(',') or [] %}
+        {% set langs_list = p.langs_list %}
+        {% set detail_url = url_for('projekt_detail', project_id=p.id) %}
 
-        <div class="col">
-          <div class="card h-100">
-            <div class="thumb" style="background-image:url('{{ url_for('static', filename=cover_path) }}')">
-              <img class="proj-icon" src="{{ url_for('static', filename=icon_path) }}" alt="ikonka">
+        <div class="col project-col"
+             data-category="{{ p.category }}"
+             data-langs="{{ (langs_list | join(',')) if langs_list else '' }}">
+          <div class="card h-100 position-relative" style="overflow: visible;">
+            <a href="{{ detail_url }}"
+               class="thumb"
+               aria-label="Otvoriť projekt: {{ p.title }}"
+               style="background-image:url('{{ url_for('static', filename=cover_path) }}')">
+              <img class="proj-icon"
+                   src="{{ url_for('static', filename=icon_path) }}"
+                   alt="ikonka"
+                   data-href="{{ detail_url }}">
               <span class="badge-steps">{{ p.steps_count or 0 }} krokov</span>
               <div class="overlay"></div>
-            </div>
+            </a>
 
             <div class="card-body">
               <div class="title mb-1 text-truncate">{{ p.title }}</div>
@@ -94,19 +170,42 @@
                 </div>
               {% endif %}
 
-              <div class="actions d-flex justify-content-between align-items-center">
-                <a href="{{ url_for('projekt_detail', project_id=p.id) }}" class="btn btn-outline-secondary">
-                  Zobraziť detail
-                </a>
+              <div class="d-flex justify-content-between align-items-center">
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm open-project-preview"
+                        data-bs-toggle="modal"
+                        data-bs-target="#projectPreviewModal"
+                        data-title="{{ p.title }}"
+                        data-level="{{ p.level }}"
+                        data-category="{{ p.category }}"
+                        data-time="{{ p.time_estimate or '' }}"
+                        data-preview="{{ p.preview_url or '' }}"
+                        data-assignment="{{ (p.assignment or '')|e }}"
+                        data-langs='{{ langs_list|tojson }}'
+                        data-steps='{{ p.steps | map(attribute="title") | list | tojson }}'
+                        data-icon-url="{{ url_for('static', filename=icon_path) }}"
+                        data-start-url="{{ detail_url }}#start">
+                  Prehľad
+                </button>
 
-                <div class="d-flex gap-2">
-                  <a href="{{ url_for('projekt_detail', project_id=p.id) }}#start"
-                     class="btn btn-primary">
+                <div class="d-flex align-items-center gap-3">
+                  <a href="{{ detail_url }}#start" class="btn btn-primary btn-sm">
                     Začať projekt
                   </a>
-                  <form action="{{ url_for('projekt_delete', project_id=p.id) }}" method="POST" onsubmit="return confirm('Naozaj odstrániť projekt?');">
-                    <button type="submit" class="btn btn-outline-danger">Odstrániť</button>
-                  </form>
+
+                  {# drobné menu s jedinou položkou „Odstrániť“ #}
+                  <div class="settings-icon position-relative">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <div class="settings-dropdown bg-white border rounded shadow-sm mt-1">
+                      <form method="POST" action="{{ url_for('projekt_delete', project_id=p.id) }}"
+                            id="form-{{ p.id }}" class="delete-form m-0">
+                        <button type="button" class="dropdown-item text-danger small open-delete-modal"
+                                data-form-id="form-{{ p.id }}">
+                          Odstrániť
+                        </button>
+                      </form>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -117,4 +216,178 @@
     </div>
   {% endif %}
 </main>
+
+{# ---- PREVIEW MODAL ---- #}
+<div class="modal fade" id="projectPreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-sm p-4 proj-preview" style="max-width: 540px; margin:auto;">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <img id="pvIcon" class="icon" src="" alt="ikonka">
+        <h5 id="pvTitle" class="mb-0">—</h5>
+      </div>
+
+      <p id="pvMeta" class="small muted mb-2">—</p>
+      <p id="pvLangs" class="small mb-2"></p>
+      <p id="pvPreviewBox" class="small mb-2" style="display:none;">
+        <strong>Náhľad:</strong> <a id="pvPreviewLink" href="#" target="_blank" rel="noopener"></a>
+      </p>
+
+      <h6 class="mb-1">Zadanie</h6>
+      <p id="pvAssignment" class="mb-3 text-muted">—</p>
+
+      <h6 class="mb-1">Kroky</h6>
+      <ul id="pvSteps" class="mb-3"></ul>
+
+      <div class="text-end">
+        <a id="pvStartBtn" href="#" class="btn btn-primary">Začať projekt</a>
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Zavrieť</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ---- DELETE CONFIRM MODAL ---- #}
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4 border-0 rounded-4 shadow-sm" style="max-width: 380px; margin: auto;">
+      <div class="text-center">
+        <div class="mb-3">
+          <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2.4rem;"></i>
+        </div>
+        <h5 class="mb-3">Vymazať projekt?</h5>
+        <p class="text-muted mb-4 small">Túto akciu nie je možné vrátiť späť. Naozaj chceš pokračovať?</p>
+        <div class="d-flex justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Zrušiť</button>
+          <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Vymazať</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (s)=>document.querySelector(s);
+  const esc = (s)=> (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const nl2br = (s)=> esc(s||'').replace(/\n/g,'<br>');
+
+  // Klik na prečnievajúcu ikonku (časť mimo <a>) -> otvor detail
+  document.querySelectorAll('.proj-icon').forEach(img=>{
+    img.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const href = img.getAttribute('data-href');
+      if (href) location.href = href;
+    });
+  });
+
+  // Prehľad (modal)
+  document.querySelectorAll('.open-project-preview').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const title     = btn.dataset.title || '—';
+      const level     = btn.dataset.level || '—';
+      const category  = btn.dataset.category || '—';
+      const time      = btn.dataset.time || '';
+      const preview   = btn.dataset.preview || '';
+      const assignment= btn.dataset.assignment || '';
+      const langs     = (()=>{ try{return JSON.parse(btn.dataset.langs||'[]')}catch(_){return []} })();
+      const steps     = (()=>{ try{return JSON.parse(btn.dataset.steps||'[]')}catch(_){return []} })();
+
+      $('#pvTitle').textContent = title;
+      $('#pvIcon').src = btn.dataset.iconUrl || '';
+
+      const parts = [];
+      if (category) parts.push(`Kategória: ${esc(category)}`);
+      if (level)    parts.push(`Úroveň: ${esc(level)}`);
+      if (time)     parts.push(`Čas: ${esc(time)}`);
+      $('#pvMeta').innerHTML = parts.length ? parts.join(' · ') : '—';
+
+      $('#pvLangs').innerHTML = langs && langs.length ? `<strong>Jazyky:</strong> ${langs.map(esc).join(', ')}` : '';
+
+      if (preview){
+        $('#pvPreviewBox').style.display = 'block';
+        const a = $('#pvPreviewLink'); a.href = preview; a.textContent = preview;
+      } else {
+        $('#pvPreviewBox').style.display = 'none';
+      }
+
+      $('#pvAssignment').innerHTML = nl2br(assignment);
+
+      const ul = $('#pvSteps'); ul.innerHTML = '';
+      if (steps.length){
+        steps.forEach((t,i)=>{
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${i+1}.</strong> ${esc(t || 'Bez názvu')}`;
+          ul.appendChild(li);
+        });
+      } else {
+        ul.innerHTML = '<li class="text-muted">Žiadne kroky…</li>';
+      }
+
+      $('#pvStartBtn').href = btn.dataset.startUrl || '#';
+    });
+  });
+
+  // Dropdown s jedinou položkou "Odstrániť"
+  document.addEventListener('click', function (e) {
+    // zavri všetky
+    document.querySelectorAll('.settings-dropdown').forEach(d => d.style.display = 'none');
+    // ak klik na ikonku – otvor príslušný dropdown
+    const iconWrap = e.target.closest('.settings-icon');
+    if (iconWrap){
+      const dd = iconWrap.querySelector('.settings-dropdown');
+      if (dd) dd.style.display = 'block';
+    }
+  });
+
+  // Potvrdenie mazania
+  let targetForm = null;
+  document.querySelectorAll('.open-delete-modal').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-form-id');
+      targetForm = document.getElementById(id);
+      const m = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+      m.show();
+    });
+  });
+  document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+    if (targetForm) targetForm.submit();
+  });
+
+  // ---- Klientsky filter (kategória + jazyk) ----
+  const filterCategory = document.getElementById('filterCategory');
+  const filterLang     = document.getElementById('filterLang');
+  const resultCount    = document.getElementById('resultCount');
+
+  function applyFilters(){
+    const cat = (filterCategory.value || '').trim();
+    const lang= (filterLang.value || '').trim();
+    const cols = document.querySelectorAll('#projectsGrid .project-col');
+
+    let visible = 0;
+    cols.forEach(col=>{
+      const c = col.getAttribute('data-category') || '';
+      const langs = (col.getAttribute('data-langs') || '').split(',').map(s=>s.trim()).filter(Boolean);
+      const okCat  = !cat  || c === cat;
+      const okLang = !lang || langs.includes(lang);
+      const show = okCat && okLang;
+      col.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    const total = cols.length;
+    resultCount.textContent = `${visible} / ${total} výsledkov`;
+  }
+
+  filterCategory.addEventListener('change', applyFilters);
+  filterLang.addEventListener('change', applyFilters);
+  document.getElementById('btnClearFilters').addEventListener('click', ()=>{
+    filterCategory.value = '';
+    filterLang.value = '';
+    applyFilters();
+  });
+
+  // prvotné spočítanie
+  applyFilters();
+})();
+</script>
 {% endblock %}
