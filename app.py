@@ -434,7 +434,56 @@ def objavujte():
 
 @app.route('/projekty')
 def projekty():
-    return render_template('projekty.html')
+    projects = (
+        Project.query
+        .filter_by(published=True)
+        .order_by(Project.id.desc())
+        .all()
+    )
+    return render_template('projekty.html', projects=projects)
+
+@app.route('/projekty/<int:project_id>')
+def projekt_public(project_id):
+    p = Project.query.get_or_404(project_id)
+    if not p.published:
+        abort(404)
+
+    rows = (ProjectStep.query
+            .filter_by(project_id=p.id)
+            .order_by(ProjectStep.order.asc()).all())
+
+    steps_payload = []
+    for r in rows:
+        steps_payload.append({
+            "title": r.title or "",
+            "explain": r.explain or "",
+            "bullets": (r.bullets or "").splitlines() if r.bullets else [],
+            "checks": (r.checks or "").splitlines() if r.checks else [],
+            "hint": r.hint or "",
+            "file": r.file_name or "",
+            "code": r.code or "",
+            "added": [int(x) for x in (r.added_csv or "").split(",") if x.strip().isdigit()],
+        })
+
+    payload = {
+        "meta": {
+            "title": p.title,
+            "level": p.level,
+            "category": p.category,
+            "time": p.time_estimate or "",
+            "preview": p.preview_url or "",
+            "langs": {k: True for k in (p.langs.split(",") if p.langs else []) if k.strip()},
+            "assignment": p.assignment or "",
+            "tips": p.tips or "",
+            "icon_path": p.icon_path or None,
+            "cover_path": p.cover_path or None,
+        },
+        "steps": steps_payload
+    }
+
+    # rovnaká šablóna ako interný detail – funguje aj public
+    return render_template('projekt-html.html', project_payload=payload, is_public=True)
+
 
 @app.route('/random')
 def random_page():
