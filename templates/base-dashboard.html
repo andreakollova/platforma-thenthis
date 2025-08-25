@@ -47,7 +47,7 @@
         <i class="fas fa-house"></i>
       </a>
       <a href="{{ url_for('dashboard') }}" class="{% if '/dashboard' in request.path %}active{% endif %}" title="Dashboard">
-        <i class="fa-solid fa-list-ul"></i>
+        <i class="fa-solid fa-border-all"></i>
       </a>
       <a href="{{ url_for('moje_cvicenia') }}" class="{% if '/moje-cvicenia' in request.path %}active{% endif %}" title="Moje cvičenia">
         <i class="fas fa-code"></i>
@@ -55,7 +55,10 @@
       <a href="{{ url_for('nove_cvicenie') }}" class="{% if '/cvicenie/nove' in request.path %}active{% endif %}" title="Nové cvičenie">
         <i class="fas fa-plus"></i>
       </a>
-      <a href="/random" class="{% if '/random' in request.path %}active{% endif %}" title="Náhodné">
+      <a href="/moje-projekty" class="{% if '/random' in request.path %}active{% endif %}" title="Projekty">
+        <i class="fa-solid fa-list-check"></i>
+      </a>
+      <a href="/kviz" class="{% if '/random' in request.path %}active{% endif %}" title="Kvíz">
         <i class="fas fa-font-awesome"></i>
       </a>
     </div>
