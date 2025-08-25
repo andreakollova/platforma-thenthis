@@ -232,7 +232,17 @@ def home():
         .limit(9)
         .all()
     )
-    return render_template('index.html', exercises=exercises)
+
+    # ➜ PRIDANÉ: projekty pre carousel na indexe
+    projects = (
+        Project.query
+        .filter_by(published=True)
+        .order_by(Project.id.desc())
+        .limit(12)
+        .all()
+    )
+
+    return render_template('index.html', exercises=exercises, projects=projects)
 
 @app.route('/register', methods=['GET','POST'])
 def register():

@@ -13,7 +13,7 @@
 
 <main>
 
-    <div class="floating-icons-wrapper text-center my-3">
+  <div class="floating-icons-wrapper text-center my-3">
 
     <!-- Ikonky -->
     <img src="{{ url_for('static', filename='icons/python.svg') }}" class="floating-icon pos-top-left" alt="Python">
@@ -51,8 +51,8 @@
 
   </section>
 
-    <div class="full-width-section py-5 home-latest">
-      <div class="container">
+  <div class="full-width-section py-5 home-latest">
+    <div class="container">
 
       <!-- Nadpis a link -->
       <div class="d-flex justify-content-between align-items-center mb-4 section-header">
@@ -67,9 +67,9 @@
         </a>
       </div>
 
-      <!-- Cards -->
+      <!-- Cards (iba prvých 6) -->
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
-        {% for exercise, author in exercises %}
+        {% for exercise, author in exercises[:6] %}
         <div class="col">
           <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 position-relative">
             <a href="{{ url_for('exercise_detail', id=exercise.id) }}" class="position-relative d-block" style="height: 200px; overflow: hidden;">
@@ -141,5 +141,424 @@
     </div>
   </div>
 
+  {# ========================== NOVÉ PROJEKTY – CAROUSEL (3 naraz, max 6) ========================== #}
+  <style>
+    .home-projects .card{
+      border:1px solid #eef2f7; border-radius:20px; overflow:visible; background:#fff;
+      box-shadow:0 6px 18px rgba(16,24,40,.04);
+      transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+    }
+    .home-projects .card:hover{ transform:translateY(-2px); border-color:#e7ecf4; box-shadow:0 10px 26px rgba(16,24,40,.07); }
+    .home-projects .thumb{
+      position:relative; height:160px; background:#eceff3 center/cover no-repeat;
+      border-top-left-radius:20px; border-top-right-radius:20px; display:block; overflow:hidden;
+    }
+    .home-projects .thumb::after{ content:""; position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.45) 100%);
+    }
+    .home-projects .badge-steps{
+      position:absolute; right:14px; top:14px; z-index:2;
+      background:#6b7280; color:#fff; border-radius:999px; font-weight:400;
+      padding:.16rem .49rem; font-size:.68rem; line-height:1.1;
+    }
+    .home-projects .proj-icon{
+      position:absolute; left:16px;
+      top: calc(160px - (80px - 7px));
+      width:80px; height:80px; object-fit:cover; border-radius:18px; border:2px solid #fff; background:#fff;
+      box-shadow:0 10px 22px rgba(16,24,40,.2); z-index:3; cursor:pointer;
+    }
+    .home-projects .card-body{ padding: calc(1.1rem + 7px) 1.1rem 1.1rem 1.1rem; }
+    .home-projects .title{ font-size:1.1rem; font-weight:700; letter-spacing:-.01em; margin-bottom:.35rem; }
+    .home-projects .meta-chip{
+      background:#fff; color:#667085; border:1px solid #e9edf3; border-radius:999px;
+      padding:.18rem .48rem; font-size:.74rem; display:inline-flex; align-items:center; gap:.35rem;
+    }
+    .home-projects .langs .badge{
+      background:#fff; border:1px solid #e9edf3; color:#374151; border-radius:999px; padding:.18rem .44rem; font-size:.74rem;
+      display:inline-flex; align-items:center; gap:.35rem;
+    }
+    .home-projects .langs img{ width:16px; height:16px; }
+
+    /* Minimalistické šípky mimo karuselu */
+    .home-projects .container{ position:relative; }
+    .home-projects .proj-nav{
+      position:absolute; top:50%; transform:translateY(-50%);
+      background:none; border:none; padding:0; line-height:1;
+      color:#9ca3af; font-size:22px; cursor:pointer;
+    }
+    .home-projects .proj-nav:hover{ color:#6b7280; }
+    .home-projects .proj-nav.prev{ left:-18px; }
+    .home-projects .proj-nav.next{ right:-18px; }
+
+    @media (max-width: 992px){
+      .home-projects .proj-nav.prev{ left:6px; }
+      .home-projects .proj-nav.next{ right:6px; }
+    }
+  </style>
+
+  {% set latest_projects = (projects[:6] if projects is defined else []) %}
+  {% if latest_projects %}
+  <section class="py-5 home-projects">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0 fw-semibold">
+          <i class="fa-solid fa-list-check text-primary me-2"></i>Najnovšie projekty
+        </h4>
+        <a href="{{ url_for('projekty') }}"
+           class="btn btn-outline-secondary section-cta d-inline-flex align-items-center">
+          Zobraziť všetky
+          <span class="ms-2">&#8250;</span>
+        </a>
+      </div>
+
+      <!-- Custom minimal outside controls -->
+      <button class="proj-nav prev" type="button" data-bs-target="#projectsCarousel" data-bs-slide="prev" aria-label="Predchádzajúce">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button class="proj-nav next" type="button" data-bs-target="#projectsCarousel" data-bs-slide="next" aria-label="Ďalšie">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+
+      <div id="projectsCarousel" class="carousel slide" data-bs-ride="false">
+        <div class="carousel-inner">
+
+          {% for group in latest_projects|batch(3, none) %}
+          <div class="carousel-item {% if loop.first %}active{% endif %}">
+            <div class="row g-4">
+              {% for p in group %}
+                {% if p %}
+                  {% set cover_path = p.cover_path or 'projects/placeholder-cover.jpg' %}
+                  {% set icon_path  = p.icon_path  or 'project-icons/default.png' %}
+                  {% set langs_list = p.langs_list %}
+                  {% set detail_url = url_for('projekt_public', project_id=p.id) %}
+                  <div class="col-12 col-md-4">
+                    <div class="card h-100 position-relative">
+                      <a href="{{ detail_url }}" class="thumb"
+                         style="background-image:url('{{ url_for('static', filename=cover_path) }}')">
+                        <span class="badge-steps" data-count="{{ p.steps_count or 0 }}"></span>
+                      </a>
+                      <img class="proj-icon"
+                           src="{{ url_for('static', filename=icon_path) }}"
+                           alt="ikonka"
+                           data-href="{{ detail_url }}">
+                      <div class="card-body">
+                        <div class="title text-truncate">{{ p.title }}</div>
+
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                          {% if p.level %}<span class="meta-chip"><i class="fa-regular fa-signal-bars"></i><span>{{ p.level }}</span></span>{% endif %}
+                          {% if p.category %}<span class="meta-chip"><i class="fa-regular fa-grid-2"></i><span>{{ p.category }}</span></span>{% endif %}
+                          {% if p.time_estimate %}<span class="meta-chip"><i class="fa-regular fa-clock"></i><span>{{ p.time_estimate }}</span></span>{% endif %}
+                        </div>
+
+                        {% if langs_list %}
+                          <div class="langs d-flex flex-wrap gap-2 mb-2">
+                            {% for L in langs_list %}
+                              {% set Ls = L.strip() %}
+                              <span class="badge">
+                                <img src="{{ url_for('static', filename='icons/' ~ icon_files.get(Ls, 'default.svg')) }}" alt="{{ Ls }} ikonka">{{ Ls }}
+                              </span>
+                            {% endfor %}
+                          </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end">
+                          <a href="{{ detail_url }}#start" class="btn btn-primary btn-sm">Začať projekt</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+  {% endif %}
+
+  {# ========================== RÝCHLY KVÍZ – AUTO-START (10 otázok, mix) ========================== #}
+  <style>
+    .home-quiz .card{ border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .home-quiz .quiz-meta{ display:flex; align-items:center; justify-content:space-between; color:#64748b; font-size:.9rem; font-weight:600; }
+    .home-quiz .progress{ background:#eef2ff; height:9px; border-radius:999px; overflow:hidden }
+    .home-quiz .progress-bar{ background:linear-gradient(90deg,#60a5fa,#3b82f6 60%,#2563eb); transition:width .35s ease }
+    .home-quiz .q-title{ font-weight:800; font-size:1.05rem; color:#0b1220; margin:10px 0 6px; }
+    .home-quiz .choice{ position:relative; display:flex; align-items:center; gap:.7rem; border:1px solid #e5e7eb; border-radius:14px; padding:.7rem .8rem; background:#fff; cursor:pointer; user-select:none; transition:background .15s,border-color .15s,box-shadow .15s,transform .06s }
+    .home-quiz .choice + .choice{ margin-top:10px }
+    .home-quiz .choice:hover{ background:#f9fafb; border-color:#d7dceb }
+    .home-quiz .choice:active{ transform:scale(.997) }
+    .home-quiz .choice input{ position:absolute; opacity:0; width:0; height:0 }
+    .home-quiz .bullet{ width:20px; height:20px; border:2px solid #cbd5e1; border-radius:50%; background:#fff }
+    .home-quiz .choice .label{ color:#0f172a; font-weight:600 }
+    .home-quiz .choice.checked{ border-color:#bfdbfe; box-shadow:0 0 0 .3rem rgba(59,130,246,.08); background:#fbfdff }
+    .home-quiz .choice.is-correct{ border-color:#16a34a; background:rgba(22,163,74,.12); box-shadow:0 0 0 .2rem rgba(22,163,74,.12) }
+    .home-quiz .choice.is-wrong{ border-color:#dc2626; background:rgba(220,38,38,.12); box-shadow:0 0 0 .2rem rgba(220,38,38,.12) }
+    .home-quiz .login-needed{ border:1px dashed #e5e7eb; background:#f8fafc; border-radius:14px; padding:1rem; color:#334155; }
+  </style>
+
+  <!-- rovnaké sivé pozadie ako cvičenia -->
+  <div class="full-width-section py-5 home-quiz">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0 fw-semibold">
+          <i class="fa-brands fa-font-awesome text-primary me-2"></i>Rýchly kvíz
+        </h4>
+        <a href="{{ url_for('kviz_vsetci') }}"
+           class="btn btn-outline-secondary section-cta d-inline-flex align-items-center">
+          Všetky kvízy
+          <span class="ms-2">&#8250;</span>
+        </a>
+      </div>
+
+      <div id="quizCard" class="card">
+        <div class="card-body">
+          <div id="quizError" class="login-needed mb-3" style="display:none"></div>
+
+          <div class="quiz-progress">
+            <div class="quiz-meta">
+              <span id="progressText">Otázka 1/10</span>
+              <span id="categoryChip" class="badge bg-light text-dark border">Mix</span>
+            </div>
+            <div class="progress mt-2">
+              <div id="progressBar" class="progress-bar" role="progressbar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div id="qBox" class="mt-2"></div>
+
+          <div class="d-flex align-items-center justify-content-between gap-2 mt-3">
+            <button id="prevBtn" class="btn btn-light btn-sm" disabled><i class="fas fa-chevron-left me-1"></i> Predchádzajúca</button>
+            <div class="d-flex gap-2">
+              <button id="finishBtn" class="btn btn-outline-secondary btn-sm" disabled>Vyhodnotiť</button>
+              <button id="nextBtn" class="btn btn-primary btn-sm">Ďalšia <i class="fas fa-chevron-right ms-1"></i></button>
+            </div>
+          </div>
+
+          <div id="resultBox" class="mt-3" style="display:none">
+            <h6 class="mb-2">Výsledok</h6>
+            <div id="scoreLine" class="fw-bold mb-2"></div>
+            <div id="answerReview" class="small"></div>
+            <div class="mt-3 d-flex gap-2">
+              <button id="retryBtn" class="btn btn-primary btn-sm"><i class="fas fa-redo me-1"></i> Skúsiť znova</button>
+              <a href="{{ url_for('kviz_vsetci') }}" class="btn btn-light btn-sm">Detail kvízov</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </main>
+
+<!-- Helper script: badge kroky + projects icon click + quiz autostart -->
+<script>
+  (function(){
+    // ---- Projects badge: správne skloňovanie „krokov“
+    function skKroky(n){
+      n = Number(n)||0;
+      if (n === 1) return '1 krok';
+      if (n >= 2 && n <= 4) return n + ' kroky';
+      return n + ' krokov';
+    }
+    document.querySelectorAll('.home-projects .badge-steps').forEach(b=>{
+      const n = b.getAttribute('data-count');
+      b.textContent = skKroky(n);
+    });
+    document.querySelectorAll('.home-projects .proj-icon').forEach(img=>{
+      img.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        const href = img.getAttribute('data-href'); if (href) location.href = href;
+      });
+    });
+
+    // ---- Rýchly kvíz: auto-start (10 otázok, mix)
+    const qEl = {
+      error: document.getElementById('quizError'),
+      qBox: document.getElementById('qBox'),
+      progressText: document.getElementById('progressText'),
+      progressBar: document.getElementById('progressBar'),
+      categoryChip: document.getElementById('categoryChip'),
+      prevBtn: document.getElementById('prevBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      finishBtn: document.getElementById('finishBtn'),
+      resultBox: document.getElementById('resultBox'),
+      scoreLine: document.getElementById('scoreLine'),
+      answerReview: document.getElementById('answerReview'),
+      retryBtn: document.getElementById('retryBtn')
+    };
+
+    let questions = [];
+    let idx = 0;
+    let answers = {};
+
+    const ICON_BASE = '/static/icons/';
+    const iconMap = {'Python':'python.svg','JavaScript':'js.svg','HTML':'html.svg','CSS':'css.svg','SQL':'mysql.svg'};
+    function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    function renderCategoryChipMix(){
+      const icons = Object.values(iconMap)
+        .map(name => `<img src="${ICON_BASE}${name}" alt="" style="height:16px;width:16px;margin-right:4px;">`)
+        .join('');
+      qEl.categoryChip.innerHTML = `<span class="d-inline-flex align-items-center">${icons}<strong class="ms-1">Mix</strong></span>`;
+    }
+
+    async function fetchRandom10(){
+      const params = new URLSearchParams({ scope:'all', limit:'10', random:'1' });
+      const r = await fetch(`/api/questions?${params.toString()}`, { credentials:'same-origin' });
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok){
+        const msg = (j && j.error) ? j.error : 'Na spustenie rýchleho kvízu sa prihlás.';
+        throw new Error(msg);
+      }
+      return j.items || [];
+    }
+
+    function showError(msg){
+      qEl.error.innerHTML = `
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
+          <div><strong>Rýchly kvíz nie je dostupný.</strong><br><span class="text-muted">${escapeHtml(msg)}</span></div>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Prihlásiť sa</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-sm">Vytvoriť účet</a>
+          </div>
+        </div>`;
+      qEl.error.style.display = '';
+    }
+
+    function renderQuestion(){
+      const q = questions[idx];
+      const letters = ['A','B','C','D'];
+      const choicesHtml = letters.map(letter => {
+        const checked = answers[idx] === letter ? 'checked' : '';
+        return `
+          <label class="choice ${checked ? 'checked':''}">
+            <input type="radio" name="q" value="${letter}" ${checked}>
+            <span class="bullet"></span>
+            <span class="label">(${letter}) ${escapeHtml(q[letter])}</span>
+          </label>`;
+      }).join('');
+      qEl.qBox.innerHTML = `
+        <div class="q-title">${escapeHtml(q.question)}</div>
+        <div class="choices mt-2">${choicesHtml}</div>`;
+
+      qEl.qBox.querySelectorAll('.choice').forEach(choice=>{
+        choice.addEventListener('click', ()=>{
+          const input = choice.querySelector('input[type="radio"]');
+          if(!input.checked){ input.checked = true; input.dispatchEvent(new Event('change', {bubbles:true})); }
+        });
+      });
+      qEl.qBox.querySelectorAll('input[name="q"]').forEach(r=>{
+        r.addEventListener('change', e=>{
+          answers[idx] = e.target.value;
+          qEl.qBox.querySelectorAll('.choice').forEach(c=>c.classList.remove('checked'));
+          e.target.closest('.choice')?.classList.add('checked');
+        });
+      });
+
+      qEl.prevBtn.disabled = (idx === 0);
+      if(idx === questions.length - 1){
+        qEl.nextBtn.style.display = 'none';
+        qEl.finishBtn.style.display = '';
+        qEl.finishBtn.classList.remove('btn-outline-secondary');
+        qEl.finishBtn.classList.add('btn-primary');
+      }else{
+        qEl.nextBtn.style.display = '';
+        qEl.finishBtn.style.display = '';
+        qEl.finishBtn.classList.remove('btn-primary');
+        qEl.finishBtn.classList.add('btn-outline-secondary');
+      }
+    }
+
+    function updateProgress(){
+      qEl.progressText.textContent = `Otázka ${idx+1}/${questions.length}`;
+      const pct = Math.round(((idx+1)/questions.length)*100);
+      qEl.progressBar.style.width = pct + '%';
+      qEl.progressBar.setAttribute('aria-valuenow', pct);
+    }
+
+    function flashFeedback(){
+      const q = questions[idx];
+      const chosen = answers[idx];
+      if(!chosen) return false;
+      const map = {A:0,B:1,C:2,D:3};
+      const els = Array.from(qEl.qBox.querySelectorAll('.choice'));
+      els.forEach(el=>el.classList.remove('is-correct','is-wrong'));
+      if(chosen === q.correct){ els[map[chosen]]?.classList.add('is-correct'); }
+      else { els[map[chosen]]?.classList.add('is-wrong'); els[map[q.correct]]?.classList.add('is-correct'); }
+      return true;
+    }
+
+    function next(){
+      const had = flashFeedback();
+      const go = ()=>{ if(idx < questions.length-1){ idx++; renderQuestion(); updateProgress(); } };
+      if(had) setTimeout(go, 650); else go();
+    }
+    function prev(){ if(idx>0){ idx--; renderQuestion(); updateProgress(); } }
+
+    function evaluate(){
+      let ok=0, review='';
+      questions.forEach((q,i)=>{
+        const chosen = answers[i] || '-';
+        const good = chosen === q.correct;
+        if(good) ok++;
+        review += `
+          <div class="mb-2">
+            <strong>${i+1}.</strong>
+            <span class="ms-2">Správna: <b>${q.correct}</b></span>
+            <span class="ms-2">Tvoja: <span class="${good?'text-success':'text-danger'} fw-bold">${chosen}</span></span>
+            ${!good ? `<div class="text-muted small mt-1">
+              A: ${escapeHtml(q.A)} · B: ${escapeHtml(q.B)} · C: ${escapeHtml(q.C)} · D: ${escapeHtml(q.D)}
+            </div>`:''}
+          </div>`;
+      });
+      qEl.scoreLine.textContent = `Skóre: ${ok} / ${questions.length}`;
+      qEl.answerReview.innerHTML = review;
+      qEl.resultBox.style.display = '';
+      qEl.finishBtn.disabled = true;
+    }
+
+    async function startQuiz(){
+      try{
+        qEl.error.style.display = 'none';
+        renderCategoryChipMix();
+        questions = await fetchRandom10();
+        if(!questions.length) throw new Error('Zatiaľ tu nie sú žiadne otázky.');
+        idx = 0; answers = {};
+        qEl.finishBtn.disabled = questions.length === 0;
+        renderQuestion();
+        updateProgress();
+      }catch(err){
+        showError(err.message || 'Nepodarilo sa spustiť kvíz.');
+        // skryť ovládanie
+        document.getElementById('quizCard')?.querySelector('.quiz-progress')?.classList.add('d-none');
+        qEl.qBox.innerHTML = '';
+        qEl.prevBtn.style.display = 'none';
+        qEl.nextBtn.style.display = 'none';
+        qEl.finishBtn.style.display = 'none';
+      }
+    }
+
+    // handlers
+    qEl.nextBtn.addEventListener('click', next);
+    qEl.prevBtn.addEventListener('click', prev);
+    qEl.finishBtn.addEventListener('click', ()=>{
+      if(idx === questions.length - 1){
+        const had = flashFeedback(); if(had) setTimeout(evaluate, 650); else evaluate();
+      } else { evaluate(); }
+    });
+    qEl.retryBtn.addEventListener('click', ()=>{
+      qEl.resultBox.style.display = 'none';
+      startQuiz();
+    });
+
+    // AUTO-START on load
+    startQuiz();
+  })();
+</script>
 {% endblock %}

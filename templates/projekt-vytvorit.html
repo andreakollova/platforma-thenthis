@@ -24,6 +24,7 @@
   .builder .steps li {
     display:flex; align-items:center; gap:.5rem; padding:.55rem .6rem;
     border-radius:.75rem; cursor:pointer; border:1px solid transparent;
+    overflow: hidden;                    /* nech sa obsah naviac odreže */
   }
   .builder .steps li:hover { background:#f8fafc; }
   .builder .steps li.active { background:#eff6ff; border:1px solid #bfdbfe; }
@@ -31,6 +32,17 @@
     width:28px; height:28px; display:grid; place-items:center;
     border-radius:.6rem; border:1px solid #e5e7eb; background:#fff;
     font-weight:700; font-size:.8rem; color:#111827; flex:0 0 28px;
+  }
+
+  /* DOPLNENÉ: kontajner pre text má byť flex:1 a min-width:0,
+     potom funguje elipsa (…); použijeme ju na názov aj na "Súbor:" */
+  .builder .steps li .title { flex: 1; min-width: 0; }     /* <<< kľúčové */
+  .builder .steps li .title .fw-semibold,
+  .builder .steps li .title small {
+    display:block;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   /* náhľad ikonky projektu v menu – vždy štvorec */
   .builder .steps .idx-img{
