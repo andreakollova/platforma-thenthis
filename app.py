@@ -557,15 +557,19 @@ def _validate_question_payload(data, is_update=False):
     return None
 
 @app.route('/api/questions', methods=['GET','POST'])
-@login_required
 def api_questions():
+    # POST ostáva len pre prihlásených
     if request.method == 'POST':
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Prihlás sa, aby si mohla pridávať otázky."}), 401
         data = request.get_json(silent=True) or {}
         err = _validate_question_payload(data)
-        if err: return jsonify({"error": err}), 400
+        if err:
+            return jsonify({"error": err}), 400
         q = QuizQuestion(
             author_id=current_user.id,
-            category=data['category'], subcategory=data.get('subcategory') or "",
+            category=data['category'],
+            subcategory=data.get('subcategory') or "",
             question=data['question'].strip(),
             A=data['A'].strip(), B=data['B'].strip(), C=data['C'].strip(), D=data['D'].strip(),
             correct=data['correct']
@@ -573,20 +577,21 @@ def api_questions():
         db.session.add(q); db.session.commit()
         return jsonify({"item": q.to_dict()}), 201
 
-    scope      = request.args.get('scope','mine')
-    category   = request.args.get('category')
-    subcategory= request.args.get('subcategory')
-    search     = request.args.get('search')
-    page       = request.args.get('page', type=int)
-    page_size  = request.args.get('page_size', type=int, default=10)
-    limit      = request.args.get('limit', type=int)
-    random_flag= request.args.get('random', default='0') in ['1','true','True']
+    # GET je verejný (na homepage sa volá ?scope=all&limit=10&random=1)
+    scope       = request.args.get('scope','mine')
+    category    = request.args.get('category')
+    subcategory = request.args.get('subcategory')
+    search      = request.args.get('search')
+    page        = request.args.get('page', type=int)
+    page_size   = request.args.get('page_size', type=int, default=10)
+    limit       = request.args.get('limit', type=int)
+    random_flag = request.args.get('random', default='0') in ['1','true','True']
 
     q = _apply_scope(QuizQuestion.query, scope)
-    if category and category != '__all__': q = q.filter(QuizQuestion.category == category)
+    if category and category != '__all__':    q = q.filter(QuizQuestion.category == category)
     if subcategory and subcategory != '__all__': q = q.filter(QuizQuestion.subcategory == subcategory)
-    if search: q = q.filter(QuizQuestion.question.ilike(f"%{search}%"))
-    if random_flag: q = q.order_by(func.random())
+    if search:                                 q = q.filter(QuizQuestion.question.ilike(f"%{search}%"))
+    if random_flag:                             q = q.order_by(func.random())
 
     if page:
         page = max(1, page); page_size = max(1, min(50, page_size))
@@ -625,7 +630,6 @@ def api_question_detail(q_id):
     return jsonify({"status":"deleted","id":q_id})
 
 @app.route('/api/subcategories')
-@login_required
 def api_subcategories():
     scope    = request.args.get('scope','mine')
     category = request.args.get('category')
