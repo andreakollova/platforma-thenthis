@@ -13,6 +13,16 @@ import os, re, random, json
 # Upload helpers
 # --------------------------------------------------------------------------- #
 
+def _static_exists(rel_path: str) -> bool:
+    """Skontroluje, či vo /static existuje daný relatívny súbor (napr. 'projects/x.jpg')."""
+    try:
+        if not rel_path:
+            return False
+        abs_path = os.path.join('static', rel_path)
+        return os.path.isfile(abs_path)
+    except Exception:
+        return False
+
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "svg"}
 
 def _save_project_image(file_storage, kind="cover"):
@@ -450,6 +460,12 @@ def projekty():
         .order_by(Project.id.desc())
         .all()
     )
+    # bezpečné fallbacky, ak DB nemá/ukazuje na neexistujúce súbory
+    for p in projects:
+        if not p.cover_path or not _static_exists(p.cover_path):
+            p.cover_path = 'projects/placeholder-cover.jpg'
+        if not p.icon_path or not _static_exists(p.icon_path):
+            p.icon_path = 'project-icons/default.png'
     return render_template('projekty.html', projects=projects)
 
 @app.route('/projekty/<int:project_id>')

@@ -655,13 +655,27 @@
   $('#btnStepDelete').onclick=()=>{ if(current>=0 && confirm('Vymazať tento krok?')){ steps.splice(current,1); current=Math.min(current,steps.length-1); saveLocal(); if(current===-1){ selectMeta(); } else { renderStepsList(); renderStepEditor(); } } };
 
   // PREVIEW (bez DB)
-  btnPublish.addEventListener('click', () => {
+  btnPublish.addEventListener('click', async () => {
     if (typeof updateMeta === 'function') updateMeta();
     if (typeof applyStepForm === 'function' && typeof current === 'number' && current >= 0) applyStepForm();
 
     const payload = { meta, steps };
-    localStorage.setItem('project_preview_v1', JSON.stringify(payload));
-    window.location.href = "{{ url_for('projekt_html') }}?preview=1";
+
+    try {
+      const res = await fetch("{{ url_for('projekt_publish') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) throw new Error(data.error || 'Publish zlyhal.');
+
+      // po úspechu choď rovno na public detail
+      window.location.href = "{{ url_for('projekt_public', project_id=0) }}".replace('0', data.project_id);
+    } catch (err) {
+      alert(err.message || 'Nepodarilo sa publikovať projekt.');
+    }
   });
 
   // init
